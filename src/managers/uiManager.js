@@ -747,17 +747,24 @@ export class UIManager {
 
     _drawHpBar(ctx, entity) {
         if (Math.abs(entity.hp - entity.maxHp) < 0.01 || entity.hp <= 0) return;
-        const barWidth = entity.width;
-        const barHeight = 8;
-        const x = entity.x;
-        const y = entity.y - barHeight - 5;
+
+        // 정사각형 형태의 상태창 구현
+        const size = Math.min(entity.width, entity.height, 20);
+        const barX = entity.x + (entity.width - size) / 2;
+        const barY = entity.y - size - 15; // 상단으로 위치 보정
+
+        // 배경
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(x, y, barWidth, barHeight);
+        ctx.fillRect(barX, barY, size, size);
+
+        // HP 비율 계산 후 하단에서 채워 올림
         const hpRatio = entity.hp / entity.maxHp;
         ctx.fillStyle = hpRatio > 0.5 ? '#00ff00' : hpRatio > 0.2 ? '#ffff00' : '#ff0000';
-        ctx.fillRect(x, y, barWidth * hpRatio, barHeight);
+        const fillHeight = size * hpRatio;
+        ctx.fillRect(barX, barY + size - fillHeight, size, fillHeight);
+
         ctx.strokeStyle = 'white';
-        ctx.strokeRect(x, y, barWidth, barHeight);
+        ctx.strokeRect(barX, barY, size, size);
     }
 
     // 아이템 툴팁 생성 로직 강화
