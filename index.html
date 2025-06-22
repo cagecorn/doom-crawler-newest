@@ -24,57 +24,10 @@
     <div id="ui-panel" class="ui-frame">
         <h2>플레이어 상태</h2>
         <div class="stats-content-box">
-            <div id="player-stats-container">
-                <div class="stat-line">
-                    <span>✨ 레벨:</span>
-                    <span id="ui-player-level">1</span>
-                </div>
-                <div class="stat-line">
-                    <span>⭐ 스탯포인트:</span>
-                    <span id="ui-player-statPoints">0</span>
-                </div>
-                <div class="stat-line">
-                    <span>💪 힘:</span>
-                    <span id="ui-player-strength">0</span>
-                    <button id="btn-plus-strength" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>🏃 민첩:</span>
-                    <span id="ui-player-agility">0</span>
-                    <button id="btn-plus-agility" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>🛡 체력:</span>
-                    <span id="ui-player-endurance">0</span>
-                    <button id="btn-plus-endurance" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>🔮 집중:</span>
-                    <span id="ui-player-focus">0</span>
-                    <button id="btn-plus-focus" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>📖 지능:</span>
-                    <span id="ui-player-intelligence">0</span>
-                    <button id="btn-plus-intelligence" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>👣 이동:</span>
-                    <span id="ui-player-movement">0</span>
-                    <button id="btn-plus-movement" class="stat-plus" style="display:none">+</button>
-                </div>
-                <div class="stat-line">
-                    <span>🚶 이동 속도:</span>
-                    <span id="ui-player-movementSpeed">0</span>
-                </div>
-                <div class="stat-line">
-                    <span>💰 골드:</span>
-                    <span id="ui-player-gold">0</span>
-                </div>
+            <div id="basic-status">
                 <div class="stat-line">
                     <span>❤️ HP:</span>
-                    <span id="ui-player-hp">20</span>
-                    <span>/</span>
+                    <span id="ui-player-hp">20</span> /
                     <span id="ui-player-maxHp">20</span>
                 </div>
                 <div class="hp-bar-container">
@@ -82,14 +35,15 @@
                 </div>
                 <div class="stat-line">
                     <span>💧 MP:</span>
-                    <span id="ui-player-mp">0</span> / <span id="ui-player-maxMp">0</span>
+                    <span id="ui-player-mp">0</span> /
+                    <span id="ui-player-maxMp">0</span>
                 </div>
                 <div class="mp-bar-container">
                     <div id="ui-mp-bar-fill" class="mp-bar-fill"></div>
                 </div>
                 <div class="stat-line">
-                    <span>⚔️ 공격력:</span>
-                    <span id="ui-player-attackPower">2</span>
+                    <span>💰 골드:</span>
+                    <span id="ui-player-gold">0</span>
                 </div>
             </div>
             <div class="exp-bar-container">
@@ -198,8 +152,9 @@
     <div id="character-sheet-panel" class="modal-panel ui-frame hidden">
         <button class="close-btn" data-panel-id="character-sheet-panel">X</button>
         <h2 id="sheet-character-name">캐릭터</h2>
-        <div class="stats-content-box">
-            <div id="sheet-equipment" class="equipment-slots">
+        <div class="stats-content-box sheet-container">
+            <div class="sheet-left">
+                <div id="sheet-equipment" class="equipment-slots">
                 <div class="equip-slot" data-slot="main_hand"><span>주무기</span></div>
                 <div class="equip-slot" data-slot="off_hand"><span>보조장비</span></div>
                 <div class="equip-slot" data-slot="armor"><span>갑옷</span></div>
@@ -208,14 +163,65 @@
                 <div class="equip-slot" data-slot="boots"><span>신발</span></div>
                 <div class="equip-slot" data-slot="accessory1"><span>장신구1</span></div>
                 <div class="equip-slot" data-slot="accessory2"><span>장신구2</span></div>
+                </div>
+                <div id="sheet-inventory"></div>
             </div>
-            <div id="sheet-inventory"></div>
-            <div class="stat-tabs">
+            <div class="sheet-right">
+                <div id="player-stats-container">
+                    <div class="stat-line">
+                        <span>✨ 레벨:</span>
+                        <span id="ui-player-level">1</span>
+                    </div>
+                    <div class="stat-line">
+                        <span>⭐ 스탯포인트:</span>
+                        <span id="ui-player-statPoints">0</span>
+                    </div>
+                    <div class="stat-line">
+                        <span>💪 힘:</span>
+                        <span id="ui-player-strength">0</span>
+                        <button id="btn-plus-strength" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>🏃 민첩:</span>
+                        <span id="ui-player-agility">0</span>
+                        <button id="btn-plus-agility" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>🛡 체력:</span>
+                        <span id="ui-player-endurance">0</span>
+                        <button id="btn-plus-endurance" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>🔮 집중:</span>
+                        <span id="ui-player-focus">0</span>
+                        <button id="btn-plus-focus" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>📖 지능:</span>
+                        <span id="ui-player-intelligence">0</span>
+                        <button id="btn-plus-intelligence" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>👣 이동:</span>
+                        <span id="ui-player-movement">0</span>
+                        <button id="btn-plus-movement" class="stat-plus" style="display:none">+</button>
+                    </div>
+                    <div class="stat-line">
+                        <span>🚶 이동 속도:</span>
+                        <span id="ui-player-movementSpeed">0</span>
+                    </div>
+                    <div class="stat-line">
+                        <span>⚔️ 공격력:</span>
+                        <span id="ui-player-attackPower">2</span>
+                    </div>
+                </div>
+                <div class="stat-tabs">
                 <button class="stat-tab-btn active" data-tab="1">기본 스탯</button>
                 <button class="stat-tab-btn" data-tab="2">무기 숙련도</button>
             </div>
             <div id="stat-page-1" class="stat-page active"></div>
             <div id="stat-page-2" class="stat-page hidden"></div>
+            </div>
         </div>
     </div>
 

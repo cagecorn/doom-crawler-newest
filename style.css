@@ -353,6 +353,10 @@ body, html {
 .sheet-left { flex-basis: 300px; flex-shrink: 0; }
 .sheet-right { flex-grow: 1; }
 
+#equipment-target-panel {
+    z-index: 250;
+}
+
 #sheet-equipment .equip-slot {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px; margin-bottom: 5px; background-color: rgba(0,0,0,0.1);
