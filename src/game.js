@@ -980,6 +980,16 @@ export class Game {
             }
         });
 
+        eventManager.subscribe('mouse_wheel', (data) => {
+            if (gameState.isPaused || gameState.isGameOver) return;
+            const step = 0.1;
+            if (data.direction < 0) {
+                gameState.zoomLevel = Math.min(2, gameState.zoomLevel + step);
+            } else if (data.direction > 0) {
+                gameState.zoomLevel = Math.max(0.25, gameState.zoomLevel - step);
+            }
+        });
+
         this.uiManager.init({
             onStatUp: this.handleStatUp,
             onItemUse: (itemIndex) => {

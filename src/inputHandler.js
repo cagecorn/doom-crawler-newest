@@ -13,5 +13,11 @@ export class InputHandler {
         document.addEventListener('keyup', (event) => {
             delete this.keysPressed[event.key];
         });
+
+        document.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            const direction = Math.sign(event.deltaY);
+            eventManager.publish('mouse_wheel', { direction });
+        }, { passive: false });
     }
 }
