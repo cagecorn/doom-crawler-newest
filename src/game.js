@@ -10,6 +10,7 @@ import { CombatCalculator } from './combat.js';
 import { TagManager } from './managers/tagManager.js';
 import { MapManager } from './map.js';
 import { AquariumMapManager } from './aquariumMap.js';
+import { SideScrollerMapManager } from './sideScrollerMap.js';
 import { AquariumManager, AquariumInspector } from './managers/aquariumManager.js';
 import * as Managers from './managers/index.js'; // managers/index.js에서 모든 매니저를 한 번에 불러옴
 import { AssetLoader } from './assetLoader.js';
@@ -104,8 +105,8 @@ export class Game {
         this.systemLogManager = new SystemLogManager(this.eventManager);
         this.tagManager = new TagManager();
         this.combatCalculator = new CombatCalculator(this.eventManager, this.tagManager);
-        // Player begins in the Aquarium map for feature testing
-        this.mapManager = new AquariumMapManager();
+        // Player begins in a side-scroller style map
+        this.mapManager = new SideScrollerMapManager();
         this.saveLoadManager = new SaveLoadManager();
         this.turnManager = new TurnManager();
         this.narrativeManager = new NarrativeManager();
