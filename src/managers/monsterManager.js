@@ -27,9 +27,10 @@ export class MonsterManager {
             });
         }
 
-        if (this._initialCount > 0 && this.mapManager && this.assets && this.factory) {
-            this._spawnMonsters(this._initialCount);
-        }
+        // 몬스터 초기 생성은 QuantumMonsterManager가 담당하므로 여기서는 스폰하지 않는다.
+        // if (this._initialCount > 0 && this.mapManager && this.assets && this.factory) {
+        //     this._spawnMonsters(this._initialCount);
+        // }
     }
 
     setTraitManager(traitManager) {
@@ -59,6 +60,9 @@ export class MonsterManager {
 
     removeMonster(monsterId) {
         this.monsters = this.monsters.filter(m => m.id !== monsterId);
+        if (this.eventManager) {
+            this.eventManager.publish('entity_removed', { victimId: monsterId });
+        }
     }
 
     update() {
