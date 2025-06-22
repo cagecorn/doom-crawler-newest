@@ -1233,10 +1233,23 @@ export class Game {
 
         // buffManager.renderGroundAuras(contexts.groundFx, ...); // (미래 구멍)
 
-        monsterManager.monsters.filter(m => !m.isHidden).forEach(m => m.render(contexts.entity));
-        mercenaryManager.mercenaries.filter(m => !m.isHidden).forEach(m => m.render(contexts.entity));
-        this.petManager.pets.filter(p => !p.isHidden).forEach(p => p.render(contexts.entity));
-        if (!gameState.player.isHidden) gameState.player.render(contexts.entity);
+        // Build a unified render queue and sort by Y to get natural overlap.
+        // Tie-breaking by id keeps the order stable when Y values are equal.
+        const allEntitiesToRender = [
+            gameState.player,
+            ...(monsterManager?.monsters || []),
+            ...(mercenaryManager?.mercenaries || []),
+            ...(this.petManager?.pets || [])
+        ].filter(e => e && !e.isDying && !e.isHidden);
+
+        allEntitiesToRender.sort((a, b) =>
+            a.y === b.y ? a.id.localeCompare(b.id) : a.y - b.y
+        );
+
+        const entityCtx = contexts.entity;
+        for (const entity of allEntitiesToRender) {
+            entity.render(entityCtx);
+        }
 
         fogManager.render(contexts.vfx, mapManager.tileSize);
         uiManager.renderHpBars(contexts.vfx, gameState.player, monsterManager.monsters, mercenaryManager.mercenaries);
