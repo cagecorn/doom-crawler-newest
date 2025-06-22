@@ -23,3 +23,23 @@ export function findEntitiesInRadius(centerX, centerY, radius, entities, exclude
     }
     return found;
 }
+
+/**
+ * 주어진 위치에서 가장 가까운 엔티티를 찾습니다.
+ * @param {{x:number,y:number}} pos - 기준 위치
+ * @param {Entity[]} entities - 검색 대상 엔티티 배열
+ * @returns {Entity|null}
+ */
+export function findNearestEntity(pos, entities) {
+    if (!entities || entities.length === 0) return null;
+    let nearest = null;
+    let minDist = Infinity;
+    for (const entity of entities) {
+        const d = Math.hypot(pos.x - entity.x, pos.y - entity.y);
+        if (d < minDist) {
+            minDist = d;
+            nearest = entity;
+        }
+    }
+    return nearest;
+}

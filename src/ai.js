@@ -1,6 +1,7 @@
 // src/ai.js
 
-import { hasLineOfSight } from './utils/geometry.js';
+import { hasLineOfSight, getAveragePosition, getDistance } from './utils/geometry.js';
+import { findNearestEntity } from './utils/entityUtils.js';
 import { SKILLS } from './data/skills.js';
 
 // AI 내에서 직접 팝업을 호출하지 않고 이벤트만 발생시켜
@@ -56,6 +57,64 @@ export class AIArchetype {
         return (enemies || []).filter(e =>
             Math.hypot(e.x - self.x, e.y - self.y) < range);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Experimental formation-aware decision helper
+// ---------------------------------------------------------------------------
+
+/**
+ * 모든 유닛 유형이 사용할 수 있는 기본 행동 결정 로직입니다.
+ * 전장의 중심선과 아군 위치를 고려하여 이동 점수를 계산합니다.
+ * 현재 프로젝트에서는 직접 사용되지 않지만, 향후 확장용으로 제공됩니다.
+ * @param {object} unit
+ * @param {object[]} entities
+ * @param {object} combat - 이동 가능 타일 계산용 컨텍스트
+ */
+export function decideNextAction(unit, entities, combat) {
+    const actions = [];
+    const enemies = entities.filter(e => e.group !== unit.group && !e.dead);
+    const allies = entities.filter(e => e.group === unit.group && e !== unit && !e.dead);
+
+    const nearbyAllies = allies.filter(a => getDistance(unit, a) < 10);
+    const meleeAllies = nearbyAllies.filter(a => a.weapon && a.weapon.range <= 1);
+
+    const allyCenter = getAveragePosition(nearbyAllies);
+    const enemyCenter = getAveragePosition(enemies);
+    const enemyFallback = enemies[0];
+
+    const frontLineX = (allyCenter && enemyCenter)
+        ? (allyCenter.x + enemyCenter.x) / 2
+        : (unit.x + (enemyFallback?.x ?? unit.x)) / 2;
+
+    const possibleMoveTiles = combat?.getReachableTiles
+        ? combat.getReachableTiles(unit)
+        : [];
+
+    possibleMoveTiles.forEach(tile => {
+        let moveScore = 1;
+        const weaponRange = unit.weapon ? unit.weapon.range : 1;
+
+        if (weaponRange <= 1) {
+            const distanceToFrontLine = Math.abs(tile.x - frontLineX);
+            moveScore += Math.max(0, 10 - distanceToFrontLine);
+        } else {
+            if (tile.x < frontLineX) {
+                moveScore += 5;
+                const nearestMeleeAlly = findNearestEntity(tile, meleeAllies);
+                if (nearestMeleeAlly && getDistance(tile, nearestMeleeAlly) < 3) {
+                    if (tile.x < nearestMeleeAlly.x) {
+                        moveScore += 15;
+                    }
+                }
+            }
+        }
+
+        actions.push({ type: 'move', target: tile, score: moveScore });
+    });
+
+    actions.sort((a, b) => b.score - a.score);
+    return actions[0] || { type: 'idle' };
 }
 
 export class CompositeAI extends AIArchetype {

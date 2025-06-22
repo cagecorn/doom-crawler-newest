@@ -26,3 +26,28 @@ export function hasLineOfSight(x0, y0, x1, y1, mapManager) {
     }
     return true;
 }
+
+/**
+ * 엔티티 목록의 평균 위치를 계산합니다.
+ * @param {Array<{x:number,y:number}>} entityList
+ * @returns {{x:number,y:number}|null}
+ */
+export function getAveragePosition(entityList) {
+    if (!entityList || entityList.length === 0) return null;
+    const totalX = entityList.reduce((sum, e) => sum + e.x, 0);
+    const totalY = entityList.reduce((sum, e) => sum + e.y, 0);
+    return { x: totalX / entityList.length, y: totalY / entityList.length };
+}
+
+/**
+ * 두 지점 사이의 거리를 계산합니다.
+ * @param {{x:number,y:number}} a
+ * @param {{x:number,y:number}} b
+ * @returns {number}
+ */
+export function getDistance(a, b) {
+    if (!a || !b) return Infinity;
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.hypot(dx, dy);
+}
