@@ -44,7 +44,6 @@
 | `logManager.js` | 콘솔 또는 UI에 표시되는 로그 기록을 관리합니다. |
 | `mercenaryManager.js` | 용병 생성, 고용, 상태 업데이트를 담당합니다. |
 | `monsterManager.js` | 몬스터 스폰과 제거, 업데이트 루프를 관리합니다. |
-| `quantumMonsterManager.js` | 플레이어 시야 범위에 따라 몬스터를 동적으로 스폰하고 비활성화합니다. |
 | `motionManager.js` | 물리적 이동 애니메이션과 간단한 트위닝을 처리합니다. |
 | `movementManager.js` | 유닛의 좌표 이동과 충돌 판정을 계산합니다. |
 | `narrativeManager.js` | 스토리 플래그와 몬스터 도감 등 서사 관련 데이터를 저장합니다. |

@@ -37,7 +37,6 @@ import { Ghost } from './entities.js';
 import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.js';
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
-import { QuantumMonsterManager } from './managers/quantumMonsterManager.js';
 
 export class Game {
     constructor() {
@@ -311,8 +310,6 @@ export class Game {
         };
         this.playerGroup.addMember(player);
 
-        this.quantumMonsterManager = new QuantumMonsterManager(this.monsterManager, player, this.monsterGroup);
-
         // 초기 아이템 배치
         const potion = this.itemFactory.create(
                                 'potion',
@@ -361,7 +358,7 @@ export class Game {
         if(emblemConductor) this.itemManager.addItem(emblemConductor);
 
         // === 3. 몬스터 생성 ===
-        const monsterConfigs = [];
+        const monsters = [];
         const baseMonsterCount = this.mapManager.name === 'aquarium' ? 10 : 40;
         for (let i = 0; i < baseMonsterCount; i++) {
             const pos = this.mapManager.getRandomFloorPosition();
@@ -370,18 +367,63 @@ export class Game {
                 if (this.mapManager.name === 'aquarium') {
                     stats = adjustMonsterStatsForAquarium(stats);
                 }
-                const config = {
+                const monster = this.factory.create('monster', {
                     x: pos.x,
                     y: pos.y,
                     tileSize: this.mapManager.tileSize,
                     groupId: this.monsterGroup.id,
                     image: assets.monster,
                     baseStats: stats
-                };
-                monsterConfigs.push(config);
+                });
+                monster.equipmentRenderManager = this.equipmentRenderManager;
+                // 몬스터 초기 장비 및 소지품 설정
+                monster.consumables = [];
+                monster.consumableCapacity = 4;
+                const itemCount = Math.floor(Math.random() * 3) + 2; // 장비 다양화를 위해 최소 2개
+                for (let j = 0; j < itemCount; j++) {
+                    const id = rollOnTable(getMonsterLootTable());
+                    const item = this.itemFactory.create(
+                        id,
+                        monster.x,
+                        monster.y,
+                        this.mapManager.tileSize
+                    );
+                    if (!item) continue;
+                    if (
+                        item.tags.includes('weapon') ||
+                        item.type === 'weapon' ||
+                        item.tags.includes('armor') ||
+                        item.type === 'armor'
+                    ) {
+                        this.equipmentManager.equip(monster, item, null);
+                    } else {
+                        monster.addConsumable(item);
+                    }
+                }
+                if (Math.random() < 0.15) {
+                    const pid = Math.random() < 0.5 ? 'parasite_leech' : 'parasite_worm';
+                    const pItem = this.itemFactory.create(
+                        pid,
+                        monster.x,
+                        monster.y,
+                        this.mapManager.tileSize
+                    );
+                    if (pItem) this.parasiteManager.equip(monster, pItem);
+                }
+                if (Math.random() < 0.3) {
+                    const bow = this.itemFactory.create(
+                        'long_bow',
+                        monster.x,
+                        monster.y,
+                        this.mapManager.tileSize
+                    );
+                    if (bow) this.equipmentManager.equip(monster, bow, null);
+                }
+                monsters.push(monster);
             }
         }
-        this.quantumMonsterManager.initializeMonsters(monsterConfigs);
+        this.monsterManager.monsters.push(...monsters);
+        this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
 
         // === 4. 용병 고용 로직 ===
         const hireBtn = document.getElementById('hire-mercenary');
@@ -1053,8 +1095,6 @@ export class Game {
     update = (deltaTime) => {
         const { gameState, mercenaryManager, monsterManager, itemManager, mapManager, inputHandler, effectManager, turnManager, metaAIManager, eventManager, equipmentManager, pathfindingManager, microEngine, microItemAIManager } = this;
         if (gameState.isPaused || gameState.isGameOver) return;
-
-        this.quantumMonsterManager.update();
 
         const allEntities = [gameState.player, ...mercenaryManager.mercenaries, ...monsterManager.monsters, ...(this.petManager?.pets || [])];
         gameState.player.applyRegen();
