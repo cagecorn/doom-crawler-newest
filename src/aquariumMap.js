@@ -7,7 +7,7 @@ export class AquariumMapManager extends MapManager {
         super(seed);
         this.name = 'aquarium';
         // wider passages help observe pathfinding for mercenaries and monsters
-        this.corridorWidth = 8;
+        this.corridorWidth = 12;
         // regenerate with the new corridor width
         this.map = this._generateMaze();
     }

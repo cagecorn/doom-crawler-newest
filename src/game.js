@@ -67,6 +67,9 @@ export class Game {
         this.loader.loadImage('arrow', 'assets/images/arrow.png');
         this.loader.loadImage('leather_armor', 'assets/images/leatherarmor.png');
         this.loader.loadImage('plate-armor', 'assets/images/plate-armor.png');
+        this.loader.loadImage('iron-helmet', 'assets/images/iron-helmet.png');
+        this.loader.loadImage('iron-gauntlets', 'assets/images/iron-gauntlets.png');
+        this.loader.loadImage('iron-boots', 'assets/images/iron-boots.png');
         this.loader.loadImage('violin-bow', 'assets/images/violin-bow.png');
         this.loader.loadImage('skeleton', 'assets/images/skeleton.png');
         this.loader.loadImage('pet-fox', 'assets/images/pet-fox.png');
@@ -285,6 +288,16 @@ export class Game {
         });
         player.ai = null; // disable any automatic skills for the player
         player.equipmentRenderManager = this.equipmentRenderManager;
+
+        // 초기 장비 세팅
+        const pHelmet = this.itemFactory.create('iron_helmet', 0, 0, this.mapManager.tileSize);
+        const pGloves = this.itemFactory.create('iron_gauntlets', 0, 0, this.mapManager.tileSize);
+        const pBoots = this.itemFactory.create('iron_boots', 0, 0, this.mapManager.tileSize);
+        const pArmor = this.itemFactory.create('leather_armor', 0, 0, this.mapManager.tileSize);
+        if (pHelmet) this.equipmentManager.equip(player, pHelmet, null);
+        if (pGloves) this.equipmentManager.equip(player, pGloves, null);
+        if (pBoots) this.equipmentManager.equip(player, pBoots, null);
+        if (pArmor) this.equipmentManager.equip(player, pArmor, null);
         this.gameState = {
             player,
             inventory: [],
@@ -366,7 +379,7 @@ export class Game {
                 // 몬스터 초기 장비 및 소지품 설정
                 monster.consumables = [];
                 monster.consumableCapacity = 4;
-                const itemCount = Math.floor(Math.random() * 3) + 1;
+                const itemCount = Math.floor(Math.random() * 3) + 2; // 장비 다양화를 위해 최소 2개
                 for (let j = 0; j < itemCount; j++) {
                     const id = rollOnTable(getMonsterLootTable());
                     const item = this.itemFactory.create(

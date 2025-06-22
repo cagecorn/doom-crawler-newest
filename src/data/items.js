@@ -64,6 +64,42 @@ export const ITEMS = {
         toughness: 4,
     },
 
+    iron_helmet: {
+        name: '철 투구',
+        type: 'armor',
+        tags: ['armor', 'helmet'],
+        imageKey: 'iron-helmet',
+        stats: { maxHp: 3 },
+        tier: 'normal',
+        durability: 80,
+        weight: 4,
+        toughness: 5,
+    },
+
+    iron_gauntlets: {
+        name: '철 장갑',
+        type: 'armor',
+        tags: ['armor', 'gloves'],
+        imageKey: 'iron-gauntlets',
+        stats: { maxHp: 2 },
+        tier: 'normal',
+        durability: 80,
+        weight: 3,
+        toughness: 4,
+    },
+
+    iron_boots: {
+        name: '철 부츠',
+        type: 'armor',
+        tags: ['armor', 'boots'],
+        imageKey: 'iron-boots',
+        stats: { maxHp: 2 },
+        tier: 'normal',
+        durability: 80,
+        weight: 3,
+        toughness: 4,
+    },
+
     shield_basic: {
         name: '기본 방패',
         type: 'shield',

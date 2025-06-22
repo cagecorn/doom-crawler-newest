@@ -143,6 +143,18 @@ export class CharacterFactory {
                     }
                 }
 
+                // 기본 방어구 장착
+                const mHelmet = this.itemFactory.create('iron_helmet', 0, 0, tileSize);
+                const mGloves = this.itemFactory.create('iron_gauntlets', 0, 0, tileSize);
+                const mBoots = this.itemFactory.create('iron_boots', 0, 0, tileSize);
+                const mArmor = this.itemFactory.create('leather_armor', 0, 0, tileSize);
+                if (mHelmet) merc.equipment.helmet = mHelmet;
+                if (mGloves) merc.equipment.gloves = mGloves;
+                if (mBoots) merc.equipment.boots = mBoots;
+                if (mArmor) merc.equipment.armor = mArmor;
+                if (merc.stats) merc.stats.updateEquipmentStats();
+                if (typeof merc.updateAI === 'function') merc.updateAI();
+
                 return merc;
             case 'monster':
                 return new Monster(finalConfig);
