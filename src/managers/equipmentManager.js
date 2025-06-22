@@ -85,6 +85,9 @@ export class EquipmentManager {
 
         // 2. 기존 로직 (하위 호환용)
         if ((item.tags && item.tags.includes('weapon')) || item.type === 'weapon') return 'main_hand';
+        if ((item.tags && item.tags.includes('helmet'))) return 'helmet';
+        if ((item.tags && item.tags.includes('gloves'))) return 'gloves';
+        if ((item.tags && item.tags.includes('boots'))) return 'boots';
         if ((item.tags && item.tags.includes('armor')) || item.type === 'armor') return 'armor';
         return null;
     }
