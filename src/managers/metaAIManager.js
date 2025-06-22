@@ -5,6 +5,7 @@ export class MetaAIManager extends BaseMetaAI {
     executeAction(entity, action, context) {
         if (!action) return;
         const { player, mapManager, onPlayerAttack, onMonsterAttacked } = context;
+
         switch (action.type) {
             case 'attack':
                 if (entity.attackCooldown === 0) {
@@ -37,8 +38,9 @@ export class MetaAIManager extends BaseMetaAI {
                     }
                 }
                 break;
-            case 'idle':
             default:
+                // 나머지 행동 유형은 기본 메서드에 위임한다
+                super.executeAction(entity, action, context);
                 break;
         }
     }
