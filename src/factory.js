@@ -71,6 +71,12 @@ export class CharacterFactory {
             properties,
         };
 
+        // Reduce vision range for all monsters and mercenaries
+        if (type === 'monster' || type === 'mercenary') {
+            const baseVision = finalConfig.stats.visionRange ?? 192 * 4;
+            finalConfig.stats.visionRange = Math.floor(baseVision / 3);
+        }
+
         // 4. 타입에 맞는 캐릭터 생성 및 반환
         switch (type) {
             case 'player':
