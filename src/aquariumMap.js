@@ -16,4 +16,10 @@ export class AquariumMapManager extends MapManager {
         // use the base maze generation but with a larger corridor width
         return super._generateMaze();
     }
+
+    // Aquarium floors focus on wide corridors for pathfinding tests, so skip
+    // placing rooms to create a pure maze layout.
+    _generateRooms(map) {
+        // no-op to keep corridors unobstructed
+    }
 }
