@@ -1,4 +1,5 @@
 import { MeleeAI, RangedAI, HealerAI, BardAI } from '../src/ai.js';
+import { SKILLS } from '../src/data/skills.js';
 import { describe, test, assert } from './helpers.js';
 
 describe('AI', () => {
@@ -164,21 +165,28 @@ test('HealerAI - attacks when no ally needs healing', () => {
     assert.strictEqual(action.type, 'attack');
 });
 
-test('BardAI - attacks when songs unavailable', () => {
-    const ai = new BardAI();
+test('BardAI - uses guardian hymn when available', () => {
+    const supportEngine = {
+        findBuffTarget(_self, allies, buff) {
+            return buff === 'shield' ? allies[1] : null;
+        }
+    };
+    const ai = new BardAI({ supportEngine });
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 0,
-        skills: ['guardian_hymn', 'courage_hymn'],
+        mp: 20,
+        skills: [SKILLS.guardian_hymn.id],
         skillCooldowns: {},
-        equipment: { weapon: { tags: ['song'] } },
-        properties: { mbti: 'ENFP' },
+        equipment: {},
+        properties: {},
         isFriendly: true, isPlayer: false
     };
-    const enemy = { x: 5, y: 0 };
-    const context = { player: {}, allies: [self], enemies: [enemy], mapManager: mapStub, eventManager: eventManagerStub };
+    const ally = { x: 5, y: 0 };
+    const context = { player: {}, allies: [self, ally], enemies: [], mapManager: mapStub };
     const action = ai.decideAction(self, context);
-    assert.strictEqual(action.type, 'attack');
+    assert.strictEqual(action.type, 'skill');
+    assert.strictEqual(action.target, ally);
+    assert.strictEqual(action.skillId, SKILLS.guardian_hymn.id);
 });
 
 test('HealerAI - T types target weakest enemy', () => {
@@ -196,20 +204,22 @@ test('HealerAI - T types target weakest enemy', () => {
     assert.strictEqual(action.target, e2);
 });
 
-test('BardAI - F types follow ally target', () => {
-    const ai = new BardAI();
+test('BardAI - attacks when songs unavailable', () => {
+    const ai = new BardAI({});
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, tileSize: 1,
-        mp: 0, skills: ['guardian_hymn'], skillCooldowns: {},
+        mp: 0,
+        skills: ['guardian_hymn'],
+        skillCooldowns: {},
         equipment: { weapon: { tags: ['song'] } },
-        properties: { mbti: 'FJ' }, isFriendly: true, isPlayer: false
+        properties: {},
+        isFriendly: true, isPlayer: false
     };
-    const enemy1 = { id: 1, x: 5, y: 0 };
-    const enemy2 = { id: 2, x: 6, y: 0 };
-    const ally = { currentTarget: enemy2 };
-    const ctx = { player: {}, allies: [self, ally], enemies: [enemy1, enemy2], mapManager: mapStub, eventManager: eventManagerStub };
+    const enemy = { x: 5, y: 0 };
+    const ctx = { player: {}, allies: [self], enemies: [enemy], mapManager: mapStub };
     const action = ai.decideAction(self, ctx);
-    assert.strictEqual(action.target, enemy2);
+    assert.strictEqual(action.type, 'attack');
+    assert.strictEqual(action.target, enemy);
 });
 
 });
