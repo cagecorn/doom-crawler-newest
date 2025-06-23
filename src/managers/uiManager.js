@@ -668,10 +668,7 @@ export class UIManager {
         const item = gameState.inventory[itemIndex];
         if (!item) return;
 
-        if (item.tags.includes('weapon') || item.tags.includes('armor') ||
-            item.type === 'weapon' || item.type === 'armor') {
-            this._showEquipTargetPanel(item, gameState);
-        } else if (item.baseId === 'potion' || item.name === 'potion') {
+        if (item.baseId === 'potion' || item.name === 'potion') {
             const player = gameState.player;
             player.hp = Math.min(player.maxHp, player.hp + 5);
             console.log(`포션을 사용했습니다! HP +5`);
@@ -687,6 +684,9 @@ export class UIManager {
                 gameState.inventory.splice(itemIndex, 1);
             }
             this.updateUI(gameState);
+        } else {
+            // 무기를 제외한 나머지 아이템도 장착 대상 선택 UI를 표시합니다.
+            this._showEquipTargetPanel(item, gameState);
         }
     }
 
