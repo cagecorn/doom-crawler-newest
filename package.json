@@ -6,5 +6,8 @@
   "scripts": {
     "test": "node run-tests.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0"
+  }
 }

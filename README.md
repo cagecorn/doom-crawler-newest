@@ -63,6 +63,22 @@
 For detailed gameplay instructions, see [GAMEPLAY_GUIDE.md](GAMEPLAY_GUIDE.md).
 
 
+## TensorFlow.js 연동
+`MbtiEngine`은 선택적으로 TensorFlow.js 모델을 로드하여 MBTI 특성 예측에 활용할 수 있습니다.  
+패키지는 `@tensorflow/tfjs`에 의존하므로, 프로젝트 루트에서 다음 명령으로 설치하세요:
+
+```bash
+npm install
+```
+
+모델을 로드하려면 다음과 같이 `MetaAIManager` 초기화 이후 `mbtiEngine.loadModel()`을 호출합니다:
+
+```javascript
+// example
+await metaAIManager.mbtiEngine.loadModel('models/mbti-model/model.json');
+```
+
+
 ## 결함 주입 테스트
 MBTI AI와 힐러 AI의 오류 처리 능력을 확인하는 시나리오가 `tests/faultInjection.test.js`에 있습니다. 버퍼/디버퍼 AI가 추가되면 동일한 파일에서 함께 관리합니다.
 이 테스트들은 매 패치마다 돌릴 필요는 없으며, 엠바고 테스트를 실행할 때 같이 수행하는 것을 권장합니다.
