@@ -951,7 +951,8 @@ export class Game {
         // AI가 성격 특성을 발동했을 때 텍스트 팝업으로 표시
         eventManager.subscribe('ai_mbti_trait_triggered', (data) => {
             if (this.vfxManager) {
-                this.vfxManager.addTextPopup(data.trait, data.entity);
+                const text = data.tfUsed ? `${data.trait}(tf)` : data.trait;
+                this.vfxManager.addTextPopup(text, data.entity);
             }
         });
 

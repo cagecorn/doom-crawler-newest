@@ -14,6 +14,7 @@ describe('MbtiEngine', () => {
         assert.ok(fired, 'Event did not fire');
         assert.strictEqual(fired.trait, 'J');
         assert.strictEqual(fired.entity, entity);
+        assert.strictEqual(fired.tfUsed, false);
     });
 
     test('cooldown prevents rapid fire', () => {
@@ -21,10 +22,12 @@ describe('MbtiEngine', () => {
         const engine = new MbtiEngine(eventManager);
         const entity = { properties: { mbti: 'ESTJ' } };
         let count = 0;
-        eventManager.subscribe('ai_mbti_trait_triggered', () => { count++; });
+        let flag = null;
+        eventManager.subscribe('ai_mbti_trait_triggered', data => { count++; flag = data.tfUsed; });
         const action = { type: 'move', target: {}, context: { allies: [] } };
         engine.process(entity, action);
         engine.process(entity, action); // cooldown should block this
         assert.strictEqual(count, 1);
+        assert.strictEqual(flag, false);
     });
 });
