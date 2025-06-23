@@ -63,6 +63,16 @@ body, html {
     display: none;
 }
 
+/* Unit detail panels */
+#character-sheet-panel,
+#mercenary-detail-panel {
+    top: 40%;
+    width: 640px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 /* 툴팁 (최상위) */
 .tooltip {
     position: fixed;
