@@ -284,6 +284,31 @@ export class VFXManager {
         this.textPopupEngine.add(text, target, options);
     }
 
+    addCinematicText(text, duration = 2000) {
+        const frames = Math.round(duration / 16.67);
+        const centerX = this.game.layerManager.layers.vfx.width / 2;
+        const centerY = this.game.layerManager.layers.vfx.height / 2;
+
+        const textEffect = {
+            text,
+            font: 'bold 72px Arial',
+            fillStyle: 'white',
+            strokeStyle: 'black',
+            lineWidth: 4,
+            x: centerX,
+            y: centerY,
+            vy: 0,
+            duration: frames,
+            life: frames,
+            isUI: true,
+            alignment: 'center',
+            alpha: 1.0,
+            fadeSpeed: 0.05
+        };
+
+        this.textPopupEngine.popups.push(textEffect);
+    }
+
     /**
      * 시전 이펙트: 지정 유닛 주변에서 파티클이 모여드는 애니메이션을 생성합니다.
      * 시전 속도가 빠를수록 파티클이 더 빠르게 모여듭니다.
