@@ -53,6 +53,11 @@ export class MetaAIManager extends BaseMetaAI {
             for (const member of membersSorted) {
                 if (member.hp <= 0 || member.possessedBy) continue;
 
+                if (!member.canAct) {
+                    if (typeof member.update === 'function') member.update(currentContext);
+                    continue;
+                }
+
                 if (typeof member.update === 'function') {
                     member.update(currentContext);
                 } else if (member.attackCooldown > 0) {
@@ -71,6 +76,10 @@ export class MetaAIManager extends BaseMetaAI {
                     if (overrideAI) {
                         const action = overrideAI.decideAction(member, currentContext);
                         this.executeAction(member, action, currentContext);
+                        if (action && action.type && action.type !== 'idle') {
+                            member.canAct = false;
+                            setTimeout(() => { member.canAct = true; }, 1000);
+                        }
                         continue;
                     }
                 }
@@ -85,6 +94,10 @@ export class MetaAIManager extends BaseMetaAI {
                 if (member.ai) {
                     const action = member.ai.decideAction(member, currentContext);
                     this.executeAction(member, action, currentContext);
+                    if (action && action.type && action.type !== 'idle') {
+                        member.canAct = false;
+                        setTimeout(() => { member.canAct = true; }, 1000);
+                    }
                 }
             }
         }
