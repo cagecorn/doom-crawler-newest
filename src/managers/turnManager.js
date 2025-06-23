@@ -56,33 +56,4 @@ export class TurnManager {
             }
         }
     }
-
-    playerAction(entity, action, game) {
-        if (!game?.metaAIManager) return;
-        const context = {
-            eventManager: game.eventManager,
-            player: game.gameState.player,
-            mapManager: game.mapManager,
-            monsterManager: game.monsterManager,
-            mercenaryManager: game.mercenaryManager,
-            pathfindingManager: game.pathfindingManager,
-            motionManager: game.motionManager,
-            movementManager: game.movementManager,
-            projectileManager: game.projectileManager,
-            itemManager: game.itemManager,
-            equipmentManager: game.equipmentManager,
-            vfxManager: game.vfxManager,
-            knockbackEngine: game.knockbackEngine,
-            supportEngine: game.supportEngine,
-            assets: game.loader.assets,
-            metaAIManager: game.metaAIManager,
-            microItemAIManager: game.microItemAIManager,
-            playerGroup: game.playerGroup,
-            monsterGroup: game.monsterGroup,
-            speechBubbleManager: game.speechBubbleManager,
-            enemies: game.metaAIManager.groups['dungeon_monsters']?.members || [],
-            game
-        };
-        game.metaAIManager.executeAction(entity, action, context);
-    }
 }

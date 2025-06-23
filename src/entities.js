@@ -30,8 +30,6 @@ class Entity {
         this.effects = []; // 적용중인 효과 목록 배열 추가
         this.unitType = 'generic'; // 기본 유닛 타입을 '일반'으로 설정
         this.possessedBy = null; // 빙의 상태를 저장할 속성
-        this.target = null;
-        this.canAct = true; // 행동 가능 여부
 
         // --- AI 상태 저장용 프로퍼티 ---
         this.aiState = null;      // 현재 AI의 상태 (예: 'retreating')
@@ -222,22 +220,6 @@ export class Player extends Entity {
         this.fullness = this.maxFullness;
         this.consumables = [];
         this.consumableCapacity = 4;
-    }
-
-    takeTurn(action, game) {
-        if (!this.canAct) {
-            console.log('Player cannot act yet.');
-            return;
-        }
-
-        this.canAct = false;
-        setTimeout(() => {
-            this.canAct = true;
-        }, 500);
-
-        if (game?.turnManager?.playerAction) {
-            game.turnManager.playerAction(this, action, game);
-        }
     }
 
     render(ctx) {
