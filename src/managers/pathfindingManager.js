@@ -1,4 +1,5 @@
 // src/pathfindingManager.js
+import * as tf from '@tensorflow/tfjs';
 
 export class PathfindingManager {
     constructor(mapManager) {
@@ -119,5 +120,19 @@ export class PathfindingManager {
         }
 
         return null;
+    }
+
+    async findPathTensor(startX, startY, endX, endY) {
+        try {
+            if (!this.model) {
+                this.model = await tf.loadLayersModel('./assets/pathfinding-model.json');
+            }
+            const input = tf.tensor2d([[startX, startY, endX, endY]]);
+            const output = this.model.predict(input).arraySync()[0];
+            return output.map(([x, y]) => ({ x, y }));
+        } catch (e) {
+            console.warn('Tensor pathfinding failed, falling back to BFS', e);
+            return this.findPath(startX, startY, endX, endY);
+        }
     }
 }
