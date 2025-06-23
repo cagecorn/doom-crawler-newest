@@ -1,6 +1,7 @@
 // src/fogManager.js
 
 import { hasLineOfSight } from '../utils/geometry.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export const FOG_STATE = { UNSEEN: 0, SEEN: 1, VISIBLE: 2 };
 
@@ -12,8 +13,20 @@ export class FogManager {
         this.fogMap = Array.from({ length: height }, () => Array(width).fill(FOG_STATE.UNSEEN));
     }
 
+    clearAllFog() {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.fogMap[y][x] = FOG_STATE.VISIBLE;
+            }
+        }
+    }
+
     // 플레이어 시야에 따라 안개 업데이트 (구멍만 파기)
     update(player, mapManager) {
+        if (!SETTINGS.ENABLE_FOG_OF_WAR) {
+            this.clearAllFog();
+            return;
+        }
         // 1. 모든 '현재 보이는' 타일을 '과거에 본' 상태로 변경
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -45,6 +58,9 @@ export class FogManager {
 
     // 포그 오브 워를 그리는 함수
     render(ctx, tileSize) {
+        if (!SETTINGS.ENABLE_FOG_OF_WAR) {
+            return;
+        }
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 switch (this.fogMap[y][x]) {
