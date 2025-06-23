@@ -39,17 +39,6 @@ import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
 
-const MBTI_THOUGHTS = {
-    E: ["함께 공격!", "내가 앞장서지!", "혼자가 아니야!"],
-    I: ["조용히 접근...", "혼자서도 충분해.", "방해하지 마라."],
-    S: ["눈 앞의 현실에 집중.", "이게 최선이야.", "확실한 것부터!"],
-    N: ["다른 가능성이...?", "뭔가 느껴진다!", "예상 밖의 한 수!"],
-    T: ["계산 완료.", "가장 효율적인 방법.", "약점을 노린다."],
-    F: ["동료를 위하여!", "위험해! 도와줘야 해.", "감히 내 동료를!"],
-    J: ["계획대로.", "전략이 전부다.", "질서정연하게."],
-    P: ["일단 부딪혀보자!", "상황은 변하는 법.", "이게 더 재밌겠군!"]
-};
-
 export class Game {
     constructor() {
         this.loader = new AssetLoader();
@@ -965,15 +954,7 @@ export class Game {
         // AI가 성격 특성을 발동했을 때 텍스트 팝업으로 표시
         eventManager.subscribe('ai_mbti_trait_triggered', (data) => {
             if (this.vfxManager) {
-                const trait = data.trait;
-                const options = MBTI_THOUGHTS[trait];
-                let thoughtText = trait;
-
-                if (options) {
-                    thoughtText = options[Math.floor(Math.random() * options.length)];
-                }
-
-                const text = data.tfUsed ? `${thoughtText}(tf)` : thoughtText;
+                const text = data.tfUsed ? `${data.trait}(tf)` : data.trait;
                 this.vfxManager.addTextPopup(text, data.entity);
             }
         });
