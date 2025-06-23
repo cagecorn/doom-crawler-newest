@@ -36,7 +36,7 @@ export class AIArchetype {
 
                 // 동료와 너무 가까우면 살짝 밀어내기
                 for (const ally of allies) {
-                    if (ally === self) continue;
+                    if (ally === self || ally.isPlayer) continue;
                     const dx = x - ally.x;
                     const dy = y - ally.y;
                     const d = Math.hypot(dx, dy);

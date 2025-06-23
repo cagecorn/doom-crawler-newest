@@ -247,6 +247,9 @@ export class Mercenary extends Entity {
         this.consumables = [];
         this.consumableCapacity = 4;
 
+        // 초기 역할 AI 보존용
+        this.defaultRoleAI = null;
+
 
         // 플레이어 주변을 배회하기 위한 프로퍼티
         // 약간의 랜덤성을 부여해 모든 용병이 동시에 움직이지 않도록 함
@@ -265,6 +268,12 @@ export class Mercenary extends Entity {
         item.quantity = 1;
         this.consumables.push(item);
         return true;
+    }
+
+    resetRoleAI() {
+        if (this.defaultRoleAI) {
+            this.roleAI = this.defaultRoleAI;
+        }
     }
 }
 
