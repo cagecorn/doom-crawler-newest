@@ -78,6 +78,17 @@ npm install
 await metaAIManager.mbtiEngine.loadModel('models/mbti-model/model.json');
 ```
 
+데이터 수집을 위해 Node 환경에서 실행할 경우 `DataRecorder`를 활성화할 수 있습니다.
+`EventManager` 인스턴스 후 다음과 같이 초기화하세요:
+
+```javascript
+import { DataRecorder } from './src/managers/dataRecorder.js';
+const recorder = new DataRecorder(eventManager, './logs/sim.csv', 'csv');
+```
+
+기본 포맷은 JSONL이며, 두 번째 인수로 경로와 세 번째 인수로 `csv` 혹은 `json` 형식을
+선택할 수 있습니다.
+
 
 ## 결함 주입 테스트
 MBTI AI와 힐러 AI의 오류 처리 능력을 확인하는 시나리오가 `tests/faultInjection.test.js`에 있습니다. 버퍼/디버퍼 AI가 추가되면 동일한 파일에서 함께 관리합니다.
