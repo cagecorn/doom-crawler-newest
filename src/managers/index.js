@@ -27,6 +27,12 @@ import { SpeechBubbleManager } from './speechBubbleManager.js';
 import { AuraManager } from './AuraManager.js';
 import { PossessionAIManager } from './possessionAIManager.js';
 import { CombatDecisionEngine } from './ai/CombatDecisionEngine.js';
+// DataRecorder is only needed in a Node.js environment so we lazy-load it
+let DataRecorder = null;
+if (typeof process !== 'undefined' && process.versions?.node) {
+    const mod = await import('./dataRecorder.js');
+    DataRecorder = mod.DataRecorder;
+}
 // 파일 기반 로거는 Node 환경 전용이라 기본 묶음에서 제외한다
 // import { FileLogManager } from './fileLogManager.js';
 // ... (나중에 다른 매니저가 생기면 여기에 추가)
@@ -58,4 +64,5 @@ export {
     SynergyManager,
     SpeechBubbleManager,
     CombatDecisionEngine,
+    DataRecorder,
 };
