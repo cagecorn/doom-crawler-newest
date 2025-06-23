@@ -794,25 +794,8 @@ export class BardAI extends AIArchetype {
     decideAction(self, context) {
         const { player, allies, enemies, mapManager } = context;
         const mbti = self.properties?.mbti || '';
-
-        const guardianTarget = this.engine?.findBuffTarget(self, allies, 'shield');
-        const courageTarget = this.engine?.findBuffTarget(self, allies, 'bonus_damage');
-
-        if (
-            guardianTarget &&
-            self.skillCooldowns[SKILLS.guardian_hymn.id] <= 0 &&
-            self.mp >= SKILLS.guardian_hymn.manaCost
-        ) {
-            return { type: 'skill', target: guardianTarget, skillId: SKILLS.guardian_hymn.id };
-        }
-
-        if (
-            courageTarget &&
-            self.skillCooldowns[SKILLS.courage_hymn.id] <= 0 &&
-            self.mp >= SKILLS.courage_hymn.manaCost
-        ) {
-            return { type: 'skill', target: courageTarget, skillId: SKILLS.courage_hymn.id };
-        }
+        // 더 이상 음유시인은 스킬을 사용하지 않는다. 버프 대상을 찾거나
+        // 마나 및 쿨다운을 확인하는 로직을 모두 제거하여 기본 공격과 이동만 수행한다.
 
         const visible = this._filterVisibleEnemies(self, enemies);
         if (visible.length > 0) {
@@ -943,7 +926,9 @@ export class WarriorAI extends AIArchetype {
                 const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
                 const range = chargeSkill.range ?? chargeSkill.chargeRange;
                 if (dist > self.attackRange && dist <= range) {
-                    return { type: 'skill', target: nearest, skillId: chargeSkill.id };
+                    // 기존에는 일반 스킬 사용으로 처리했으나, 전사의 '차지 어택'은
+                    // 돌진 스킬처럼 적에게 순식간에 접근해야 한다.
+                    return { type: 'charge_attack', target: nearest, skill: chargeSkill };
                 }
             }
         }
