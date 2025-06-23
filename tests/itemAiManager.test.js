@@ -24,4 +24,20 @@ describe('ItemAI', () => {
     assert.ok(merc.hp > merc.maxHp * 0.4, 'hp should increase');
     assert.strictEqual(merc.consumables.length, 0, 'potion consumed');
   });
+
+  test('picks up and equips nearby weapon', () => {
+    const factory = new CharacterFactory(assets);
+    const itemFactory = new ItemFactory(assets);
+    const eventManager = new EventManager();
+    const projectileManager = new ProjectileManager(eventManager, assets);
+    const itemAI = new ItemAIManager(eventManager, projectileManager, null, { addEffect(){} });
+    const merc = factory.create('mercenary', { x:0, y:0, tileSize:1, groupId:'g', jobId:'warrior' });
+    merc.equipment.weapon = null;
+    const sword = itemFactory.create('short_sword', 0,0,1);
+    const itemManager = { items:[sword], removeItem(i){ this.items=this.items.filter(it=>it!==i); } };
+    const context = { player:merc, mercenaryManager:{ mercenaries:[merc] }, monsterManager:{ monsters:[] }, itemManager, equipmentManager:{ equip(e,i){ e.equipment.weapon=i; } } };
+    itemAI.update(context);
+    assert.strictEqual(merc.equipment.weapon, sword, 'weapon equipped');
+    assert.strictEqual(itemManager.items.length, 0, 'item removed from ground');
+  });
 });
