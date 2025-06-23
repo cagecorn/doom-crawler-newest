@@ -130,7 +130,8 @@ export class Game {
                 name !== 'ItemAIManager' &&
                 name !== 'EffectManager' &&
                 name !== 'SkillManager' &&
-                name !== 'ProjectileManager'
+                name !== 'ProjectileManager' &&
+                name !== 'DataRecorder'
         );
         for (const managerName of otherManagerNames) {
             this.managers[managerName] = new Managers[managerName](this.eventManager, assets, this.factory);
