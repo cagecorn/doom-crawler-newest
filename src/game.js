@@ -770,25 +770,29 @@ export class Game {
         });
 
         eventManager.subscribe('weapon_disarmed', (data) => {
-            const context = {
-                eventManager: this.eventManager,
-                itemManager: this.itemManager,
-                equipmentManager: this.equipmentManager,
-                vfxManager: this.vfxManager,
-                mapManager: this.mapManager,
-                ...data
-            };
-            disarmWorkflow(context);
+            if (data.weapon) {
+                const context = {
+                    eventManager: this.eventManager,
+                    itemManager: this.itemManager,
+                    equipmentManager: this.equipmentManager,
+                    vfxManager: this.vfxManager,
+                    mapManager: this.mapManager,
+                    ...data
+                };
+                disarmWorkflow(context);
+            }
         });
 
         eventManager.subscribe('armor_broken', (data) => {
-            const context = {
-                eventManager: this.eventManager,
-                equipmentManager: this.equipmentManager,
-                vfxManager: this.vfxManager,
-                ...data
-            };
-            armorBreakWorkflow(context);
+            if (data.armor) {
+                const context = {
+                    eventManager: this.eventManager,
+                    equipmentManager: this.equipmentManager,
+                    vfxManager: this.vfxManager,
+                    ...data
+                };
+                armorBreakWorkflow(context);
+            }
         });
 
         eventManager.subscribe('skill_used', (data) => {
@@ -1244,23 +1248,26 @@ export class Game {
         const camera = gameState.camera;
         let zoom = gameState.zoomLevel;
 
-        let cameraTarget = gameState.player;
-        if (this.cinematicManager.isPlaying && this.cinematicManager.targetEntity) {
-            cameraTarget = this.cinematicManager.targetEntity;
+        if (this.cinematicManager.isPlaying) {
+            const cameraTarget = this.cinematicManager.targetEntity;
+            if (cameraTarget) {
+                const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
+                const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
+                camera.x += (targetCameraX - camera.x) * 0.08;
+                camera.y += (targetCameraY - camera.y) * 0.08;
+            }
+            const targetZoom = this.cinematicManager.targetZoom;
+            zoom += (targetZoom - zoom) * 0.08;
+        } else {
+            const cameraTarget = gameState.player;
+            const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
+            const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
+            const mapPixelWidth = mapManager.width * mapManager.tileSize;
+            const mapPixelHeight = mapManager.height * mapManager.tileSize;
+            camera.x = Math.max(0, Math.min(targetCameraX, mapPixelWidth - canvas.width / zoom));
+            camera.y = Math.max(0, Math.min(targetCameraY, mapPixelHeight - canvas.height / zoom));
         }
-
-        const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
-        const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
-        const mapPixelWidth = mapManager.width * mapManager.tileSize;
-        const mapPixelHeight = mapManager.height * mapManager.tileSize;
-        camera.x = Math.max(0, Math.min(targetCameraX, mapPixelWidth - canvas.width / zoom));
-        camera.y = Math.max(0, Math.min(targetCameraY, mapPixelHeight - canvas.height / zoom));
-
-        let targetZoom = this.cinematicManager.isPlaying
-            ? this.cinematicManager.targetZoom
-            : (this.cinematicManager.originalZoom || SETTINGS.DEFAULT_ZOOM);
-        this.gameState.zoomLevel += (targetZoom - this.gameState.zoomLevel) * 0.08;
-        zoom = this.gameState.zoomLevel;
+        gameState.zoomLevel = zoom;
 
         for (const key in layerManager.contexts) {
             const ctx = layerManager.contexts[key];
