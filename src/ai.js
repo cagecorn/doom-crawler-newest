@@ -1023,108 +1023,43 @@ export class CharmAI extends AIArchetype {
 }
 
 export class WarriorAI extends AIArchetype {
-    constructor(game = {}) {
-        super();
-        this.game = game || {};
-        this.microItemAIManager = this.game.microItemAIManager;
-    }
-
     decideAction(self, context) {
-        const { player, enemies, mapManager } = context;
-
-        // 우선순위 1: 차지 어택 (직업 스킬)
+        const { enemies } = context;
         const chargeSkill = SKILLS.charge_attack;
+
         if ((self.skillCooldowns[chargeSkill.id] || 0) <= 0 && self.mp >= chargeSkill.manaCost) {
-            const nearestEnemy = this._findNearestEnemy(self, this._filterVisibleEnemies(self, enemies));
-            if (nearestEnemy) {
+            const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+            if (visibleEnemies.length > 0) {
+                const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
                 const distance = Math.hypot(nearestEnemy.x - self.x, nearestEnemy.y - self.y);
-                if (distance > self.attackRange && distance <= chargeSkill.range) {
-                    return { type: 'skill', target: nearestEnemy, skillId: chargeSkill.id };
+                const range = chargeSkill.range ?? chargeSkill.chargeRange;
+                if (distance > self.attackRange && distance <= range) {
+                    return { type: 'charge_attack', target: nearestEnemy, skill: chargeSkill };
                 }
             }
         }
 
-        // 우선순위 2: 무기 숙련도 스킬
-        const weapon = self.equipment?.weapon;
-        if (weapon && this.microItemAIManager) {
-            const weaponAI = this.microItemAIManager.getWeaponAI(weapon);
-            if (weaponAI) {
-                const weaponAction = weaponAI.decideAction(self, weapon, context);
-                if (weaponAction?.type !== 'idle') return weaponAction;
-            }
-        }
-
-        // 우선순위 3: 기본 근접 전투
-        const visibleEnemies = this._filterVisibleEnemies(self, enemies);
-        if (visibleEnemies.length > 0) {
-            const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
-            if (nearestEnemy) {
-                if (this.isInAttackRange(self, nearestEnemy)) return { type: 'attack', target: nearestEnemy };
-                return { type: 'move', target: nearestEnemy };
-            }
-        }
-
-        // 우선순위 4: 플레이어 따라다니기
-        const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
-        if (playerDistance > self.tileSize * 3) {
-            return { type: 'move', target: player };
-        }
-
+        // 스킬을 사용하지 않으면 다음 AI에게 결정을 넘긴다
         return { type: 'idle' };
     }
 }
 
 export class ArcherAI extends AIArchetype {
-    constructor(game = {}) {
-        super();
-        this.game = game || {};
-        this.microItemAIManager = this.game.microItemAIManager;
-    }
-
     decideAction(self, context) {
-        const { player, enemies, mapManager } = context;
+        const { enemies } = context;
+        const doubleStrike = SKILLS.double_strike;
 
-        // 우선순위 1: 더블 스트라이크 (직업 스킬)
-        const doubleStrikeSkill = SKILLS.double_strike;
-        if ((self.skillCooldowns[doubleStrikeSkill.id] || 0) <= 0 && self.mp >= doubleStrikeSkill.manaCost) {
-            const nearestEnemy = this._findNearestEnemy(self, this._filterVisibleEnemies(self, enemies));
-            if (nearestEnemy && this.isInAttackRange(self, nearestEnemy)) {
-                return { type: 'skill', target: nearestEnemy, skillId: doubleStrikeSkill.id };
-            }
-        }
-
-        // 우선순위 2: 무기 숙련도 스킬
-        const weapon = self.equipment?.weapon;
-        if (weapon && this.microItemAIManager) {
-            const weaponAI = this.microItemAIManager.getWeaponAI(weapon);
-            if (weaponAI) {
-                const weaponAction = weaponAI.decideAction(self, weapon, context);
-                if (weaponAction?.type !== 'idle') return weaponAction;
-            }
-        }
-
-        // 우선순위 3: 기본 원거리 전투 (카이팅)
-        const visibleEnemies = this._filterVisibleEnemies(self, enemies);
-        if (visibleEnemies.length > 0) {
-            const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
-            if (nearestEnemy) {
-                const distance = Math.hypot(nearestEnemy.x - self.x, nearestEnemy.y - self.y);
-                if (distance < self.attackRange * 0.5) {
-                    return { type: 'move', target: this._getFleePosition(self, nearestEnemy, mapManager) };
-                } else if (distance <= self.attackRange) {
-                    return { type: 'attack', target: nearestEnemy };
-                } else {
-                    return { type: 'move', target: nearestEnemy };
+        if ((self.skillCooldowns[doubleStrike.id] || 0) <= 0 && self.mp >= doubleStrike.manaCost) {
+            const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+            if (visibleEnemies.length > 0) {
+                const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
+                if (this.isInAttackRange(self, nearestEnemy)) {
+                    return { type: 'skill', target: nearestEnemy, skillId: doubleStrike.id };
                 }
             }
         }
 
-        // 우선순위 4: 플레이어 따라다니기
-        const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
-        if (playerDistance > self.tileSize * 3) {
-            return { type: 'move', target: player };
-        }
-
+        // 스킬이 없거나 사거리가 맞지 않으면 기본 AI가 처리
         return { type: 'idle' };
     }
 }

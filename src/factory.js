@@ -97,26 +97,21 @@ export class CharacterFactory {
 
                 if (config.jobId === 'archer') {
                     merc.skills.push(SKILLS.double_strike.id);
-                    // ===== '만능 AI' 패턴으로 통일 =====
-                    merc.roleAI = new ArcherAI(this.game);
-                    merc.fallbackAI = null; // 기본 AI 비활성화
-                    const weapon = this.itemFactory.create('long_bow', 0, 0, tileSize);
-                    if (weapon) {
-                        merc.equipment.weapon = weapon;
+                    const bow = this.itemFactory.create('long_bow', 0, 0, tileSize);
+                    if (bow) {
+                        merc.equipment.weapon = bow;
                         if (merc.stats) merc.stats.updateEquipmentStats();
                     }
-                    // ===================================
+                    merc.fallbackAI = new RangedAI();
+                    merc.roleAI = new ArcherAI(this.game);
                 } else if (config.jobId === 'warrior') {
                     merc.skills.push(SKILLS.charge_attack.id);
-                    // ===== '만능 AI' 패턴으로 통일 =====
                     merc.roleAI = new WarriorAI(this.game);
-                    merc.fallbackAI = null; // 기본 AI 비활성화
                     const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
                     if (weapon) {
                         merc.equipment.weapon = weapon;
                         if (merc.stats) merc.stats.updateEquipmentStats();
                     }
-                    // ===================================
                 } else if (config.jobId === 'healer') {
                     merc.skills.push(SKILLS.heal.id);
                     merc.skills.push(SKILLS.purify.id);
