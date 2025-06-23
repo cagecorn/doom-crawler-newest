@@ -56,6 +56,22 @@ export class AIArchetype {
         return (enemies || []).filter(e =>
             Math.hypot(e.x - self.x, e.y - self.y) < range);
     }
+
+    // 사용 가능한 스킬을 찾아 반환한다
+    _findReadySkill(self, filterFn = () => true) {
+        if (!Array.isArray(self.skills)) return null;
+        for (const id of self.skills) {
+            const skill = SKILLS[id];
+            if (!skill || !filterFn(skill)) continue;
+            if (
+                self.mp >= skill.manaCost &&
+                (self.skillCooldowns[id] || 0) <= 0
+            ) {
+                return { id, skill };
+            }
+        }
+        return null;
+    }
 }
 
 export class CompositeAI extends AIArchetype {
@@ -141,9 +157,8 @@ export class MeleeAI extends AIArchetype {
                 }
             }
             // 돌진 스킬 확인 및 P 성향 표시
-            const chargeSkill = Array.isArray(self.skills)
-                ? self.skills.map(id => SKILLS[id]).find(s => s && s.tags && s.tags.includes('charge'))
-                : null;
+            const chargeCandidate = this._findReadySkill(self, s => s.tags?.includes('charge'));
+            const chargeSkill = chargeCandidate?.skill;
             if (mbti.includes('P')) {
                 // P 성향은 돌진 성향을 강화합니다
             }
@@ -153,27 +168,21 @@ export class MeleeAI extends AIArchetype {
                 chargeSkill &&
                 minDistance > self.attackRange &&
                 minDistance <= chargeSkill.chargeRange &&
-                self.mp >= chargeSkill.manaCost &&
-                (self.skillCooldowns[chargeSkill.id] || 0) <= 0
+                chargeCandidate
             ) {
                 return { type: 'charge_attack', target: nearestTarget, skill: chargeSkill };
             }
 
             if (hasLOS && minDistance < self.attackRange) {
                 // 사용할 수 있는 스킬이 있다면 스킬 사용
-                const skillId = self.skills && self.skills[0];
-                const skill = SKILLS[skillId];
-                if (
-                    skill &&
-                    self.mp >= skill.manaCost &&
-                    (self.skillCooldowns[skillId] || 0) <= 0
-                ) {
+                const meleeSkill = this._findReadySkill(self, s => s.tags?.includes('melee') && !s.tags?.includes('charge'));
+                if (meleeSkill) {
                     if (mbti.includes('S')) {
                         // 감각형은 스킬 사용을 선호
                     } else if (mbti.includes('N') && self.hp / self.maxHp < 0.6) {
                         // 직관형은 체력이 낮을 때 스킬 사용
                     }
-                    return { type: 'skill', target: nearestTarget, skillId };
+                    return { type: 'skill', target: nearestTarget, skillId: meleeSkill.id };
                 }
 
                 // 공격 범위 안에 있으면 기본 공격
@@ -438,14 +447,9 @@ export class RangedAI extends AIArchetype {
                         // 위기 상황에서 스킬 사용
                     }
 
-                    const skillId = self.skills && self.skills[0];
-                    const skill = SKILLS[skillId];
-                    if (
-                        skill &&
-                        self.mp >= skill.manaCost &&
-                        (self.skillCooldowns[skillId] || 0) <= 0
-                    ) {
-                        return { type: 'skill', target: nearestTarget, skillId };
+                    const rangedSkill = this._findReadySkill(self, s => s.tags?.includes('ranged'));
+                    if (rangedSkill) {
+                        return { type: 'skill', target: nearestTarget, skillId: rangedSkill.id };
                     }
                     return { type: 'attack', target: nearestTarget };
                 }
