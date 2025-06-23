@@ -37,7 +37,6 @@ import { Ghost } from './entities.js';
 import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.js';
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
-import DataRecorder from './managers/dataRecorder.js';
 
 export class Game {
     constructor() {
@@ -101,7 +100,7 @@ export class Game {
 
         // === 1. 모든 매니저 및 시스템 생성 ===
         this.eventManager = new EventManager();
-        this.inputHandler = new InputHandler(this.eventManager, this);
+        this.inputHandler = new InputHandler(this.eventManager);
         this.combatLogManager = new CombatLogManager(this.eventManager);
         this.systemLogManager = new SystemLogManager(this.eventManager);
         this.tagManager = new TagManager();
@@ -195,8 +194,6 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.metaAIManager = new MetaAIManager(this.eventManager);
-        this.dataRecorder = new DataRecorder(this);
-        this.dataRecorder.init();
         this.possessionAIManager = new PossessionAIManager(this.eventManager);
         this.itemFactory.emblems = EMBLEMS;
 

@@ -56,7 +56,7 @@ export class MbtiEngine {
         this.cooldownCounter = this.cooldown;
     }
 
-    buildInput(entity, action, game) {
+    _buildInput(entity, action, game) {
         // 1. 현재 체력 비율 계산
         const healthPercentage = entity.hp / entity.maxHp;
 
@@ -136,8 +136,8 @@ export class MbtiEngine {
 
         if (this.tf && this.model) {
 
-            // buildInput에 game 객체를 전달합니다.
-            const tensor = this.buildInput(entity, action, game);
+            // _buildInput에 game 객체를 전달합니다.
+            const tensor = this._buildInput(entity, action, game);
             const trait = this._predictTrait(tensor);
 
             if (trait) {
