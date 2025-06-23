@@ -126,12 +126,25 @@ test('차지 어택과 포션 사용 시나리오', () => {
     assert.ok(usedPurify || player.effects.some(e => e.id === 'poison'), 'Healer may skip purify based on MBTI');
 });
 
- test('TensorFlow simple inference', () => {
+test('TensorFlow simple inference', () => {
+    const model = tf.sequential();
+    model.add(tf.layers.dense({ units: 1, inputShape: [2], useBias: false }));
+    model.setWeights([tf.tensor2d([[1],[1]])]);
+    const output = model.predict(tf.tensor2d([[2, 3]])).dataSync()[0];
+    assert.strictEqual(output, 5, 'TensorFlow model should compute sum');
+});
+
+ test('Autoencoder reconstruction', () => {
+     const input = tf.tensor2d([[0.1, 0.2, 0.3]]);
+     const encoder = tf.layers.dense({ units: 3, inputShape: [3], useBias: false });
+     const decoder = tf.layers.dense({ units: 3, useBias: false });
      const model = tf.sequential();
-     model.add(tf.layers.dense({ units: 1, inputShape: [2], useBias: false }));
-     model.setWeights([tf.tensor2d([[1],[1]])]);
-     const output = model.predict(tf.tensor2d([[2, 3]])).dataSync()[0];
-     assert.strictEqual(output, 5, 'TensorFlow model should compute sum');
+     model.add(encoder);
+     model.add(decoder);
+     encoder.setWeights([tf.eye(3)]);
+     decoder.setWeights([tf.eye(3)]);
+     const output = model.predict(input).arraySync()[0];
+     assert.ok(Math.abs(output[0] - 0.1) < 1e-6, 'Autoencoder should reconstruct');
  });
 
 

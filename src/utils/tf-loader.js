@@ -21,3 +21,17 @@ export async function loadTf() {
 
     return loadTf.tfPromise;
 }
+
+export async function loadCocoSsd() {
+    if (!loadCocoSsd.promise) {
+        loadCocoSsd.promise = import('@tensorflow-models/coco-ssd');
+    }
+    return loadCocoSsd.promise;
+}
+
+export async function loadKnnClassifier() {
+    if (!loadKnnClassifier.promise) {
+        loadKnnClassifier.promise = import('@tensorflow-models/knn-classifier');
+    }
+    return loadKnnClassifier.promise;
+}
