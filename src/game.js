@@ -1315,6 +1315,7 @@ export class Game {
         this.vfxManager.render(contexts.vfx);
         this.speechBubbleManager.render(contexts.vfx);
         this.effectIconManager.render(contexts.vfx, [gameState.player, ...monsterManager.monsters, ...mercenaryManager.mercenaries, ...this.petManager.pets], EFFECTS);
+        this.cinematicManager.render(contexts.vfx);
 
         // weatherManager.render(contexts.weather); // (미래 구멍)
 
