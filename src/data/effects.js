@@ -134,6 +134,14 @@ export const EFFECTS = {
         tags: ['debuff', 'slow'],
     },
 
+    haste: {
+        name: '신속',
+        type: 'buff',
+        duration: 300,
+        stats: { movementSpeed: 1 },
+        tags: ['buff', 'speed_up'],
+    },
+
     charging_shot_effect: {
         name: '충전된 사격',
         type: 'buff',

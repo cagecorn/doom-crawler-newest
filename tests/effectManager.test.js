@@ -57,4 +57,18 @@ test('동결 이동 속도 감소', () => {
     assert.strictEqual(stats.get('movementSpeed'), base);
 });
 
+test('신속 이동 속도 증가', () => {
+    const eventManager = new EventManager();
+    const effectManager = new EffectManager(eventManager);
+    const stats = new StatManager({}, { movement: 4 });
+    const target = { effects: [], stats, shield: 0, damageBonus: 0, takeDamage: () => {} };
+    const base = stats.get('movementSpeed');
+    effectManager.addEffect(target, 'haste');
+    stats.recalculate();
+    assert.strictEqual(stats.get('movementSpeed'), base + 1);
+    effectManager.removeEffect(target, target.effects[0]);
+    stats.recalculate();
+    assert.strictEqual(stats.get('movementSpeed'), base);
+});
+
 });

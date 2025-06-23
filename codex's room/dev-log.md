@@ -60,3 +60,8 @@
 - 알파벳 상태 효과 8종을 `effects.js`에 추가.
 - `StatManager`가 상태 효과를 감지해 스탯 보너스를 적용하도록 수정.
 - 새 테스트 `alphabetState.test.js`로 이동 속도 증가를 확인.
+
+## 세션 14
+- 이동 속도 증가 버프 `haste` 효과 및 스킬 추가.
+- 스킬 목록 문서에 `haste` 항목을 기록.
+- `effectManager.test.js`에 신속 효과 테스트를 작성.
