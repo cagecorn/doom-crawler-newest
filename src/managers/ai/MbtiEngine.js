@@ -1,4 +1,4 @@
-import { loadTf, loadCocoSsd, loadKnnClassifier } from '../../utils/tf-loader.js';
+import tfLoader from '../../utils/tf-loader.js';
 
 export class MbtiEngine {
     constructor(eventManager, options = {}) {
@@ -13,14 +13,12 @@ export class MbtiEngine {
         this.tf = null;
         this.coco = null;
         this.knn = null;
-        loadTf().then(tf => { this.tf = tf; }).catch(err => {
-            console.warn('[MbtiEngine] Failed to load TensorFlow.js:', err);
-        });
-        loadCocoSsd().then(mod => { this.coco = mod; }).catch(err => {
-            console.warn('[MbtiEngine] Failed to load coco-ssd:', err);
-        });
-        loadKnnClassifier().then(mod => { this.knn = mod; }).catch(err => {
-            console.warn('[MbtiEngine] Failed to load knn-classifier:', err);
+        tfLoader.init().then(() => {
+            this.tf = tfLoader.getTf();
+            this.coco = tfLoader.cocoSsd;
+            this.knn = tfLoader.knnClassifier;
+        }).catch(err => {
+            console.warn('[MbtiEngine] Failed to initialize TensorFlow libraries:', err);
         });
 
         if (options.model) {
@@ -36,7 +34,8 @@ export class MbtiEngine {
     }
 
     async loadModel(url) {
-        const tf = this.tf || await loadTf();
+        await tfLoader.init();
+        const tf = this.tf || tfLoader.getTf();
         this.model = await tf.loadLayersModel(url);
         this.modelLoaded = true;
         console.log(`[MbtiEngine] Model loaded from ${url}`);
