@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs';
+import { loadTf } from '../../utils/tf-loader.js';
 
 export class MbtiEngine {
     constructor(eventManager, options = {}) {
@@ -10,6 +10,10 @@ export class MbtiEngine {
 
         this.model = null;
         this.modelLoaded = false;
+        this.tf = null;
+        loadTf().then(tf => { this.tf = tf; }).catch(err => {
+            console.warn('[MbtiEngine] Failed to load TensorFlow.js:', err);
+        });
 
         if (options.model) {
             this.model = options.model;
@@ -24,6 +28,7 @@ export class MbtiEngine {
     }
 
     async loadModel(url) {
+        const tf = this.tf || await loadTf();
         this.model = await tf.loadLayersModel(url);
         this.modelLoaded = true;
         console.log(`[MbtiEngine] Model loaded from ${url}`);
@@ -39,7 +44,8 @@ export class MbtiEngine {
     }
 
     _predictTrait(entity, action) {
-        if (!this.modelLoaded) return null;
+        const tf = this.tf;
+        if (!tf || !this.modelLoaded) return null;
         const tensor = tf.tensor2d([this._buildInput(entity, action)]);
         const prediction = this.model.predict(tensor);
         const traitIndex = prediction.argMax(-1).dataSync()[0];
