@@ -604,8 +604,8 @@ export class Game {
 
         this.setupEventListeners(assets, canvas);
 
-        const gameLoop = new GameLoop(this.update, this.render);
-        gameLoop.start();
+        this.gameLoop = new GameLoop(this.update, this.render);
+        this.gameLoop.start();
     }
 
     setupEventListeners(assets, canvas) {
