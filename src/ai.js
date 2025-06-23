@@ -32,6 +32,8 @@ export class AIArchetype {
                 let x = player.x + Math.cos(angle) * dist;
                 let y = player.y + Math.sin(angle) * dist;
 
+                ({ x, y } = this._applyMbtiInfluence(self, { x, y }, allies, base));
+
                 // 동료와 너무 가까우면 살짝 밀어내기
                 for (const ally of allies) {
                     if (ally === self) continue;
@@ -117,6 +119,63 @@ export class AIArchetype {
             x = self.x - dx;
             y = self.y - dy;
         }
+        return { x, y };
+    }
+
+    /**
+     * 같은 MBTI 알파벳을 가진 아군에게는 끌리고 다른 알파벳을 가진 아군을 피하도록
+     * 위치를 조정합니다.
+     * @param {object} self - 현재 유닛
+     * @param {{x:number,y:number}} pos - 기본 목표 위치
+     * @param {Array} allies - 아군 목록
+     * @param {number} base - 보정 기준 길이(타일 사이즈)
+     * @returns {{x:number,y:number}}
+     */
+    _applyMbtiInfluence(self, pos, allies, base = 32) {
+        const myLetter = self?.properties?.mbti?.charAt(0);
+        if (!myLetter) return pos;
+
+        let attractX = 0, attractY = 0, attractCount = 0;
+        let repelX = 0, repelY = 0, repelCount = 0;
+
+        for (const ally of allies) {
+            if (ally === self) continue;
+            const letter = ally?.properties?.mbti?.charAt(0);
+            if (!letter) continue;
+            if (letter === myLetter) {
+                attractX += ally.x;
+                attractY += ally.y;
+                attractCount++;
+            } else {
+                repelX += ally.x;
+                repelY += ally.y;
+                repelCount++;
+            }
+        }
+
+        let { x, y } = pos;
+        const adjust = base * 0.3;
+
+        if (attractCount) {
+            const ax = attractX / attractCount;
+            const ay = attractY / attractCount;
+            const dx = ax - x;
+            const dy = ay - y;
+            const d = Math.hypot(dx, dy) || 1;
+            x += (dx / d) * adjust;
+            y += (dy / d) * adjust;
+        }
+
+        if (repelCount) {
+            const rx = repelX / repelCount;
+            const ry = repelY / repelCount;
+            const dx = rx - x;
+            const dy = ry - y;
+            const d = Math.hypot(dx, dy) || 1;
+            x -= (dx / d) * adjust;
+            y -= (dy / d) * adjust;
+        }
+
         return { x, y };
     }
 
