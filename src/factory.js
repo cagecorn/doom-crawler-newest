@@ -121,11 +121,27 @@ export class CharacterFactory {
                 } else if (config.jobId === 'wizard') {
                     const mageSkill = Math.random() < 0.5 ? SKILLS.fireball.id : SKILLS.iceball.id;
                     merc.skills.push(mageSkill);
-                    merc.roleAI = new WizardAI();
+                    // ===== 마법사에게 기본 무기 장착 및 AI 수정 =====
+                    const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
+                    if (weapon) {
+                        merc.equipment.weapon = weapon;
+                        if (merc.stats) merc.stats.updateEquipmentStats();
+                    }
+                    merc.roleAI = new WizardAI(this.game);
+                    merc.fallbackAI = null;
+                    // ===============================================
                 } else if (config.jobId === 'summoner') {
                     merc.skills.push(SKILLS.summon_skeleton.id);
                     merc.properties.maxMinions = 2;
-                    merc.roleAI = new SummonerAI();
+                    // ===== 소환사에게 기본 무기 장착 및 AI 수정 =====
+                    const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
+                    if (weapon) {
+                        merc.equipment.weapon = weapon;
+                        if (merc.stats) merc.stats.updateEquipmentStats();
+                    }
+                    merc.roleAI = new SummonerAI(this.game);
+                    merc.fallbackAI = null;
+                    // ===============================================
                 } else if (config.jobId === 'bard') {
                     merc.skills.push(SKILLS.guardian_hymn.id);
                     merc.skills.push(SKILLS.courage_hymn.id);
