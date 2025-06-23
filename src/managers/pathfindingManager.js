@@ -1,5 +1,5 @@
 // src/pathfindingManager.js
-import { loadTf } from '../utils/tf-loader.js';
+import tfLoader from '../utils/tf-loader.js';
 
 export class PathfindingManager {
     constructor(mapManager) {
@@ -124,7 +124,8 @@ export class PathfindingManager {
 
     async findPathTensor(startX, startY, endX, endY) {
         try {
-            const tf = await loadTf();
+            await tfLoader.init();
+            const tf = tfLoader.getTf();
             if (!this.model) {
                 this.model = await tf.loadLayersModel('./assets/pathfinding-model.json');
             }

@@ -1,10 +1,10 @@
-import { loadTf } from '../../utils/tf-loader.js';
+import tfLoader from '../../utils/tf-loader.js';
 
 export class CombatDecisionEngine {
     constructor() {
         this.tf = null;
         this.model = null;
-        loadTf().then(tf => { this.tf = tf; this._init(); }).catch(() => {});
+        tfLoader.init().then(() => { this.tf = tfLoader.getTf(); this._init(); }).catch(() => {});
     }
 
     _init() {
