@@ -249,7 +249,8 @@ export class Mercenary extends Entity {
 
 
         // 플레이어 주변을 배회하기 위한 프로퍼티
-        this.wanderCooldown = 0;
+        // 약간의 랜덤성을 부여해 모든 용병이 동시에 움직이지 않도록 함
+        this.wanderCooldown = Math.floor(Math.random() * 30);
         this.wanderTarget = null;
     }
 

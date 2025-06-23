@@ -16,34 +16,55 @@ export class AIArchetype {
 
     // 플레이어 주변을 랜덤하게 배회하도록 목표 위치를 계산
     _getWanderPosition(self, player, allies, mapManager) {
-        const reached = self.wanderTarget &&
-            Math.hypot(self.wanderTarget.x - self.x, self.wanderTarget.y - self.y) < self.tileSize * 0.3;
+        const reached =
+            self.wanderTarget &&
+            Math.hypot(
+                self.wanderTarget.x - self.x,
+                self.wanderTarget.y - self.y
+            ) < self.tileSize * 0.3;
+
         if (!self.wanderTarget || reached || self.wanderCooldown <= 0) {
             const base = mapManager ? mapManager.tileSize : self.tileSize;
-            const angle = Math.random() * Math.PI * 2;
-            const dist = base * (1 + Math.random() * 1.5);
-            let x = player.x + Math.cos(angle) * dist;
-            let y = player.y + Math.sin(angle) * dist;
+            let found = false;
+            for (let i = 0; i < 5 && !found; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = base * (1 + Math.random() * 1.5);
+                let x = player.x + Math.cos(angle) * dist;
+                let y = player.y + Math.sin(angle) * dist;
 
-            // 동료와 너무 가까우면 살짝 밀어내기
-            for (const ally of allies) {
-                if (ally === self) continue;
-                const dx = x - ally.x;
-                const dy = y - ally.y;
-                const d = Math.hypot(dx, dy);
-                if (d > 0 && d < base) {
-                    x += (dx / d) * base;
-                    y += (dy / d) * base;
+                // 동료와 너무 가까우면 살짝 밀어내기
+                for (const ally of allies) {
+                    if (ally === self) continue;
+                    const dx = x - ally.x;
+                    const dy = y - ally.y;
+                    const d = Math.hypot(dx, dy);
+                    if (d > 0 && d < base) {
+                        x += (dx / d) * base;
+                        y += (dy / d) * base;
+                    }
                 }
+
+                if (
+                    mapManager &&
+                    mapManager.isWallAt(x, y, self.width, self.height)
+                ) {
+                    continue;
+                }
+
+                self.wanderTarget = { x, y };
+                self.wanderCooldown = 60 + Math.floor(Math.random() * 60);
+                found = true;
             }
 
-            if (mapManager && mapManager.isWallAt(x, y, self.width, self.height)) {
-                x = player.x;
-                y = player.y;
+            if (!found) {
+                const offsetAng = Math.random() * Math.PI * 2;
+                const offsetDist = base * 0.5;
+                self.wanderTarget = {
+                    x: player.x + Math.cos(offsetAng) * offsetDist,
+                    y: player.y + Math.sin(offsetAng) * offsetDist,
+                };
+                self.wanderCooldown = 30;
             }
-
-            self.wanderTarget = { x, y };
-            self.wanderCooldown = 60 + Math.floor(Math.random() * 60);
         } else {
             self.wanderCooldown--;
         }
