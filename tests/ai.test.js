@@ -168,7 +168,7 @@ test('BardAI - attacks when songs unavailable', () => {
     const ai = new BardAI();
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 0, // not enough mana for songs
+        mp: 0,
         skills: ['guardian_hymn', 'courage_hymn'],
         skillCooldowns: {},
         equipment: { weapon: { tags: ['song'] } },

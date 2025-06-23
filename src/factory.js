@@ -131,8 +131,9 @@ export class CharacterFactory {
                         if (merc.stats) merc.stats.updateEquipmentStats();
                         if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
-                    merc.roleAI = new BardAI();
-                    merc.roleAI.engine = this.supportEngine;
+                    // Pass the game object so BardAI can access SupportEngine safely
+                    const gameRef = this.game || { supportEngine: this.supportEngine };
+                    merc.roleAI = new BardAI(gameRef);
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);
