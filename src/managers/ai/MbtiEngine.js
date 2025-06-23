@@ -1,11 +1,51 @@
+import * as tf from '@tensorflow/tfjs';
+
 export class MbtiEngine {
-    constructor(eventManager) {
+    constructor(eventManager, options = {}) {
         if (!eventManager) {
-            throw new Error("MbtiEngine requires an EventManager");
+            throw new Error('MbtiEngine requires an EventManager');
         }
         this.eventManager = eventManager;
-        this.cooldown = 120; // 팝업이 너무 자주 뜨지 않도록 조절 (프레임 단위, 2초)
-        console.log("[MbtiEngine] Initialized");
+        this.cooldown = 120; // 2 seconds at 60fps
+
+        this.model = null;
+        this.modelLoaded = false;
+
+        if (options.model) {
+            this.model = options.model;
+            this.modelLoaded = true;
+        }
+        if (options.modelUrl) {
+            this.loadModel(options.modelUrl).catch(err => {
+                console.warn('[MbtiEngine] Failed to load model:', err);
+            });
+        }
+        console.log('[MbtiEngine] Initialized');
+    }
+
+    async loadModel(url) {
+        this.model = await tf.loadLayersModel(url);
+        this.modelLoaded = true;
+        console.log(`[MbtiEngine] Model loaded from ${url}`);
+    }
+
+    _buildInput(entity, action) {
+        const allyCount = action.context?.allies?.length || 0;
+        return [
+            action.type === 'attack' ? 1 : 0,
+            action.type === 'move' ? 1 : 0,
+            allyCount
+        ];
+    }
+
+    _predictTrait(entity, action) {
+        if (!this.modelLoaded) return null;
+        const tensor = tf.tensor2d([this._buildInput(entity, action)]);
+        const prediction = this.model.predict(tensor);
+        const traitIndex = prediction.argMax(-1).dataSync()[0];
+        tf.dispose([tensor, prediction]);
+        const traits = ['E', 'I', 'S', 'N', 'T', 'F', 'J', 'P'];
+        return traits[traitIndex] || null;
     }
 
     /**
@@ -25,49 +65,51 @@ export class MbtiEngine {
         }
 
         const mbti = entity.properties.mbti;
-        let traitToPublish = null;
+        let traitToPublish = this._predictTrait(entity, action);
 
-        // 각 MBTI 차원별로 특성 발동 조건 확인
-        switch (action.type) {
-            case 'attack':
-            case 'skill':
-                if (action.target?.isFriendly === false) { // 적을 대상으로 한 공격/스킬
-                    if (mbti.includes('T')) traitToPublish = 'T'; // 논리적, 공격적 판단
-                    else if (mbti.includes('F')) traitToPublish = 'F'; // 감정적, 관계 중심 판단 (약한 적을 먼저)
-                } else if (action.target?.isFriendly === true) { // 아군을 대상으로 한 스킬 (힐, 버프)
-                    if (mbti.includes('F')) traitToPublish = 'F'; // 관계, 조화를 중시
-                }
+        // 기존 규칙 기반 판단(백업)
+        if (!traitToPublish) {
+            switch (action.type) {
+                case 'attack':
+                case 'skill':
+                    if (action.target?.isFriendly === false) {
+                        if (mbti.includes('T')) traitToPublish = 'T';
+                        else if (mbti.includes('F')) traitToPublish = 'F';
+                    } else if (action.target?.isFriendly === true) {
+                        if (mbti.includes('F')) traitToPublish = 'F';
+                    }
 
-                if (!traitToPublish && mbti.includes('S')) traitToPublish = 'S'; // 감각적, 현재의 구체적인 행동
-                break;
+                    if (!traitToPublish && mbti.includes('S')) traitToPublish = 'S';
+                    break;
 
-            case 'move':
-                if (action.target) { // 특정 목표(적)를 향해 이동
-                    if (mbti.includes('J')) traitToPublish = 'J'; // 계획적, 목표 지향적 움직임
-                } else { // 목표 없이 배회
-                    if (mbti.includes('P')) traitToPublish = 'P'; // 탐색적, 즉흥적 움직임
-                }
-                break;
+                case 'move':
+                    if (action.target) {
+                        if (mbti.includes('J')) traitToPublish = 'J';
+                    } else {
+                        if (mbti.includes('P')) traitToPublish = 'P';
+                    }
+                    break;
 
-            case 'idle':
-            case 'flee':
-                if (mbti.includes('I')) traitToPublish = 'I'; // 내향적, 혼자 있거나 후퇴
-                break;
+                case 'idle':
+                case 'flee':
+                    if (mbti.includes('I')) traitToPublish = 'I';
+                    break;
+            }
         }
 
         // E/I는 별도 조건으로 한 번 더 체크 (주변 유닛 수)
         if (!traitToPublish && action.context?.allies) {
             if (action.context.allies.length > 3 && mbti.includes('E')) {
-                traitToPublish = 'E'; // 외향적, 많은 아군과 함께 있을 때 활성화
+                traitToPublish = 'E';
             }
         }
 
         if (traitToPublish) {
             this.eventManager.publish('ai_mbti_trait_triggered', {
-                entity: entity,
+                entity,
                 trait: traitToPublish
             });
-            entity._mbtiCooldown = this.cooldown; // 쿨다운 설정
+            entity._mbtiCooldown = this.cooldown;
         }
     }
 }
