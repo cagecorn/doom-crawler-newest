@@ -94,7 +94,8 @@ export class Game {
 
     init(assets) {
         this.assets = assets;
-        this.layerManager = new LayerManager();
+        // WebGL 가속 레이어 사용을 위해 true 전달
+        this.layerManager = new LayerManager(true);
         const canvas = this.layerManager.layers.mapBase;
 
         // === 1. 모든 매니저 및 시스템 생성 ===

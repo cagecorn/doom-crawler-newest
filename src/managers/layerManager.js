@@ -1,5 +1,7 @@
+import { WebGLRenderer } from '../renderers/webglRenderer.js';
+
 export class LayerManager {
-    constructor() {
+    constructor(useWebGL = false) {
         this.layers = {
             mapBase: document.getElementById('map-base-canvas'),
             mapDecor: document.getElementById('map-decor-canvas'),
@@ -9,8 +11,15 @@ export class LayerManager {
             weather: document.getElementById('weather-canvas'),
         };
         this.contexts = {};
+        this.glRenderers = {};
         for (const key in this.layers) {
-            this.contexts[key] = this.layers[key].getContext('2d');
+            if (useWebGL && ['entity','vfx','weather'].includes(key)) {
+                const renderer = new WebGLRenderer(this.layers[key]);
+                this.glRenderers[key] = renderer;
+                this.contexts[key] = renderer;
+            } else {
+                this.contexts[key] = this.layers[key].getContext('2d');
+            }
         }
 
         window.addEventListener('resize', () => this.resize());
@@ -27,11 +36,21 @@ export class LayerManager {
     clear(layerKey) {
         if (layerKey) {
             const layer = this.layers[layerKey];
-            this.contexts[layerKey].clearRect(0, 0, layer.width, layer.height);
+            const ctx = this.contexts[layerKey];
+            if (ctx && ctx.clear) {
+                ctx.clear();
+            } else {
+                ctx.clearRect(0, 0, layer.width, layer.height);
+            }
         } else {
             for (const key in this.contexts) {
                 const layer = this.layers[key];
-                this.contexts[key].clearRect(0, 0, layer.width, layer.height);
+                const ctx = this.contexts[key];
+                if (ctx && ctx.clear) {
+                    ctx.clear();
+                } else {
+                    ctx.clearRect(0, 0, layer.width, layer.height);
+                }
             }
         }
     }
