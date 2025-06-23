@@ -42,13 +42,13 @@ export class ProjectileManager {
         }
     }
 
-    throwItem(caster, target, item) {
+    throwItem(caster, target, item, damage = 0, itemManager = null) {
         const config = {
             x: caster.x + caster.width / 2,
             y: caster.y + caster.height / 2,
             target,
             caster,
-            damage: 0,
+            damage,
             knockbackStrength: 0,
             image: item.image,
             width: item.width,
@@ -58,6 +58,8 @@ export class ProjectileManager {
             vfxManager: this.vfxManager,
         };
         const projectile = new Projectile(config);
+        projectile.droppedItem = item;
+        projectile.itemManager = itemManager;
         this.projectiles.push(projectile);
     }
 
@@ -101,6 +103,12 @@ export class ProjectileManager {
                             this.eventManager.publish('entity_attack', { attacker: proj.caster, defender: aoeTarget, damage: proj.damage * 0.5 });
                         }
                     }
+                }
+
+                if (proj.droppedItem && proj.itemManager) {
+                    proj.droppedItem.x = result.target.x;
+                    proj.droppedItem.y = result.target.y;
+                    proj.itemManager.addItem(proj.droppedItem);
                 }
 
                 this.projectiles.splice(index, 1);
