@@ -37,10 +37,19 @@ export class TextPopupEngine {
         for (let i = this.popups.length - 1; i >= 0; i--) {
             const popup = this.popups[i];
             popup.life--;
-            popup.y -= popup.floatSpeed;
-            popup.alpha = popup.life / popup.duration;
+            if (popup.vy !== undefined) {
+                popup.y += popup.vy;
+            } else {
+                popup.y -= popup.floatSpeed;
+            }
 
-            if (popup.life <= 0) {
+            if (popup.fadeSpeed !== undefined) {
+                popup.alpha -= popup.fadeSpeed;
+            } else {
+                popup.alpha = popup.life / popup.duration;
+            }
+
+            if (popup.life <= 0 || popup.alpha <= 0) {
                 this.popups.splice(i, 1);
             }
         }
@@ -48,14 +57,22 @@ export class TextPopupEngine {
 
     render(ctx) {
         if (!ctx) return;
-        ctx.save();
         for (const popup of this.popups) {
+            ctx.save();
+            if (popup.isUI && ctx.setTransform) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
             ctx.globalAlpha = popup.alpha;
-            ctx.fillStyle = popup.color;
+            ctx.fillStyle = popup.fillStyle || popup.color;
             ctx.font = popup.font;
-            ctx.textAlign = 'center';
+            ctx.textAlign = popup.alignment || 'center';
+            if (popup.strokeStyle) {
+                ctx.strokeStyle = popup.strokeStyle;
+                ctx.lineWidth = popup.lineWidth || 1;
+                ctx.strokeText(popup.text, popup.x, popup.y);
+            }
             ctx.fillText(popup.text, popup.x, popup.y);
+            ctx.restore();
         }
-        ctx.restore();
     }
 }

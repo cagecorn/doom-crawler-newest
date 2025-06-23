@@ -38,6 +38,7 @@ import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
+import { CinematicManager } from './managers/cinematicManager.js';
 
 export class Game {
     constructor() {
@@ -149,6 +150,7 @@ export class Game {
         this.equipmentManager = this.managers.EquipmentManager;
         this.uiManager = this.managers.UIManager;
         this.vfxManager = this.managers.VFXManager;
+        this.vfxManager.game = this;
         this.soundManager = this.managers.SoundManager;
         this.effectManager = this.managers.EffectManager;
         this.auraManager = new Managers.AuraManager(this.effectManager, this.eventManager, this.vfxManager);
@@ -195,6 +197,7 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.metaAIManager = new MetaAIManager(this.eventManager);
+        this.cinematicManager = new CinematicManager(this);
         this.dataRecorder = new DataRecorder(this);
         this.dataRecorder.init();
         this.possessionAIManager = new PossessionAIManager(this.eventManager);
@@ -1239,14 +1242,25 @@ export class Game {
         layerManager.clear();
 
         const camera = gameState.camera;
-        const zoom = gameState.zoomLevel;
+        let zoom = gameState.zoomLevel;
 
-        const targetCameraX = gameState.player.x - canvas.width / (2 * zoom);
-        const targetCameraY = gameState.player.y - canvas.height / (2 * zoom);
+        let cameraTarget = gameState.player;
+        if (this.cinematicManager.isPlaying && this.cinematicManager.targetEntity) {
+            cameraTarget = this.cinematicManager.targetEntity;
+        }
+
+        const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
+        const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
         const mapPixelWidth = mapManager.width * mapManager.tileSize;
         const mapPixelHeight = mapManager.height * mapManager.tileSize;
         camera.x = Math.max(0, Math.min(targetCameraX, mapPixelWidth - canvas.width / zoom));
         camera.y = Math.max(0, Math.min(targetCameraY, mapPixelHeight - canvas.height / zoom));
+
+        let targetZoom = this.cinematicManager.isPlaying
+            ? this.cinematicManager.targetZoom
+            : (this.cinematicManager.originalZoom || SETTINGS.DEFAULT_ZOOM);
+        this.gameState.zoomLevel += (targetZoom - this.gameState.zoomLevel) * 0.08;
+        zoom = this.gameState.zoomLevel;
 
         for (const key in layerManager.contexts) {
             const ctx = layerManager.contexts[key];
