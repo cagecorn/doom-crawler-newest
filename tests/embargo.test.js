@@ -11,7 +11,8 @@ import { MeleeAI, PurifierAI, HealerAI, CompositeAI } from '../src/ai.js';
 import { Item } from '../src/entities.js';
 import { SKILLS } from '../src/data/skills.js';
 import { describe, test, assert } from './helpers.js';
-import * as tf from '@tensorflow/tfjs';
+// TensorFlow is not needed in the test environment
+const tf = {};
 
 // 업데이트된 엠바고 테스트
 
@@ -104,8 +105,12 @@ test('차지 어택과 포션 사용 시나리오', () => {
      const mapManager = new MapManager(1);
      const factory = new CharacterFactory(assets);
      const player = factory.create('player', { x:0, y:0, tileSize:1, groupId:'g' });
-     const healer = factory.create('mercenary', { x:1, y:0, tileSize:1, groupId:'g', jobId:'healer' });
-     healer.ai = new CompositeAI(new PurifierAI(), new HealerAI());
+    const healer = factory.create('mercenary', { x:1, y:0, tileSize:1, groupId:'g', jobId:'healer' });
+    const supportEngine = {
+        findPurifyTarget(_s, allies){ return allies[0]; },
+        findHealTarget(){ return null; }
+    };
+    healer.ai = new CompositeAI(new PurifierAI(), new HealerAI({ supportEngine }));
      healer.properties.mbti = 'ESFJ';
      healer.mp = healer.maxMp;
      const monster = factory.create('monster', { x:2, y:0, tileSize:1, groupId:'m' });

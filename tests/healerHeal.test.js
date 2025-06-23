@@ -9,7 +9,11 @@ describe('Healing', () => {
   test('healer skill restores ally hp', () => {
     const factory = new CharacterFactory(assets);
     const healer = factory.create('mercenary', { x:0, y:0, tileSize:1, groupId:'g', jobId:'healer' });
-    healer.ai = new HealerAI();
+    const supportEngine = { 
+      findHealTarget(_s, allies){ return allies[1]; },
+      findPurifyTarget(){ return null; }
+    };
+    healer.ai = new HealerAI({ supportEngine });
     healer.mp = healer.maxMp; // 충분한 마나 확보
     const ally = factory.create('mercenary', { x:5, y:0, tileSize:1, groupId:'g', jobId:'warrior' });
     ally.hp = ally.maxHp - 5; // 부상 입힘

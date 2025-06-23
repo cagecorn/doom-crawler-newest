@@ -32,7 +32,7 @@ describe('Integration', () => {
     const archer = factory.create('mercenary', { x:1, y:0, tileSize:1, groupId:playerGroup.id, jobId:'archer' });
     const healer = factory.create('mercenary', { x:-1, y:0, tileSize:1, groupId:playerGroup.id, jobId:'healer' });
     // PurifierAI가 이동으로 가로채는 것을 막기 위해 HealerAI만 사용한다.
-    healer.roleAI = new HealerAI();
+    healer.roleAI = new HealerAI({ supportEngine: factory.supportEngine });
     const bard = factory.create('mercenary', { x:0, y:1, tileSize:1, groupId:playerGroup.id, jobId:'bard' });
     playerGroup.addMember(archer);
     playerGroup.addMember(healer);

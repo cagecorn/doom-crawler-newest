@@ -13,7 +13,8 @@ const mapStub = { tileSize: 1, isWallAt: () => false };
 describe('Fault Injection', () => {
 
     test('HealerAI handles invalid mbti string', () => {
-        const ai = new AI.HealerAI();
+        const supportEngine = { findHealTarget(){ return null; }, findPurifyTarget(){ return null; } };
+        const ai = new AI.HealerAI({ supportEngine });
         const self = {
             x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
             mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: '????' }
@@ -25,7 +26,8 @@ describe('Fault Injection', () => {
     });
 
     test('HealerAI handles missing heal skill gracefully', () => {
-        const ai = new AI.HealerAI();
+        const supportEngine = { findHealTarget(){ return null; }, findPurifyTarget(){ return null; } };
+        const ai = new AI.HealerAI({ supportEngine });
         const self = {
             x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
             mp: 0, skills: [], skillCooldowns: {}, properties: { mbti: 'ENFP' }

@@ -64,7 +64,11 @@ test('RangedAI - 사정거리 밖 적에게 접근', () => {
 });
 
 test('HealerAI - injured ally gets healed', () => {
-    const ai = new HealerAI();
+    const supportEngine = {
+        findHealTarget(_s, allies) { return allies[1]; },
+        findPurifyTarget(){ return null; }
+    };
+    const ai = new HealerAI({ supportEngine });
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
         mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: 'ENFP' },
@@ -79,53 +83,21 @@ test('HealerAI - injured ally gets healed', () => {
 });
 
 test('HealerAI - follows player when everyone healthy', () => {
-    const ai = new HealerAI();
+    const supportEngine = { findHealTarget(){ return null; }, findPurifyTarget(){ return null; } };
+    const ai = new HealerAI({ supportEngine });
     const player = { x: 10, y: 0 };
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: 'ENFP' },
+        mp: 20, skills: ['heal'], skillCooldowns: {},
         isFriendly: true, isPlayer: false
     };
     const ally = { x: 5, y: 0, hp: 10, maxHp: 10 };
     const context = { player, allies: [self, ally], enemies: [], mapManager: mapStub };
-    const orig = Math.random;
-    Math.random = () => 0;
     const action = ai.decideAction(self, context);
-    Math.random = orig;
     assert.strictEqual(action.type, 'move');
-    assert.deepStrictEqual(action.target, { x: 11, y: 0 });
+    assert.strictEqual(action.target, player);
 });
 
-test('HealerAI - sensing types heal earlier', () => {
-    const ai = new HealerAI();
-    const self = {
-        x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: 'ISFP' }
-    };
-    const ally = { x: 5, y: 0, hp: 17, maxHp: 20 };
-    const context = { player: {}, allies: [self, ally], enemies: [], mapManager: mapStub };
-    const action = ai.decideAction(self, context);
-    assert.strictEqual(action.type, 'skill');
-    assert.strictEqual(action.target, ally);
-});
-
-test('HealerAI - intuitive types still follow player when no healing needed', () => {
-    const ai = new HealerAI();
-    const player = { x: 8, y: 0 };
-    const self = {
-        x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: 'INFP' },
-        isFriendly: true, isPlayer: false
-    };
-    const ally = { x: 5, y: 0, hp: 7, maxHp: 10 };
-    const context = { player, allies: [self, ally], enemies: [], mapManager: mapStub };
-    const orig = Math.random;
-    Math.random = () => 0;
-    const action = ai.decideAction(self, context);
-    Math.random = orig;
-    assert.strictEqual(action.type, 'move');
-    assert.deepStrictEqual(action.target, { x: 9, y: 0 });
-});
 
 test('RangedAI - follows player when no line of sight to enemy', () => {
     const ai = new RangedAI();
@@ -151,18 +123,19 @@ test('MeleeAI - idle when enemy beyond vision range', () => {
     assert.strictEqual(action.type, 'idle');
 });
 
-test('HealerAI - attacks when no ally needs healing', () => {
-    const ai = new HealerAI();
+test('HealerAI - idles when no ally needs healing and no weapon AI', () => {
+    const supportEngine = { findHealTarget(){ return null; }, findPurifyTarget(){ return null; } };
+    const ai = new HealerAI({ supportEngine });
     const self = {
         x: 0, y: 0, visionRange: 100, attackRange: 10, speed: 5, tileSize: 1,
-        mp: 20, skills: ['heal'], skillCooldowns: {}, properties: { mbti: 'ENFP' },
+        mp: 20, skills: ['heal'], skillCooldowns: {},
         isFriendly: true, isPlayer: false
     };
     const ally = { x: 5, y: 0, hp: 10, maxHp: 10 };
     const enemy = { x: 5, y: 0 };
     const context = { player: {}, allies: [self, ally], enemies: [enemy], mapManager: mapStub };
     const action = ai.decideAction(self, context);
-    assert.strictEqual(action.type, 'attack');
+    assert.strictEqual(action.type, 'idle');
 });
 
 test('BardAI - uses guardian hymn when available', () => {
@@ -189,20 +162,6 @@ test('BardAI - uses guardian hymn when available', () => {
     assert.strictEqual(action.skillId, SKILLS.guardian_hymn.id);
 });
 
-test('HealerAI - T types target weakest enemy', () => {
-    const ai = new HealerAI();
-    const self = {
-        x: 0, y: 0, visionRange: 100, attackRange: 10, tileSize: 1,
-        mp: 20, skills: ['heal'], skillCooldowns: {},
-        properties: { mbti: 'TP' }, isFriendly: true, isPlayer: false
-    };
-    const ally = { x: 10, y: 0, hp: 10, maxHp: 10 };
-    const e1 = { id: 1, x: 5, y: 0, hp: 10 };
-    const e2 = { id: 2, x: 6, y: 0, hp: 5 };
-    const ctx = { player: {}, allies: [self, ally], enemies: [e1, e2], mapManager: mapStub, eventManager: eventManagerStub };
-    const action = ai.decideAction(self, ctx);
-    assert.strictEqual(action.target, e2);
-});
 
 test('BardAI - attacks when songs unavailable', () => {
     const ai = new BardAI({});

@@ -85,6 +85,24 @@ export class AIArchetype {
         }
         return null;
     }
+
+    // 위협으로부터 멀어지는 위치를 계산합니다.
+    _getFleePosition(self, threat, mapManager) {
+        const dx = self.x - threat.x;
+        const dy = self.y - threat.y;
+        let x = self.x + dx;
+        let y = self.y + dy;
+        if (mapManager && mapManager.isWallAt(x, y, self.width, self.height)) {
+            x = self.x - dx;
+            y = self.y - dy;
+        }
+        return { x, y };
+    }
+
+    // 공격 사거리 내에 있는지 여부를 판단합니다.
+    isInAttackRange(self, target) {
+        return Math.hypot(target.x - self.x, target.y - self.y) <= self.attackRange;
+    }
 }
 
 export class CompositeAI extends AIArchetype {
@@ -223,110 +241,63 @@ export class MeleeAI extends AIArchetype {
 
 // --- 힐러형 AI ---
 export class HealerAI extends AIArchetype {
+    constructor(game = {}) {
+        super();
+        this.game = game;
+        this.supportEngine = game.supportEngine;
+        this.microItemAIManager = game.microItemAIManager;
+    }
+
     decideAction(self, context) {
-        const { player, allies, enemies, mapManager, eventManager } = context;
-        const mbti = self.properties?.mbti || '';
-        const healId = SKILLS.heal?.id;
-        const healSkill = SKILLS[healId];
-        if (!healId || !healSkill) return { type: 'idle' };
-        // --- S/N 성향에 따라 힐 우선순위를 조정 ---
-        // 실제 힐을 사용할 때 MBTI 알파벳을 표시하기 위해 먼저 우선순위만 결정한다.
-        let healThreshold = 0.7;
-        if (mbti.includes('S')) {
-            healThreshold = 0.9;
-        } else if (mbti.includes('N')) {
-            healThreshold = 0.5;
-        }
+        const { player, allies, enemies } = context;
 
-        // 체력이 일정 비율 이하로 떨어진 아군만 후보로 선정
-        const candidates = allies.filter(
-            a => a.hp < a.maxHp && a.hp / a.maxHp <= healThreshold
-        );
-        if (candidates.length === 0) {
-            const visibles = this._filterVisibleEnemies(self, enemies);
-            if (visibles.length > 0) {
-                let potential = [...visibles];
-                let targetCandidate = null;
-                if (mbti.includes('T')) {
-                    targetCandidate = potential.reduce((low, cur) => cur.hp < low.hp ? cur : low, potential[0]);
-                } else if (mbti.includes('F')) {
-                    const allyTargets = new Set();
-                    allies.forEach(a => {
-                        if (a.currentTarget) allyTargets.add(a.currentTarget.id);
-                    });
-                    const focused = potential.find(t => allyTargets.has(t.id));
-                    if (focused) {
-                        targetCandidate = focused;
-                    }
-                }
-                const nearest = targetCandidate || potential.reduce(
-                    (closest, cur) =>
-                        Math.hypot(cur.x - self.x, cur.y - self.y) < Math.hypot(closest.x - self.x, closest.y - self.y)
-                            ? cur
-                            : closest,
-                    potential[0]
-                );
-                const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
-                const hasLOS = hasLineOfSight(
-                    Math.floor(self.x / mapManager.tileSize),
-                    Math.floor(self.y / mapManager.tileSize),
-                    Math.floor(nearest.x / mapManager.tileSize),
-                    Math.floor(nearest.y / mapManager.tileSize),
-                    mapManager,
-                );
-                self.currentTarget = nearest;
-                if (hasLOS && dist <= self.attackRange) {
-                    return { type: 'attack', target: nearest };
-                }
-                return { type: 'move', target: nearest };
-            }
-
-            if (self.isFriendly && !self.isPlayer && player) {
-                const target = this._getWanderPosition(self, player, allies, mapManager);
-                if (Math.hypot(target.x - self.x, target.y - self.y) > self.tileSize * 0.3) {
-                    return { type: 'move', target };
+        // 우선순위 1: 힐 또는 정화
+        if (this.supportEngine) {
+            const purifySkill = SKILLS.purify;
+            if ((self.skillCooldowns[purifySkill.id] || 0) <= 0 && self.mp >= purifySkill.manaCost) {
+                const purifyTarget = this.supportEngine.findPurifyTarget(self, allies);
+                if (purifyTarget) {
+                    return { type: 'skill', target: purifyTarget, skillId: purifySkill.id };
                 }
             }
-            return { type: 'idle' };
+            const healSkill = SKILLS.heal;
+            if ((self.skillCooldowns[healSkill.id] || 0) <= 0 && self.mp >= healSkill.manaCost) {
+                const healTarget = this.supportEngine.findHealTarget(self, allies);
+                if (healTarget) {
+                    return { type: 'skill', target: healTarget, skillId: healSkill.id };
+                }
+            }
         }
 
-        // --- E/I 성향에 따라 힐 대상 선택 ---
-        let target = null;
-        if (mbti.includes('I')) {
-            target = candidates.find(c => c === self) || candidates[0];
-        } else if (mbti.includes('E')) {
-            target = candidates.reduce(
-                (lowest, cur) =>
-                    cur.hp / cur.maxHp < lowest.hp / lowest.maxHp ? cur : lowest,
-                candidates[0],
-            );
-        } else {
-            target = candidates[0];
+        // 우선순위 2: 무기 숙련도 스킬
+        const weapon = self.equipment?.weapon;
+        if (weapon && this.microItemAIManager) {
+            const weaponAI = this.microItemAIManager.getWeaponAI(weapon);
+            if (weaponAI) {
+                const weaponAction = weaponAI.decideAction(self, weapon, context);
+                if (weaponAction && weaponAction.type !== 'idle') {
+                    return weaponAction;
+                }
+            }
         }
 
-        const skillReady =
-            healId &&
-            Array.isArray(self.skills) &&
-            self.skills.includes(healId) &&
-            self.mp >= healSkill.manaCost &&
-            (self.skillCooldowns[healId] || 0) <= 0;
-
-        const distance = Math.hypot(target.x - self.x, target.y - self.y);
-        const hasLOS = hasLineOfSight(
-            Math.floor(self.x / mapManager.tileSize),
-            Math.floor(self.y / mapManager.tileSize),
-            Math.floor(target.x / mapManager.tileSize),
-            Math.floor(target.y / mapManager.tileSize),
-            mapManager,
-        );
-
-        if (distance <= self.attackRange && hasLOS && skillReady) {
-            // MBTI 성향에 따른 힐 사용 타이밍 기록
-
-            return { type: 'skill', target, skillId: healId };
+        // 우선순위 3: 체력이 낮으면 도주
+        const lowHp = self.maxHp ? self.maxHp * 0.4 : 0;
+        if (self.hp < lowHp) {
+            const nearestEnemy = this._findNearestEnemy(self, enemies);
+            if (nearestEnemy && this.isInAttackRange?.(self, nearestEnemy)) {
+                const fleeTarget = this._getFleePosition(self, nearestEnemy, context.mapManager);
+                return { type: 'move', target: fleeTarget };
+            }
         }
 
-        return { type: 'move', target };
+        // 우선순위 4: 플레이어와 일정 거리 유지
+        const playerDist = Math.hypot(player.x - self.x, player.y - self.y);
+        if (playerDist > self.tileSize * 3) {
+            return { type: 'move', target: player };
+        }
+
+        return { type: 'idle' };
     }
 }
 
@@ -791,19 +762,15 @@ export class SummonerAI extends RangedAI {
 }
 
 export class BardAI extends AIArchetype {
-    constructor(game) {
+    constructor(game = {}) {
         super();
         this.game = game;
         this.supportEngine = game.supportEngine;
         this.microItemAIManager = game.microItemAIManager;
     }
 
-    isInAttackRange(self, target) {
-        return Math.hypot(target.x - self.x, target.y - self.y) <= self.attackRange;
-    }
-
     decideAction(self, context) {
-        const { player, allies, enemies, mapManager } = context;
+        const { player, allies, enemies } = context;
 
         // 우선순위 1: 노래 부르기 (직업 스킬)
         if (this.supportEngine) {

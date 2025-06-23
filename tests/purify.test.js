@@ -9,7 +9,11 @@ describe('Purify', () => {
   test('healer removes ailment from ally', () => {
     const factory = new CharacterFactory(assets);
     const healer = factory.create('mercenary', { x:0, y:0, tileSize:1, groupId:'g', jobId:'healer' });
-    healer.ai = new CompositeAI(new PurifierAI(), new HealerAI());
+    const supportEngine = { 
+      findPurifyTarget(_s, allies){ return allies[1]; },
+      findHealTarget(){ return null; }
+    };
+    healer.ai = new CompositeAI(new PurifierAI(), new HealerAI({ supportEngine }));
     healer.properties.mbti = 'ISFJ';
     healer.mp = healer.maxMp;
     const ally = factory.create('mercenary', { x:5, y:0, tileSize:1, groupId:'g', jobId:'warrior' });
