@@ -57,6 +57,19 @@ export class AIArchetype {
             Math.hypot(e.x - self.x, e.y - self.y) < range);
     }
 
+    _findNearestEnemy(self, enemies) {
+        let nearest = null;
+        let minDist = Infinity;
+        for (const e of enemies || []) {
+            const d = Math.hypot(e.x - self.x, e.y - self.y);
+            if (d < minDist) {
+                minDist = d;
+                nearest = e;
+            }
+        }
+        return nearest;
+    }
+
     // 사용 가능한 스킬을 찾아 반환한다
     _findReadySkill(self, filterFn = () => true) {
         if (!Array.isArray(self.skills)) return null;
@@ -912,5 +925,52 @@ export class CharmAI extends AIArchetype {
         const caster = charmEffect?.caster;
         if (!caster) return { type: 'idle' };
         return { type: 'move', target: caster };
+    }
+}
+
+export class WarriorAI extends AIArchetype {
+    decideAction(self, context) {
+        const { enemies } = context;
+        const chargeSkill = SKILLS.charge_attack;
+
+        if (
+            (self.skillCooldowns[chargeSkill.id] || 0) <= 0 &&
+            self.mp >= chargeSkill.manaCost
+        ) {
+            const visible = this._filterVisibleEnemies(self, enemies);
+            if (visible.length > 0) {
+                const nearest = this._findNearestEnemy(self, visible);
+                const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
+                const range = chargeSkill.range ?? chargeSkill.chargeRange;
+                if (dist > self.attackRange && dist <= range) {
+                    return { type: 'skill', target: nearest, skillId: chargeSkill.id };
+                }
+            }
+        }
+
+        return { type: 'idle' };
+    }
+}
+
+export class ArcherAI extends AIArchetype {
+    decideAction(self, context) {
+        const { enemies } = context;
+        const doubleStrike = SKILLS.double_strike;
+
+        if (
+            (self.skillCooldowns[doubleStrike.id] || 0) <= 0 &&
+            self.mp >= doubleStrike.manaCost
+        ) {
+            const visible = this._filterVisibleEnemies(self, enemies);
+            if (visible.length > 0) {
+                const nearest = this._findNearestEnemy(self, visible);
+                const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
+                if (dist <= self.attackRange) {
+                    return { type: 'skill', target: nearest, skillId: doubleStrike.id };
+                }
+            }
+        }
+
+        return { type: 'idle' };
     }
 }
