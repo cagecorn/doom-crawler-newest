@@ -34,6 +34,11 @@ export class MetaAIManager {
         });
     }
 
+    processMbti(entity, action) {
+        if (!this.mbtiEngine) return;
+        this.mbtiEngine.process(entity, action, this.game);
+    }
+
     createGroup(id, strategy) {
         if (!this.groups[id]) {
             this.groups[id] = new AIGroup(id, strategy);
@@ -251,7 +256,7 @@ export class MetaAIManager {
                 }
                 
                 // AI가 행동을 결정한 직후 MBTI 엔진 처리
-                this.mbtiEngine.process(member, { ...action, context: currentContext });
+                this.processMbti(member, { ...action, context: currentContext });
 
                 this.executeAction(member, action, currentContext);
             }

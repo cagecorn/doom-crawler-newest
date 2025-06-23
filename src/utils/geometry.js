@@ -26,3 +26,12 @@ export function hasLineOfSight(x0, y0, x1, y1, mapManager) {
     }
     return true;
 }
+
+// 두 엔티티 간의 중심 거리 계산
+export function calculateDistance(a, b) {
+    const ax = a.x + (a.width || 0) / 2;
+    const ay = a.y + (a.height || 0) / 2;
+    const bx = b.x + (b.width || 0) / 2;
+    const by = b.y + (b.height || 0) / 2;
+    return Math.hypot(ax - bx, ay - by);
+}
