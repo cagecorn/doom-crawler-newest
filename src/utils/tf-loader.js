@@ -24,14 +24,32 @@ export async function loadTf() {
 
 export async function loadCocoSsd() {
     if (!loadCocoSsd.promise) {
-        loadCocoSsd.promise = import('@tensorflow-models/coco-ssd');
+        if (typeof window !== 'undefined') {
+            loadCocoSsd.promise = import(
+                'https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.esm.js'
+            ).catch(err => {
+                console.warn('[tf-loader] Failed to load coco-ssd', err);
+                throw err;
+            });
+        } else {
+            loadCocoSsd.promise = import('@tensorflow-models/coco-ssd');
+        }
     }
     return loadCocoSsd.promise;
 }
 
 export async function loadKnnClassifier() {
     if (!loadKnnClassifier.promise) {
-        loadKnnClassifier.promise = import('@tensorflow-models/knn-classifier');
+        if (typeof window !== 'undefined') {
+            loadKnnClassifier.promise = import(
+                'https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.esm.js'
+            ).catch(err => {
+                console.warn('[tf-loader] Failed to load knn-classifier', err);
+                throw err;
+            });
+        } else {
+            loadKnnClassifier.promise = import('@tensorflow-models/knn-classifier');
+        }
     }
     return loadKnnClassifier.promise;
 }
