@@ -39,6 +39,7 @@ import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
 import { CinematicManager } from './managers/cinematicManager.js';
+import { ItemTracker } from './managers/itemTracker.js';
 
 export class Game {
     constructor() {
@@ -118,7 +119,8 @@ export class Game {
         // --- 매니저 생성 부분 수정 ---
         this.managers = {};
         // ItemManager를 먼저 생성합니다.
-        this.itemManager = new Managers.ItemManager(this.eventManager, assets, this.factory);
+        this.itemTracker = new ItemTracker();
+        this.itemManager = new Managers.ItemManager(0, this.mapManager, assets, this.itemTracker);
         this.managers.ItemManager = this.itemManager;
 
         // VFXManager는 ItemManager와 EventManager가 모두 필요합니다.

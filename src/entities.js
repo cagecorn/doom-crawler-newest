@@ -315,6 +315,7 @@ export class Pet extends Entity {
 
 export class Item {
     constructor(x, y, tileSize, name, image) {
+        this.id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2);
         this.x = x; this.y = y; this.width = tileSize; this.height = tileSize;
         this.name = name; this.image = image;
         this.quantity = 1;
@@ -366,6 +367,7 @@ export class Item {
 
     getSaveState() {
         return {
+            id: this.id,
             name: this.name,
             quantity: this.quantity,
             rank: this.rank,
