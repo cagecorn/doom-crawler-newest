@@ -67,19 +67,30 @@ export class CinematicManager {
         this.targetZoom = Math.min(this.targetZoom, 10);
         this.game.gameLoop.timeScale = 0.1;
 
-        // simple WebGL highlight
-        const canvas = this.game.layerManager.layers.vfx;
-        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-        if (gl && item.image) {
-            gl.clearColor(0, 0, 0, 0.5);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            // WebGL implementation placeholder - textured quad
-        }
+        // actual highlight will be drawn in render()
 
         setTimeout(() => {
             this.reset();
             this.eventManager.publish('cinematic_complete', { id: item.id });
         }, 1500);
+    }
+
+    render(ctx) {
+        if (!this.isPlaying || !this.targetEntity || !this.targetEntity.image) return;
+
+        const canvas = ctx.canvas;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const scale = 2;
+        const w = this.targetEntity.width * scale;
+        const h = this.targetEntity.height * scale;
+        const x = canvas.width / 2 - w / 2;
+        const y = canvas.height / 2 - h / 2;
+        ctx.drawImage(this.targetEntity.image, x, y, w, h);
+        ctx.restore();
     }
 
     reset() {
