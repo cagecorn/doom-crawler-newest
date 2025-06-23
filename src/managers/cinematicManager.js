@@ -26,6 +26,8 @@ export class CinematicManager {
         this.isPlaying = true;
         this.targetEntity = target;
 
+        // Save the game's current zoom and time scale so we can restore them
+        // precisely once the cinematic ends.
         this.originalZoom = this.game.gameState.zoomLevel;
         this.originalTimeScale = this.game.gameLoop.timeScale;
 

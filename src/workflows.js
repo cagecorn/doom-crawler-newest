@@ -28,7 +28,16 @@ export function monsterDeathWorkflow(context) {
 
 // === 무기 무장해제 워크플로우 ===
 export function disarmWorkflow(context) {
-    const { eventManager, owner, weapon, itemManager, equipmentManager, vfxManager } = context;
+    const {
+        eventManager,
+        owner,
+        weapon,
+        itemManager,
+        equipmentManager,
+        vfxManager,
+        attacker,
+        target
+    } = context;
 
     if (equipmentManager && typeof equipmentManager.unequip === 'function') {
         equipmentManager.unequip(owner, 'weapon');
@@ -56,11 +65,22 @@ export function disarmWorkflow(context) {
         message: `💥 ${owner.constructor.name}의 ${weapon.name}(이)가 튕겨나갔습니다!`,
         color: 'orange'
     });
+
+    // Notify cinematic system of disarm event
+    eventManager.publish('weapon_disarmed', { attacker, defender: target });
 }
 
 // === 방어구 파괴 워크플로우 ===
 export function armorBreakWorkflow(context) {
-    const { eventManager, owner, armor, equipmentManager, vfxManager } = context;
+    const {
+        eventManager,
+        owner,
+        armor,
+        equipmentManager,
+        vfxManager,
+        attacker,
+        target
+    } = context;
 
     if (equipmentManager && typeof equipmentManager.unequip === 'function') {
         equipmentManager.unequip(owner, 'armor');
@@ -74,4 +94,7 @@ export function armorBreakWorkflow(context) {
         message: `🛡️ ${owner.constructor.name}의 ${armor.name}(이)가 파괴되었습니다!`,
         color: 'red'
     });
+
+    // Notify cinematic system of armor break event
+    eventManager.publish('armor_broken', { attacker, defender: target });
 }
