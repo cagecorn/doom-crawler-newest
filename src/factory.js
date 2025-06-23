@@ -134,6 +134,7 @@ export class CharacterFactory {
                     // Pass the game object so BardAI can access SupportEngine safely
                     const gameRef = this.game || { supportEngine: this.supportEngine };
                     merc.roleAI = new BardAI(gameRef);
+                    merc.fallbackAI = null; // disable default AI for bards
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);

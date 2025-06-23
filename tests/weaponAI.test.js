@@ -6,7 +6,7 @@ const mapStub = { tileSize: 1, isWallAt: () => false };
 describe('WeaponAI', () => {
   test('BowAI uses charge shot at mid range', () => {
     const ai = new BowAI();
-    const wielder = { x: 0, y: 0, attackRange: 20, effects: [] };
+    const wielder = { x: 0, y: 0, attackRange: 20, effects: [], skillCooldowns: {} };
     const weapon = { weaponStats: { canUseSkill: () => true } };
     const enemy = { x: 15, y: 0 };
     const action = ai.decideAction(wielder, weapon, { enemies: [enemy], mapManager: mapStub });
@@ -16,7 +16,7 @@ describe('WeaponAI', () => {
 
   test('SpearAI charges when enemy out of range', () => {
     const ai = new SpearAI();
-    const wielder = { x: 0, y: 0, attackRange: 10 };
+    const wielder = { x: 0, y: 0, attackRange: 10, skillCooldowns: {} };
     const weapon = { weaponStats: { canUseSkill: () => true } };
     const enemy = { x: 25, y: 0 };
     const action = ai.decideAction(wielder, weapon, { enemies: [enemy], mapManager: mapStub });
@@ -26,7 +26,7 @@ describe('WeaponAI', () => {
 
   test('SwordAI uses parry stance when recovering attack cooldown', () => {
     const ai = new SwordAI();
-    const wielder = { x: 0, y: 0, attackRange: 10, attackCooldown: 5 };
+    const wielder = { x: 0, y: 0, attackRange: 10, attackCooldown: 5, skillCooldowns: {} };
     const weapon = { weaponStats: { canUseSkill: (id) => id === 'parry_stance' } };
     const enemy = { x: 8, y: 0 };
     const action = ai.decideAction(wielder, weapon, { enemies: [enemy], mapManager: mapStub });
@@ -36,7 +36,7 @@ describe('WeaponAI', () => {
 
   test('WhipAI uses pull when target within skill range', () => {
     const ai = new WhipAI();
-    const wielder = { x: 0, y: 0, attackRange: 10, properties: { mbti: 'INTP' } };
+    const wielder = { x: 0, y: 0, attackRange: 10, properties: { mbti: 'INTP' }, skillCooldowns: {} };
     const weapon = { weaponStats: { canUseSkill: () => true } };
     const enemy = { x: 30, y: 0, hp: 5 };
     const action = ai.decideAction(wielder, weapon, { enemies: [enemy], mapManager: mapStub });
@@ -46,7 +46,7 @@ describe('WeaponAI', () => {
 
   test('WhipAI with T-type personality targets weakest enemy', () => {
     const ai = new WhipAI();
-    const wielder = { x: 0, y: 0, attackRange: 10, properties: { mbti: 'INTJ' } };
+    const wielder = { x: 0, y: 0, attackRange: 10, properties: { mbti: 'INTJ' }, skillCooldowns: {} };
     const weapon = { weaponStats: { canUseSkill: () => true } };
     const weak = { x: 25, y: 0, hp: 3 };
     const strong = { x: 24, y: 0, hp: 8 };

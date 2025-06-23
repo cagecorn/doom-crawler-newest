@@ -794,79 +794,66 @@ export class BardAI extends AIArchetype {
     constructor(game) {
         super();
         this.game = game;
-        this.supportEngine = game ? game.supportEngine : null;
+        this.supportEngine = game.supportEngine;
+        this.microItemAIManager = game.microItemAIManager;
+    }
+
+    isInAttackRange(self, target) {
+        return Math.hypot(target.x - self.x, target.y - self.y) <= self.attackRange;
     }
 
     decideAction(self, context) {
         const { player, allies, enemies, mapManager } = context;
-        const mbti = self.properties?.mbti || '';
 
-        const guardianTarget = this.supportEngine?.findBuffTarget(self, allies, 'shield');
-        if (
-            guardianTarget &&
-            (self.skillCooldowns[SKILLS.guardian_hymn.id] || 0) <= 0 &&
-            self.mp >= SKILLS.guardian_hymn.manaCost
-        ) {
-            return { type: 'skill', target: guardianTarget, skillId: SKILLS.guardian_hymn.id };
-        }
-
-        const courageTarget = this.supportEngine?.findBuffTarget(self, allies, 'bonus_damage');
-        if (
-            courageTarget &&
-            (self.skillCooldowns[SKILLS.courage_hymn.id] || 0) <= 0 &&
-            self.mp >= SKILLS.courage_hymn.manaCost
-        ) {
-            return { type: 'skill', target: courageTarget, skillId: SKILLS.courage_hymn.id };
-        }
-
-        const visible = this._filterVisibleEnemies(self, enemies);
-        if (visible.length > 0) {
-            let potential = [...visible];
-            let targetCandidate = null;
-            if (mbti.includes('T')) {
-                targetCandidate = potential.reduce((low, cur) => (cur.hp < low.hp ? cur : low), potential[0]);
-            } else if (mbti.includes('F')) {
-                const allyTargets = new Set();
-                allies.forEach(a => {
-                    if (a.currentTarget) allyTargets.add(a.currentTarget.id);
-                });
-                const focused = potential.find(t => allyTargets.has(t.id));
-                if (focused) {
-                    targetCandidate = focused;
+        // 우선순위 1: 노래 부르기 (직업 스킬)
+        if (this.supportEngine) {
+            const guardianSkill = SKILLS.guardian_hymn;
+            if ((self.skillCooldowns[guardianSkill.id] || 0) <= 0 && self.mp >= guardianSkill.manaCost) {
+                const guardianTarget = this.supportEngine.findBuffTarget(self, allies, 'shield');
+                if (guardianTarget) {
+                    return { type: 'skill', target: guardianTarget, skillId: guardianSkill.id };
                 }
             }
-            const nearest =
-                targetCandidate ||
-                potential.reduce(
-                    (closest, cur) =>
-                        Math.hypot(cur.x - self.x, cur.y - self.y) <
-                        Math.hypot(closest.x - self.x, closest.y - self.y)
-                            ? cur
-                            : closest,
-                    potential[0]
-                );
-            const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
-            const hasLOS = hasLineOfSight(
-                Math.floor(self.x / mapManager.tileSize),
-                Math.floor(self.y / mapManager.tileSize),
-                Math.floor(nearest.x / mapManager.tileSize),
-                Math.floor(nearest.y / mapManager.tileSize),
-                mapManager
-            );
-            self.currentTarget = nearest;
-            if (hasLOS && dist <= self.attackRange) {
-                return { type: 'attack', target: nearest };
-            }
-            return { type: 'move', target: nearest };
-        }
-
-        if (self.isFriendly && !self.isPlayer) {
-            const target = this._getWanderPosition(self, player, allies, mapManager);
-            if (Math.hypot(target.x - self.x, target.y - self.y) > self.tileSize * 0.3) {
-                return { type: 'move', target };
+            const courageSkill = SKILLS.courage_hymn;
+            if ((self.skillCooldowns[courageSkill.id] || 0) <= 0 && self.mp >= courageSkill.manaCost) {
+                const courageTarget = this.supportEngine.findBuffTarget(self, allies, 'bonus_damage');
+                if (courageTarget) {
+                    return { type: 'skill', target: courageTarget, skillId: courageSkill.id };
+                }
             }
         }
 
+        // 우선순위 2: 무기 숙련도 스킬 사용
+        const weapon = self.equipment?.weapon;
+        if (weapon && this.microItemAIManager) {
+            const weaponAI = this.microItemAIManager.getWeaponAI(weapon);
+            if (weaponAI) {
+                const weaponAction = weaponAI.decideAction(self, weapon, context);
+                if (weaponAction && weaponAction.type !== 'idle') {
+                    return weaponAction;
+                }
+            }
+        }
+
+        // 우선순위 3: 기본 전투 (공격 및 이동)
+        const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+        if (visibleEnemies.length > 0) {
+            const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
+            if (nearestEnemy) {
+                if (this.isInAttackRange(self, nearestEnemy)) {
+                    return { type: 'attack', target: nearestEnemy };
+                }
+                return { type: 'move', target: nearestEnemy };
+            }
+        }
+
+        // 우선순위 4: 할 일 없으면 플레이어 따라다니기
+        const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
+        if (playerDistance > self.tileSize * 3) {
+            return { type: 'move', target: player };
+        }
+
+        // 최종: 모든 조건 불만족 시 대기
         return { type: 'idle' };
     }
 }
