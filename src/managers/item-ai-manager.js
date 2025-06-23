@@ -1,5 +1,4 @@
 import { CombatDecisionEngine } from './ai/CombatDecisionEngine.js';
-import { performThrowWeaponAttack } from '../combat.js';
 
 export class ItemAIManager {
     constructor(eventManager = null, projectileManager = null, vfxManager = null, effectManager = null) {
@@ -171,7 +170,6 @@ export class ItemAIManager {
                 if (ok) {
                     itemManager.removeItem(item);
                     equipmentManager.equip(entity, item, null);
-                    this.eventManager?.publish('item_picked_up', { entity, item });
                     break;
                 }
             }
@@ -192,21 +190,21 @@ export class ItemAIManager {
             if (ok) {
                 itemManager.removeItem(item);
                 entity.addConsumable?.(item);
-                this.eventManager?.publish('item_picked_up', { entity, item });
                 this._useItem(entity, item, entity);
             }
         }
     }
 
     _maybeThrowWeapon(entity, target, context) {
-        const { projectileManager, itemManager, equipmentManager, game } = context;
+        const { projectileManager, itemManager, equipmentManager } = context;
         const weapon = entity.equipment?.weapon;
-        if (!weapon || !projectileManager || !itemManager || !equipmentManager || !game) return;
+        if (!weapon || !projectileManager || !itemManager || !equipmentManager) return;
         const dist = Math.hypot(target.x - entity.x, target.y - entity.y);
         const hpRatio = entity.hp / entity.maxHp;
         const ok = this.decisionEngine.shouldThrowWeapon(hpRatio, dist, weapon.weight || 1);
         if (ok) {
-            performThrowWeaponAttack(game, entity, target);
+            equipmentManager.unequip(entity, 'weapon', null);
+            projectileManager.throwItem(entity, target, weapon, (weapon.weight || 1) + (entity.damageBonus || 0), itemManager);
         }
     }
 
