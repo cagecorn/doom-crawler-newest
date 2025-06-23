@@ -13,15 +13,11 @@ export class CinematicManager {
 
     init() {
         this.eventManager.subscribe('weapon_disarmed', (data) => {
-            this.triggerMicroWorldJudgement(data.defender);
+            this.triggerCinematic(data.defender, 'PARRIED!', 2000);
         });
         this.eventManager.subscribe('armor_broken', (data) => {
-            this.triggerMicroWorldJudgement(data.defender);
+            this.triggerCinematic(data.defender, 'ARMOR BREAK!', 2000);
         });
-    }
-
-    triggerMicroWorldJudgement(target) {
-        this.triggerCinematic(target, 'MICROWORLD JUDGEMENT!', 2000);
     }
 
     triggerCinematic(target, text, duration) {
