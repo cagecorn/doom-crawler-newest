@@ -78,6 +78,16 @@ export class EquipmentManager {
         }
     }
 
+    /**
+     * Get the weapon currently equipped by the entity.
+     *
+     * @param {Object} entity - The character whose weapon is requested.
+     * @returns {Object|null} The equipped weapon or null if none.
+     */
+    getWeapon(entity) {
+        return entity?.equipment?.main_hand || entity?.equipment?.weapon || null;
+    }
+
     _getSlotForItem(item) {
         if (!item) return null;
         // 1. 아이템 데이터에 명시된 slot을 최우선으로 사용합니다.
