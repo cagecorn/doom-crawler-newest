@@ -10,7 +10,7 @@ import { EMBLEMS } from './data/emblems.js';
 import { PREFIXES, SUFFIXES } from './data/affixes.js';
 import { JOBS } from './data/jobs.js';
 import { SKILLS } from './data/skills.js';
-import { MeleeAI, RangedAI, WizardAI, SummonerAI, BardAI } from './ai.js';
+import { MeleeAI, RangedAI, HealerAI, BardAI, SummonerAI, WizardAI, WarriorAI, ArcherAI } from './ai.js';
 import { SupportAI } from './ai/SupportAI.js';
 import { SupportEngine } from './systems/SupportEngine.js';
 import { MBTI_TYPES } from './data/mbti.js';
@@ -95,8 +95,7 @@ export class CharacterFactory {
                 merc.fallbackAI = new MeleeAI();
 
                 if (config.jobId === 'archer') {
-                    const rangedSkill = Math.random() < 0.5 ? SKILLS.double_thrust.id : SKILLS.hawk_eye.id;
-                    merc.skills.push(rangedSkill);
+                    merc.skills.push(SKILLS.double_strike.id);
                     const bow = this.itemFactory.create('long_bow', 0, 0, tileSize);
                     if (bow) {
                         merc.equipment.weapon = bow;
@@ -104,8 +103,10 @@ export class CharacterFactory {
                         if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
                     merc.fallbackAI = new RangedAI();
+                    merc.roleAI = new ArcherAI();
                 } else if (config.jobId === 'warrior') {
                     merc.skills.push(SKILLS.charge_attack.id);
+                    merc.roleAI = new WarriorAI();
                 } else if (config.jobId === 'healer') {
                     merc.skills.push(SKILLS.heal.id);
                     merc.skills.push(SKILLS.purify.id);

@@ -26,6 +26,7 @@ export class SwordAI extends BaseWeaponAI {
 
         if (
             weapon?.weaponStats?.canUseSkill('parry_stance') &&
+            (wielder.skillCooldowns['parry_stance'] || 0) <= 0 &&
             minDist <= wielder.attackRange &&
             wielder.attackCooldown > 0
         ) {
@@ -74,7 +75,12 @@ export class BowAI extends BaseWeaponAI {
         }
 
         const chargeSkillId = 'charge_shot';
-        if (weapon.weaponStats?.canUseSkill(chargeSkillId) && distance <= wielder.attackRange && distance > wielder.attackRange*0.5) {
+        if (
+            weapon.weaponStats?.canUseSkill(chargeSkillId) &&
+            (wielder.skillCooldowns[chargeSkillId] || 0) <= 0 &&
+            distance <= wielder.attackRange &&
+            distance > wielder.attackRange * 0.5
+        ) {
             return { type: 'weapon_skill', skillId: chargeSkillId, target: wielder };
         }
 
@@ -105,7 +111,12 @@ export class SpearAI extends BaseWeaponAI {
             const chargeData = WEAPON_SKILLS[chargeSkillId];
             const chargeRange = chargeData.range || 200;
 
-            if (weapon.weaponStats?.canUseSkill(chargeSkillId) && minDistance > wielder.attackRange && minDistance <= chargeRange) {
+            if (
+                weapon.weaponStats?.canUseSkill(chargeSkillId) &&
+                (wielder.skillCooldowns[chargeSkillId] || 0) <= 0 &&
+                minDistance > wielder.attackRange &&
+                minDistance <= chargeRange
+            ) {
                 return { type: 'weapon_skill', skillId: chargeSkillId, target: nearestTarget };
             }
 
@@ -187,6 +198,7 @@ export class WhipAI extends SpearAI {
 
         if (
             weapon.weaponStats.canUseSkill(pullSkillId) &&
+            (wielder.skillCooldowns[pullSkillId] || 0) <= 0 &&
             distance > wielder.attackRange &&
             distance <= pullSkillData.range
         ) {
