@@ -13,17 +13,15 @@ export class CinematicManager {
 
     init() {
         this.eventManager.subscribe('weapon_disarmed', (data) => {
-            if (data.weapon) {
-                this.playItemCloseup(data.weapon);
-            } else {
-                this.triggerMicroWorldJudgement(data.defender);
+            const target = data.owner || data.defender;
+            if (target) {
+                this.triggerMicroWorldJudgement(target);
             }
         });
         this.eventManager.subscribe('armor_broken', (data) => {
-            if (data.armor) {
-                this.playItemCloseup(data.armor);
-            } else {
-                this.triggerMicroWorldJudgement(data.defender);
+            const target = data.owner || data.defender;
+            if (target) {
+                this.triggerMicroWorldJudgement(target);
             }
         });
     }
