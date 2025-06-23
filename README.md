@@ -61,6 +61,8 @@
 ## Additional Documentation
 
 For detailed gameplay instructions, see [GAMEPLAY_GUIDE.md](GAMEPLAY_GUIDE.md).
+Guidelines for TensorFlow-based pathfinding are available in
+[meta-ai-tensorflow-pathing.md](meta-ai-tensorflow-pathing.md).
 
 
 ## TensorFlow.js 연동
