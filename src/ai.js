@@ -363,23 +363,27 @@ export class PurifierAI extends AIArchetype {
 // --- 원거리형 AI ---
 export class RangedAI extends AIArchetype {
     decideAction(self, context) {
-        const { player, allies, enemies, mapManager, eventManager } = context;
+        const { player, allies, enemies, mapManager } = context;
 
         const currentVisionRange = self.stats?.get('visionRange') ?? self.visionRange;
-        const visibleEnemies = enemies.filter(e => Math.hypot(e.x - self.x, e.y - self.y) < currentVisionRange);
-        const targetList = visibleEnemies;
+        const targetList = enemies.filter(e =>
+            Math.hypot(e.x - self.x, e.y - self.y) < currentVisionRange
+        );
 
         if (targetList.length === 0) {
             if (self.isFriendly && !self.isPlayer) {
-                const target = this._getWanderPosition(self, player, allies, mapManager);
-                if (Math.hypot(target.x - self.x, target.y - self.y) > self.tileSize * 0.3) {
-                    return { type: 'move', target };
+                const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
+                if (playerDistance > self.tileSize * 10) {
+                    return { type: 'move', target: player };
+                }
+                const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+                if (Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+                    return { type: 'move', target: wanderTarget };
                 }
             }
             return { type: 'idle' };
         }
 
-        // T/F 성향에 따른 타겟팅 우선순위 결정
         const mbti = self.properties?.mbti || '';
         let potentialTargets = [...targetList];
         if (mbti.includes('T')) {
@@ -395,17 +399,7 @@ export class RangedAI extends AIArchetype {
             }
         }
 
-        let nearestTarget = null;
-        let minDistance = Infinity;
-        for (const target of potentialTargets) {
-            const dx = target.x - self.x;
-            const dy = target.y - self.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestTarget = target;
-            }
-        }
+        const nearestTarget = this._findNearestEnemy(self, potentialTargets);
 
         if (nearestTarget) {
             const hasLOS = hasLineOfSight(
@@ -415,49 +409,26 @@ export class RangedAI extends AIArchetype {
                 Math.floor(nearestTarget.y / mapManager.tileSize),
                 mapManager
             );
-            if (!hasLOS && self.isFriendly && !self.isPlayer) {
-                const target = this._getWanderPosition(self, player, allies, mapManager);
-                if (Math.hypot(target.x - self.x, target.y - self.y) > self.tileSize * 0.3) {
-                    return { type: 'move', target };
+
+            if (!hasLOS) {
+                if (self.isFriendly && !self.isPlayer) {
+                    const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+                    if (Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+                        return { type: 'move', target: wanderTarget };
+                    }
                 }
+                return { type: 'idle' };
             }
 
-            if (hasLOS) {
-                if (minDistance <= self.attackRange && minDistance > self.attackRange * 0.5) {
-                    // S/N 성향에 따른 스킬 사용 시점 표시
-                    if (mbti.includes('S')) {
-                        // 스킬 사용 선호
-                    } else if (mbti.includes('N') && self.hp / self.maxHp < 0.6) {
-                        // 위기 상황에서 스킬 사용
-                    }
+            const minDistance = Math.hypot(nearestTarget.x - self.x, nearestTarget.y - self.y);
 
-                    const rangedSkill = this._findReadySkill(self, s => s.tags?.includes('ranged'));
-                    if (rangedSkill) {
-                        return { type: 'skill', target: nearestTarget, skillId: rangedSkill.id };
-                    }
-                    return { type: 'attack', target: nearestTarget };
-                }
-
-                if (minDistance <= self.attackRange * 0.5) {
-                    // P 성향은 후퇴하지 않고 돌격
-                    if (mbti.includes('P')) {
-                        return { type: 'move', target: nearestTarget };
-                    }
-                    if (mbti.includes('J')) {
-                        // 계획적인 움직임 표시
-                    }
-                    const dx = nearestTarget.x - self.x;
-                    const dy = nearestTarget.y - self.y;
-                    return { type: 'move', target: { x: self.x - dx, y: self.y - dy } };
-                }
+            if (minDistance < self.attackRange * 0.5 && minDistance > 0) {
+                return { type: 'move', target: this._getFleePosition(self, nearestTarget, mapManager) };
+            } else if (this.isInAttackRange(self, nearestTarget)) {
+                return { type: 'attack', target: nearestTarget };
             }
 
             return { type: 'move', target: nearestTarget };
-        } else if (self.isFriendly && !self.isPlayer) {
-            const target = this._getWanderPosition(self, player, allies, mapManager);
-            if (Math.hypot(target.x - self.x, target.y - self.y) > self.tileSize * 0.3) {
-                return { type: 'move', target };
-            }
         }
 
         return { type: 'idle' };
@@ -976,23 +947,19 @@ export class WarriorAI extends AIArchetype {
         const { enemies } = context;
         const chargeSkill = SKILLS.charge_attack;
 
-        if (
-            (self.skillCooldowns[chargeSkill.id] || 0) <= 0 &&
-            self.mp >= chargeSkill.manaCost
-        ) {
-            const visible = this._filterVisibleEnemies(self, enemies);
-            if (visible.length > 0) {
-                const nearest = this._findNearestEnemy(self, visible);
-                const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
+        if ((self.skillCooldowns[chargeSkill.id] || 0) <= 0 && self.mp >= chargeSkill.manaCost) {
+            const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+            if (visibleEnemies.length > 0) {
+                const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
+                const distance = Math.hypot(nearestEnemy.x - self.x, nearestEnemy.y - self.y);
                 const range = chargeSkill.range ?? chargeSkill.chargeRange;
-                if (dist > self.attackRange && dist <= range) {
-                    // 기존에는 일반 스킬 사용으로 처리했으나, 전사의 '차지 어택'은
-                    // 돌진 스킬처럼 적에게 순식간에 접근해야 한다.
-                    return { type: 'charge_attack', target: nearest, skill: chargeSkill };
+                if (distance > self.attackRange && distance <= range) {
+                    return { type: 'charge_attack', target: nearestEnemy, skill: chargeSkill };
                 }
             }
         }
 
+        // 스킬을 사용하지 않으면 다음 AI에게 결정을 넘긴다
         return { type: 'idle' };
     }
 }
@@ -1002,20 +969,17 @@ export class ArcherAI extends AIArchetype {
         const { enemies } = context;
         const doubleStrike = SKILLS.double_strike;
 
-        if (
-            (self.skillCooldowns[doubleStrike.id] || 0) <= 0 &&
-            self.mp >= doubleStrike.manaCost
-        ) {
-            const visible = this._filterVisibleEnemies(self, enemies);
-            if (visible.length > 0) {
-                const nearest = this._findNearestEnemy(self, visible);
-                const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
-                if (dist <= self.attackRange) {
-                    return { type: 'skill', target: nearest, skillId: doubleStrike.id };
+        if ((self.skillCooldowns[doubleStrike.id] || 0) <= 0 && self.mp >= doubleStrike.manaCost) {
+            const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+            if (visibleEnemies.length > 0) {
+                const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
+                if (this.isInAttackRange(self, nearestEnemy)) {
+                    return { type: 'skill', target: nearestEnemy, skillId: doubleStrike.id };
                 }
             }
         }
 
+        // 스킬이 없거나 사거리가 맞지 않으면 기본 AI가 처리
         return { type: 'idle' };
     }
 }

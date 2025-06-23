@@ -92,6 +92,7 @@ export class CharacterFactory {
                     finalConfig.stats = { ...finalConfig.stats, ...JOBS[config.jobId].stats };
                 }
                 const merc = new Mercenary(finalConfig);
+                // 기본 전투는 근접 AI로 시작하되 직업에 따라 교체된다
                 merc.fallbackAI = new MeleeAI();
 
                 if (config.jobId === 'archer') {
@@ -100,13 +101,17 @@ export class CharacterFactory {
                     if (bow) {
                         merc.equipment.weapon = bow;
                         if (merc.stats) merc.stats.updateEquipmentStats();
-                        if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
                     merc.fallbackAI = new RangedAI();
-                    merc.roleAI = new ArcherAI();
+                    merc.roleAI = new ArcherAI(this.game);
                 } else if (config.jobId === 'warrior') {
                     merc.skills.push(SKILLS.charge_attack.id);
-                    merc.roleAI = new WarriorAI();
+                    merc.roleAI = new WarriorAI(this.game);
+                    const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
+                    if (weapon) {
+                        merc.equipment.weapon = weapon;
+                        if (merc.stats) merc.stats.updateEquipmentStats();
+                    }
                 } else if (config.jobId === 'healer') {
                     merc.skills.push(SKILLS.heal.id);
                     merc.skills.push(SKILLS.purify.id);
