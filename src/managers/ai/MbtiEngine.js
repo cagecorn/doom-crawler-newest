@@ -1,4 +1,4 @@
-import { loadTf } from '../../utils/tf-loader.js';
+import { loadTf, loadCocoSsd, loadKnnClassifier } from '../../utils/tf-loader.js';
 
 export class MbtiEngine {
     constructor(eventManager, options = {}) {
@@ -11,8 +11,16 @@ export class MbtiEngine {
         this.model = null;
         this.modelLoaded = false;
         this.tf = null;
+        this.coco = null;
+        this.knn = null;
         loadTf().then(tf => { this.tf = tf; }).catch(err => {
             console.warn('[MbtiEngine] Failed to load TensorFlow.js:', err);
+        });
+        loadCocoSsd().then(mod => { this.coco = mod; }).catch(err => {
+            console.warn('[MbtiEngine] Failed to load coco-ssd:', err);
+        });
+        loadKnnClassifier().then(mod => { this.knn = mod; }).catch(err => {
+            console.warn('[MbtiEngine] Failed to load knn-classifier:', err);
         });
 
         if (options.model) {
