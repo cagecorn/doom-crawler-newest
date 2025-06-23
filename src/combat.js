@@ -149,36 +149,3 @@ export class CombatCalculator {
         }
     }
 }
-
-/**
- * '무기 던지기' 공격을 수행한다.
- * 체력이 30% 미만일 때만 사용 가능하며, 무게에 비례한 추가 피해를 준다.
- * @param {object} game - 게임 인스턴스
- * @param {object} attacker - 공격자
- * @param {object} target - 목표물
- */
-export function performThrowWeaponAttack(game, attacker, target) {
-    const weapon = game.equipmentManager.getWeapon(attacker);
-    if (!weapon) {
-        console.log(`${attacker.name} has no weapon to throw.`);
-        return;
-    }
-
-    const healthPercentage = attacker.hp / attacker.maxHp;
-    if (healthPercentage >= 0.3) {
-        console.log(`${attacker.name} is not desperate enough to throw weapon. (HP: ${Math.floor(healthPercentage * 100)}%)`);
-        // 절박하지 않으므로 일반 공격
-        game.combatCalculator.handleAttack({ attacker, defender: target, skill: null }, { knockbackEngine: game.knockbackEngine });
-        return;
-    }
-
-    console.log(`${attacker.name} uses Last Resort! Throws ${weapon.name}!`);
-    game.eventManager.publish('log', { message: `${attacker.name}이(가) 최후의 수단으로 ${weapon.name}을(를) 던집니다!`, color: 'red' });
-
-    game.equipmentManager.unequip(attacker, weapon.slot);
-
-    const damage = ((weapon.weight || 1) + (attacker.damageBonus || 0)) * 2;
-    game.projectileManager.throwItem(attacker, target, weapon, damage, game.itemManager);
-
-    game.eventManager.publish('entity_updated', { entity: attacker });
-}

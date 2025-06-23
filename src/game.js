@@ -962,19 +962,19 @@ export class Game {
             }
         });
 
-        // AI가 성격 특성을 발동했을 때 간단한 알파벳 팝업을 표시
+        // AI가 성격 특성을 발동했을 때 텍스트 팝업으로 표시
         eventManager.subscribe('ai_mbti_trait_triggered', (data) => {
             if (this.vfxManager) {
-                // TensorFlow 사용 여부에 따라 (tf) 표시를 추가한다
-                const text = data.tfUsed ? `${data.trait}(tf)` : data.trait;
-                this.vfxManager.addTextPopup(text, data.entity);
-            }
-        });
+                const trait = data.trait;
+                const options = MBTI_THOUGHTS[trait];
+                let thoughtText = trait;
 
-        // 아이템을 주웠을 때 "PICK UP!" 팝업을 표시
-        eventManager.subscribe('item_picked_up', ({ entity, item }) => {
-            if (this.vfxManager) {
-                this.vfxManager.addTextPopup('PICK UP!', entity, { color: 'yellow' });
+                if (options) {
+                    thoughtText = options[Math.floor(Math.random() * options.length)];
+                }
+
+                const text = data.tfUsed ? `${thoughtText}(tf)` : thoughtText;
+                this.vfxManager.addTextPopup(text, data.entity);
             }
         });
 
@@ -1229,8 +1229,7 @@ export class Game {
             playerGroup: this.playerGroup,
             monsterGroup: this.monsterGroup,
             speechBubbleManager: this.speechBubbleManager,
-            enemies: metaAIManager.groups['dungeon_monsters']?.members || [],
-            game: this
+            enemies: metaAIManager.groups['dungeon_monsters']?.members || []
         };
         metaAIManager.update(context);
         this.possessionAIManager.update(context);
