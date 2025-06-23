@@ -19,7 +19,14 @@ export function test(name, fn) {
     if (!shouldRun) return;
     const indent = ' '.repeat(describeStack.length);
     try {
-        fn();
+        const result = fn();
+        if (result && typeof result.then === 'function') {
+            return result.then(() => {
+                console.log(`${indent}✅ PASSED: ${name}`);
+            }).catch(e => {
+                console.error(`${indent}❌ FAILED: ${name} - ${e.message}`);
+            });
+        }
         console.log(`${indent}✅ PASSED: ${name}`);
     } catch (e) {
         console.error(`${indent}❌ FAILED: ${name} - ${e.message}`);
