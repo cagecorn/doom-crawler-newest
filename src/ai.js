@@ -779,41 +779,26 @@ export class SummonerAI extends RangedAI {
 
 export class BardAI extends AIArchetype {
     decideAction(self, context) {
-        const { player, allies, enemies, mapManager, eventManager } = context;
+        const { player, allies, enemies, mapManager } = context;
         const mbti = self.properties?.mbti || '';
-        const songs = [SKILLS.guardian_hymn.id, SKILLS.courage_hymn.id];
-        for (const skillId of songs) {
-            const skill = SKILLS[skillId];
-            if (
-                self.skills.includes(skillId) &&
-                self.mp >= skill.manaCost &&
-                (self.skillCooldowns[skillId] || 0) <= 0 &&
-                self.equipment.weapon && self.equipment.weapon.tags.includes('song')
-            ) {
-                let target = player; // 기본 대상은 플레이어
 
-                // --- E/I 성향에 따라 노래 대상 선택 ---
-                if (mbti.includes('E')) {
-                    const woundedAlly = allies
-                        .filter(a => a !== self)
-                        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-                    if (woundedAlly) target = woundedAlly;
-                } else if (mbti.includes('I')) {
-                    target = self;
-                }
+        const guardianTarget = this.engine?.findBuffTarget(self, allies, 'shield');
+        const courageTarget = this.engine?.findBuffTarget(self, allies, 'bonus_damage');
 
-                const distance = Math.hypot(target.x - self.x, target.y - self.y);
-                if (distance <= self.attackRange) {
-                    // E/I 성향을 실제 노래 시점에 표시
-                    if (mbti.includes('E')) {
-                        // 외향형은 크게 노래함
-                    } else if (mbti.includes('I')) {
-                        // 내향형은 조용히 노래한다
-                    }
-                    return { type: 'skill', target, skillId };
-                }
-                return { type: 'move', target };
-            }
+        if (
+            guardianTarget &&
+            self.skillCooldowns[SKILLS.guardian_hymn.id] <= 0 &&
+            self.mp >= SKILLS.guardian_hymn.manaCost
+        ) {
+            return { type: 'skill', target: guardianTarget, skillId: SKILLS.guardian_hymn.id };
+        }
+
+        if (
+            courageTarget &&
+            self.skillCooldowns[SKILLS.courage_hymn.id] <= 0 &&
+            self.mp >= SKILLS.courage_hymn.manaCost
+        ) {
+            return { type: 'skill', target: courageTarget, skillId: SKILLS.courage_hymn.id };
         }
 
         const visible = this._filterVisibleEnemies(self, enemies);
@@ -821,7 +806,7 @@ export class BardAI extends AIArchetype {
             let potential = [...visible];
             let targetCandidate = null;
             if (mbti.includes('T')) {
-                targetCandidate = potential.reduce((low, cur) => cur.hp < low.hp ? cur : low, potential[0]);
+                targetCandidate = potential.reduce((low, cur) => (cur.hp < low.hp ? cur : low), potential[0]);
             } else if (mbti.includes('F')) {
                 const allyTargets = new Set();
                 allies.forEach(a => {
@@ -832,20 +817,23 @@ export class BardAI extends AIArchetype {
                     targetCandidate = focused;
                 }
             }
-            const nearest = targetCandidate || potential.reduce(
-                (closest, cur) =>
-                    Math.hypot(cur.x - self.x, cur.y - self.y) < Math.hypot(closest.x - self.x, closest.y - self.y)
-                        ? cur
-                        : closest,
-                potential[0]
-            );
+            const nearest =
+                targetCandidate ||
+                potential.reduce(
+                    (closest, cur) =>
+                        Math.hypot(cur.x - self.x, cur.y - self.y) <
+                        Math.hypot(closest.x - self.x, closest.y - self.y)
+                            ? cur
+                            : closest,
+                    potential[0]
+                );
             const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
             const hasLOS = hasLineOfSight(
                 Math.floor(self.x / mapManager.tileSize),
                 Math.floor(self.y / mapManager.tileSize),
                 Math.floor(nearest.x / mapManager.tileSize),
                 Math.floor(nearest.y / mapManager.tileSize),
-                mapManager,
+                mapManager
             );
             self.currentTarget = nearest;
             if (hasLOS && dist <= self.attackRange) {

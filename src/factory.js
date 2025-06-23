@@ -10,7 +10,7 @@ import { EMBLEMS } from './data/emblems.js';
 import { PREFIXES, SUFFIXES } from './data/affixes.js';
 import { JOBS } from './data/jobs.js';
 import { SKILLS } from './data/skills.js';
-import { MeleeAI, RangedAI, WizardAI, SummonerAI } from './ai.js';
+import { MeleeAI, RangedAI, WizardAI, SummonerAI, BardAI } from './ai.js';
 import { SupportAI } from './ai/SupportAI.js';
 import { SupportEngine } from './systems/SupportEngine.js';
 import { MBTI_TYPES } from './data/mbti.js';
@@ -130,11 +130,8 @@ export class CharacterFactory {
                         if (merc.stats) merc.stats.updateEquipmentStats();
                         if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
-                    merc.roleAI = new SupportAI(this.supportEngine, {
-                        priorities: ['buff'],
-                        buffId: 'shield',
-                        skillIds: { buff: SKILLS.guardian_hymn.id }
-                    });
+                    merc.roleAI = new BardAI();
+                    merc.roleAI.engine = this.supportEngine;
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);
