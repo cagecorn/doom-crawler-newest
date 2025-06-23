@@ -104,9 +104,11 @@ export class CharacterFactory {
                     }
                     merc.fallbackAI = new RangedAI();
                     merc.roleAI = new ArcherAI(this.game);
+                    merc.defaultRoleAI = merc.roleAI;
                 } else if (config.jobId === 'warrior') {
                     merc.skills.push(SKILLS.charge_attack.id);
                     merc.roleAI = new WarriorAI(this.game);
+                    merc.defaultRoleAI = merc.roleAI;
                     const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
                     if (weapon) {
                         merc.equipment.weapon = weapon;
@@ -122,6 +124,7 @@ export class CharacterFactory {
                     }
                     const gameRef = this.game || { supportEngine: this.supportEngine };
                     merc.roleAI = new HealerAI(gameRef);
+                    merc.defaultRoleAI = merc.roleAI;
                     merc.fallbackAI = null;
                 } else if (config.jobId === 'wizard') {
                     const mageSkill = Math.random() < 0.5 ? SKILLS.fireball.id : SKILLS.iceball.id;
@@ -133,6 +136,7 @@ export class CharacterFactory {
                         if (merc.stats) merc.stats.updateEquipmentStats();
                     }
                     merc.roleAI = new WizardAI(this.game);
+                    merc.defaultRoleAI = merc.roleAI;
                     merc.fallbackAI = null;
                     // ===============================================
                 } else if (config.jobId === 'summoner') {
@@ -145,6 +149,7 @@ export class CharacterFactory {
                         if (merc.stats) merc.stats.updateEquipmentStats();
                     }
                     merc.roleAI = new SummonerAI(this.game);
+                    merc.defaultRoleAI = merc.roleAI;
                     merc.fallbackAI = null;
                     // ===============================================
                 } else if (config.jobId === 'bard') {
@@ -159,6 +164,7 @@ export class CharacterFactory {
                     // Pass the game object so BardAI can access SupportEngine safely
                     const gameRef = this.game || { supportEngine: this.supportEngine };
                     merc.roleAI = new BardAI(gameRef);
+                    merc.defaultRoleAI = merc.roleAI;
                     merc.fallbackAI = null; // disable default AI for bards
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;

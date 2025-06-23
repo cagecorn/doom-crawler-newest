@@ -52,6 +52,12 @@ export class MetaAIManager {
         }
     }
 
+    resetRoleAI(entity) {
+        if (entity && typeof entity.resetRoleAI === 'function') {
+            entity.resetRoleAI();
+        }
+    }
+
     executeAction(entity, action, context) {
         if (!action || !action.type || action.type === 'idle') return;
         const { eventManager } = context;
