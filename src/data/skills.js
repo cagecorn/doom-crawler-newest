@@ -257,6 +257,16 @@ export const SKILLS = {
         tags: ['skill', 'debuff', 'resist_down', 'enemy', '디버프'],
         effects: { target: ['resist_down'] },
     },
+
+    haste: {
+        id: 'haste',
+        name: '신속',
+        description: '아군의 이동 속도를 일시적으로 증가시킵니다.',
+        manaCost: 10,
+        cooldown: 120,
+        tags: ['skill', 'buff', 'speed_up', 'support'],
+        effects: { target: ['haste'] },
+    },
     summon_skeleton: {
         id: 'summon_skeleton',
         name: '해골 소환',
