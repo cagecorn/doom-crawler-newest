@@ -62,7 +62,7 @@ describe('Full Cycle Integration Test', () => {
       maxMp: 30,
       skills: ['heal'],
       skillCooldowns: {},
-      ai: new HealerAI(),
+      ai: new HealerAI({ supportEngine: { findHealTarget(){ return player; }, findPurifyTarget(){ return null; } } }),
       properties: { mbti: 'ESFJ' },
       stats: { get: () => 0 },
       attackRange: 192,

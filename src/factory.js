@@ -110,10 +110,14 @@ export class CharacterFactory {
                 } else if (config.jobId === 'healer') {
                     merc.skills.push(SKILLS.heal.id);
                     merc.skills.push(SKILLS.purify.id);
-                    merc.roleAI = new SupportAI(this.supportEngine, {
-                        priorities: ['purify', 'heal'],
-                        skillIds: { heal: SKILLS.heal.id, purify: SKILLS.purify.id }
-                    });
+                    const weapon = this.itemFactory.create('short_sword', 0, 0, tileSize);
+                    if (weapon) {
+                        merc.equipment.weapon = weapon;
+                        if (merc.stats) merc.stats.updateEquipmentStats();
+                    }
+                    const gameRef = this.game || { supportEngine: this.supportEngine };
+                    merc.roleAI = new HealerAI(gameRef);
+                    merc.fallbackAI = null;
                 } else if (config.jobId === 'wizard') {
                     const mageSkill = Math.random() < 0.5 ? SKILLS.fireball.id : SKILLS.iceball.id;
                     merc.skills.push(mageSkill);
