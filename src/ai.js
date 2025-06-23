@@ -791,23 +791,29 @@ export class SummonerAI extends RangedAI {
 }
 
 export class BardAI extends AIArchetype {
+    constructor(game) {
+        super();
+        this.game = game;
+        this.supportEngine = game ? game.supportEngine : null;
+    }
+
     decideAction(self, context) {
         const { player, allies, enemies, mapManager } = context;
         const mbti = self.properties?.mbti || '';
-        const guardianTarget = this.engine?.findBuffTarget(self, allies, 'shield');
-        const courageTarget = this.engine?.findBuffTarget(self, allies, 'bonus_damage');
 
+        const guardianTarget = this.supportEngine?.findBuffTarget(self, allies, 'shield');
         if (
             guardianTarget &&
-            self.skillCooldowns[SKILLS.guardian_hymn.id] <= 0 &&
+            (self.skillCooldowns[SKILLS.guardian_hymn.id] || 0) <= 0 &&
             self.mp >= SKILLS.guardian_hymn.manaCost
         ) {
             return { type: 'skill', target: guardianTarget, skillId: SKILLS.guardian_hymn.id };
         }
 
+        const courageTarget = this.supportEngine?.findBuffTarget(self, allies, 'bonus_damage');
         if (
             courageTarget &&
-            self.skillCooldowns[SKILLS.courage_hymn.id] <= 0 &&
+            (self.skillCooldowns[SKILLS.courage_hymn.id] || 0) <= 0 &&
             self.mp >= SKILLS.courage_hymn.manaCost
         ) {
             return { type: 'skill', target: courageTarget, skillId: SKILLS.courage_hymn.id };
