@@ -78,16 +78,19 @@ npm install
 await metaAIManager.mbtiEngine.loadModel('models/mbti-model/model.json');
 ```
 
-데이터 수집을 위해 Node 환경에서 실행할 경우 `DataRecorder`를 활성화할 수 있습니다.
-`EventManager` 인스턴스 후 다음과 같이 초기화하세요:
+게임은 기본적으로 `DataRecorder`를 통해 플레이어의 행동을 실시간으로 수집합니다.
+브라우저에서는 `D` 키를 눌러 저장된 데이터를 `training_data.json` 파일로 다운로드할 수 있습니다.
+
+Node 환경에서 직접 파일로 기록하고 싶다면 다음과 같이 초기화합니다:
 
 ```javascript
-import { DataRecorder } from './src/managers/dataRecorder.js';
-const recorder = new DataRecorder(eventManager, './logs/sim.csv', 'csv');
+import DataRecorder from './src/managers/dataRecorder.js';
+const game = createGame();
+const recorder = new DataRecorder(game, './logs/training.jsonl');
+await recorder.init();
 ```
 
-기본 포맷은 JSONL이며, 두 번째 인수로 경로와 세 번째 인수로 `csv` 혹은 `json` 형식을
-선택할 수 있습니다.
+기본 포맷은 JSONL이며 `training.jsonl` 파일에 누적 기록됩니다.
 
 
 ## 결함 주입 테스트
