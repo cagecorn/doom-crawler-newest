@@ -65,6 +65,7 @@ describe('Integration', () => {
 
     assert.ok(actions[archer.id] && actions[archer.id].type !== 'idle', 'archer should act');
     assert.strictEqual(actions[healer.id].type, 'skill', 'healer should attempt to heal');
-    assert.strictEqual(actions[bard.id].type, 'skill', 'bard should perform a hymn');
+    // 음유시인은 더 이상 스킬을 사용하지 않으므로 skill 타입이 아닌지 확인한다.
+    assert.notStrictEqual(actions[bard.id].type, 'skill', 'bard should not use skills');
   });
 });
