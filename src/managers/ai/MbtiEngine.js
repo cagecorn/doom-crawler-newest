@@ -1,3 +1,4 @@
+import { calculateDistance } from "../../utils/geometry.js";
 import tfLoader from '../../utils/tf-loader.js';
 
 export class MbtiEngine {
@@ -21,6 +22,8 @@ export class MbtiEngine {
             console.warn('[MbtiEngine] Failed to initialize TensorFlow libraries:', err);
         });
 
+        this.cooldownCounter = 0;
+
         if (options.model) {
             this.model = options.model;
             this.modelLoaded = true;
@@ -41,19 +44,75 @@ export class MbtiEngine {
         console.log(`[MbtiEngine] Model loaded from ${url}`);
     }
 
-    _buildInput(entity, action) {
-        const allyCount = action.context?.allies?.length || 0;
-        return [
-            action.type === 'attack' ? 1 : 0,
-            action.type === 'move' ? 1 : 0,
-            allyCount
-        ];
+    isReady() {
+        if (this.cooldownCounter > 0) {
+            this.cooldownCounter--;
+            return false;
+        }
+        return true;
     }
 
-    _predictTrait(entity, action) {
+    setCooldown() {
+        this.cooldownCounter = this.cooldown;
+    }
+
+    _buildInput(entity, action, game) {
+        // 1. 현재 체력 비율 계산
+        const healthPercentage = entity.hp / entity.maxHp;
+
+        // 2. 거리 및 주변 유닛 수 계산을 위한 변수 초기화
+        let nearestEnemyDist = Infinity;
+        let enemiesInVicinity = 0;
+        let alliesInVicinity = 0;
+        const VICINITY_RADIUS = 5; // 주변으로 인식할 반경 (5칸)
+
+        // 3. 게임 내 모든 유닛을 순회하며 정보 수집
+        for (const other of game.entityManager.entities) {
+            if (other.id === entity.id) continue; // 자기 자신은 제외
+
+            const distance = calculateDistance(entity, other);
+
+            if (other.team !== entity.team) { // 적군일 경우
+                if (distance < nearestEnemyDist) {
+                    nearestEnemyDist = distance;
+                }
+                if (distance <= VICINITY_RADIUS) {
+                    enemiesInVicinity++;
+                }
+            } else { // 아군일 경우
+                if (distance <= VICINITY_RADIUS) {
+                    alliesInVicinity++;
+                }
+            }
+        }
+
+        // 거리가 무한대(주변에 적이 없음)일 경우를 처리하고, 값을 정규화 (0~1 사이로)
+        const normalizedDistance = nearestEnemyDist === Infinity ? 1.0 : Math.min(1.0, nearestEnemyDist / 20.0);
+
+        // 4. 사용 가능한 스킬 수 계산
+        let availableSkillCount = 0;
+        if (game.skillManager && entity.skills) {
+            availableSkillCount = entity.skills.filter(skill => game.skillManager.isSkillReady(entity, skill.name)).length;
+        }
+
+        // 5. 최종적으로 5개의 정보를 담은 배열 생성
+        const inputArray = [
+            healthPercentage,
+            normalizedDistance,
+            enemiesInVicinity,
+            alliesInVicinity,
+            availableSkillCount
+        ];
+
+        // 디버깅을 위해 콘솔에 로그 출력
+        console.log(`[MbtiEngine] New Input for ${entity.name}:`, inputArray);
+
+        return this.tf.tensor([inputArray]);
+    }
+
+    _predictTrait(tensor) {
         const tf = this.tf;
         if (!tf || !this.modelLoaded) return null;
-        const tensor = tf.tensor2d([this._buildInput(entity, action)]);
         const prediction = this.model.predict(tensor);
         const traitIndex = prediction.argMax(-1).dataSync()[0];
         tf.dispose([tensor, prediction]);
@@ -66,53 +125,56 @@ export class MbtiEngine {
      * @param {object} entity - AI 유닛
      * @param {object} action - AI가 결정한 행동
      */
-    process(entity, action) {
+    process(entity, action, game) {
         if (!entity || !action || !entity.properties?.mbti) {
             return;
         }
 
-        // 쿨다운 체크
-        if (entity._mbtiCooldown > 0) {
-            entity._mbtiCooldown--;
+        if (!this.isReady()) {
             return;
         }
 
-        const mbti = entity.properties.mbti;
-        const predictedTrait = this._predictTrait(entity, action);
-        let traitToPublish = predictedTrait;
-        let tfUsed = !!predictedTrait;
+        if (this.tf && this.model) {
 
-        // 기존 규칙 기반 판단(백업)
-        if (!traitToPublish) {
-            switch (action.type) {
-                case 'attack':
-                case 'skill':
-                    if (action.target?.isFriendly === false) {
-                        if (mbti.includes('T')) traitToPublish = 'T';
-                        else if (mbti.includes('F')) traitToPublish = 'F';
-                    } else if (action.target?.isFriendly === true) {
-                        if (mbti.includes('F')) traitToPublish = 'F';
-                    }
+            // _buildInput에 game 객체를 전달합니다.
+            const tensor = this._buildInput(entity, action, game);
+            const trait = this._predictTrait(tensor);
 
-                    if (!traitToPublish && mbti.includes('S')) traitToPublish = 'S';
-                    break;
-
-                case 'move':
-                    if (action.target) {
-                        if (mbti.includes('J')) traitToPublish = 'J';
-                    } else {
-                        if (mbti.includes('P')) traitToPublish = 'P';
-                    }
-                    break;
-
-                case 'idle':
-                case 'flee':
-                    if (mbti.includes('I')) traitToPublish = 'I';
-                    break;
+            if (trait) {
+                this.eventManager.publish('ai_mbti_trait_triggered', { entity, trait, tfUsed: true });
+                this.setCooldown();
+                return;
             }
         }
 
-        // E/I는 별도 조건으로 한 번 더 체크 (주변 유닛 수)
+        const mbti = entity.properties.mbti;
+        let traitToPublish = null;
+        let tfUsed = false;
+
+        switch (action.type) {
+            case 'attack':
+            case 'skill':
+                if (action.target?.isFriendly === false) {
+                    if (mbti.includes('T')) traitToPublish = 'T';
+                    else if (mbti.includes('F')) traitToPublish = 'F';
+                } else if (action.target?.isFriendly === true) {
+                    if (mbti.includes('F')) traitToPublish = 'F';
+                }
+                if (!traitToPublish && mbti.includes('S')) traitToPublish = 'S';
+                break;
+            case 'move':
+                if (action.target) {
+                    if (mbti.includes('J')) traitToPublish = 'J';
+                } else {
+                    if (mbti.includes('P')) traitToPublish = 'P';
+                }
+                break;
+            case 'idle':
+            case 'flee':
+                if (mbti.includes('I')) traitToPublish = 'I';
+                break;
+        }
+
         if (!traitToPublish && action.context?.allies) {
             if (action.context.allies.length > 3 && mbti.includes('E')) {
                 traitToPublish = 'E';
@@ -125,7 +187,7 @@ export class MbtiEngine {
                 trait: traitToPublish,
                 tfUsed
             });
-            entity._mbtiCooldown = this.cooldown;
+            this.setCooldown();
         }
     }
 }
