@@ -794,8 +794,24 @@ export class BardAI extends AIArchetype {
     decideAction(self, context) {
         const { player, allies, enemies, mapManager } = context;
         const mbti = self.properties?.mbti || '';
-        // 더 이상 음유시인은 스킬을 사용하지 않는다. 버프 대상을 찾거나
-        // 마나 및 쿨다운을 확인하는 로직을 모두 제거하여 기본 공격과 이동만 수행한다.
+        const guardianTarget = this.engine?.findBuffTarget(self, allies, 'shield');
+        const courageTarget = this.engine?.findBuffTarget(self, allies, 'bonus_damage');
+
+        if (
+            guardianTarget &&
+            self.skillCooldowns[SKILLS.guardian_hymn.id] <= 0 &&
+            self.mp >= SKILLS.guardian_hymn.manaCost
+        ) {
+            return { type: 'skill', target: guardianTarget, skillId: SKILLS.guardian_hymn.id };
+        }
+
+        if (
+            courageTarget &&
+            self.skillCooldowns[SKILLS.courage_hymn.id] <= 0 &&
+            self.mp >= SKILLS.courage_hymn.manaCost
+        ) {
+            return { type: 'skill', target: courageTarget, skillId: SKILLS.courage_hymn.id };
+        }
 
         const visible = this._filterVisibleEnemies(self, enemies);
         if (visible.length > 0) {
