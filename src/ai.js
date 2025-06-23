@@ -329,7 +329,7 @@ export class HealerAI extends AIArchetype {
     }
 
     decideAction(self, context) {
-        const { player, allies, enemies } = context;
+        const { player, allies, enemies, mapManager } = context;
 
         // 우선순위 1: 힐 또는 정화
         if (this.supportEngine) {
@@ -375,6 +375,12 @@ export class HealerAI extends AIArchetype {
         const playerDist = Math.hypot(player.x - self.x, player.y - self.y);
         if (playerDist > self.tileSize * 3) {
             return { type: 'move', target: player };
+        }
+
+        const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+        if (wanderTarget &&
+            Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+            return { type: 'move', target: wanderTarget };
         }
 
         return { type: 'idle' };
@@ -524,7 +530,7 @@ export class WizardAI extends AIArchetype {
     }
 
     decideAction(self, context) {
-        const { player, enemies, mapManager } = context;
+        const { player, allies, enemies, mapManager } = context;
 
         // 우선순위 1: 마법 공격 (직업 스킬)
         const magicSkillId = self.skills.find(id => id === 'fireball' || id === 'iceball');
@@ -567,6 +573,12 @@ export class WizardAI extends AIArchetype {
         const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
         if (playerDistance > self.tileSize * 3) {
             return { type: 'move', target: player };
+        }
+
+        const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+        if (wanderTarget &&
+            Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+            return { type: 'move', target: wanderTarget };
         }
 
         return { type: 'idle' };
@@ -849,7 +861,7 @@ export class SummonerAI extends AIArchetype {
     }
 
     decideAction(self, context) {
-        const { player, enemies, mapManager } = context;
+        const { player, allies, enemies, mapManager } = context;
 
         // 우선순위 1: 스켈레톤 소환 (직업 스킬)
         const summonSkill = SKILLS.summon_skeleton;
@@ -892,6 +904,12 @@ export class SummonerAI extends AIArchetype {
             return { type: 'move', target: player };
         }
 
+        const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+        if (wanderTarget &&
+            Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+            return { type: 'move', target: wanderTarget };
+        }
+
         return { type: 'idle' };
     }
 }
@@ -905,7 +923,7 @@ export class BardAI extends AIArchetype {
     }
 
     decideAction(self, context) {
-        const { player, allies, enemies } = context;
+        const { player, allies, enemies, mapManager } = context;
 
         // 우선순위 1: 노래 부르기 (직업 스킬)
         if (this.supportEngine) {
@@ -953,6 +971,12 @@ export class BardAI extends AIArchetype {
         const playerDistance = Math.hypot(player.x - self.x, player.y - self.y);
         if (playerDistance > self.tileSize * 3) {
             return { type: 'move', target: player };
+        }
+
+        const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
+        if (wanderTarget &&
+            Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+            return { type: 'move', target: wanderTarget };
         }
 
         // 최종: 모든 조건 불만족 시 대기
