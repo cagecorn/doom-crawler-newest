@@ -189,9 +189,7 @@ export class Game {
         );
         this.itemAIManager.setEffectManager(this.effectManager);
         this.movementManager = new MovementManager(this.mapManager);
-        if (SETTINGS.ENABLE_FOG_OF_WAR) {
-            this.fogManager = new FogManager(this.mapManager.width, this.mapManager.height);
-        }
+        this.fogManager = new FogManager(this.mapManager.width, this.mapManager.height);
         this.particleDecoratorManager = new Managers.ParticleDecoratorManager();
         this.particleDecoratorManager.setManagers(this.vfxManager, this.mapManager);
         this.particleDecoratorManager.init();
@@ -1199,7 +1197,7 @@ export class Game {
             }
             this.itemManager.removeItem(itemToPick);
         }
-        if (SETTINGS.ENABLE_FOG_OF_WAR && this.fogManager) {
+        if (this.fogManager) {
             this.fogManager.update(player, mapManager);
         }
         const context = {
@@ -1309,7 +1307,7 @@ export class Game {
             entity.render(entityCtx);
         }
 
-        if (SETTINGS.ENABLE_FOG_OF_WAR && fogManager) {
+        if (fogManager) {
             fogManager.render(contexts.vfx, mapManager.tileSize);
         }
         uiManager.renderHpBars(contexts.vfx, gameState.player, monsterManager.monsters, mercenaryManager.mercenaries);
