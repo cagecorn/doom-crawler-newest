@@ -215,6 +215,11 @@ export class MetaAIManager {
             for (const member of membersSorted) {
                 if (member.hp <= 0) continue;
 
+                if (!member.canAct) {
+                    if (typeof member.update === 'function') member.update(currentContext);
+                    continue;
+                }
+
                 // 에어본 상태이면, 이번 턴 행동을 건너뜀
                 if (Array.isArray(member.effects) && member.effects.some(e => e.id === 'airborne')) {
                     if (typeof member.update === 'function') member.update(currentContext);
@@ -259,6 +264,12 @@ export class MetaAIManager {
                 this.processMbti(member, { ...action, context: currentContext });
 
                 this.executeAction(member, action, currentContext);
+                if (action && action.type && action.type !== 'idle') {
+                    member.canAct = false;
+                    setTimeout(() => {
+                        member.canAct = true;
+                    }, 1000);
+                }
             }
         }
     }
