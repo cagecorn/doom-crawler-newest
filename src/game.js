@@ -999,10 +999,7 @@ export class Game {
                 const item = gameState.inventory[itemIndex];
                 if (!item) return;
 
-                if (item.tags.includes('weapon') || item.tags.includes('armor') ||
-                    item.type === 'weapon' || item.type === 'armor') {
-                    this.uiManager._showEquipTargetPanel(item, gameState);
-                } else if (item.baseId === 'potion' || item.name === 'potion') {
+                if (item.baseId === 'potion' || item.name === 'potion') {
                     const playerChar = gameState.player;
                     playerChar.hp = Math.min(playerChar.maxHp, playerChar.hp + 5);
                     this.particleDecoratorManager.playHealingEffect(playerChar);
@@ -1013,6 +1010,9 @@ export class Game {
                     }
                 } else if (item.tags.includes('pet') || item.type === 'pet') {
                     this.petManager.equip(gameState.player, item, 'fox');
+                } else {
+                    // 무기를 포함한 모든 장비는 장착 대상 선택 UI를 사용합니다.
+                    this.uiManager._showEquipTargetPanel(item, gameState);
                 }
                 this.uiManager.renderInventory(gameState);
             },
