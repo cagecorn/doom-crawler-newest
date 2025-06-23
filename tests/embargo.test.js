@@ -11,6 +11,7 @@ import { MeleeAI, PurifierAI, HealerAI, CompositeAI } from '../src/ai.js';
 import { Item } from '../src/entities.js';
 import { SKILLS } from '../src/data/skills.js';
 import { describe, test, assert } from './helpers.js';
+import * as tf from '@tensorflow/tfjs';
 
 // 업데이트된 엠바고 테스트
 
@@ -122,7 +123,15 @@ test('차지 어택과 포션 사용 시나리오', () => {
          player.effects = player.effects.filter(e => !e.tags?.includes('status_ailment'));
      }
 
-     assert.ok(usedPurify || player.effects.some(e => e.id === 'poison'), 'Healer may skip purify based on MBTI');
+    assert.ok(usedPurify || player.effects.some(e => e.id === 'poison'), 'Healer may skip purify based on MBTI');
+});
+
+ test('TensorFlow simple inference', () => {
+     const model = tf.sequential();
+     model.add(tf.layers.dense({ units: 1, inputShape: [2], useBias: false }));
+     model.setWeights([tf.tensor2d([[1],[1]])]);
+     const output = model.predict(tf.tensor2d([[2, 3]])).dataSync()[0];
+     assert.strictEqual(output, 5, 'TensorFlow model should compute sum');
  });
 
 
