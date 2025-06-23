@@ -13,6 +13,7 @@
 | `PARASITE_SYSTEM.md` | 몬스터가 지니는 기생 아이템 시스템의 개념을 간략히 소개합니다. |
 | `FAULT_INJECTION_GUIDE.md` | MBTI AI와 힐러 AI 등을 대상으로 한 결함 주입 테스트 운영 지침을 기록합니다. |
 | `config-summary.md` | 밸런스 수치와 스탯 계산식을 요약 정리한 표입니다. 실제 값은 코드와 데이터 모듈을 참조합니다. |
+| `meta-ai-tensorflow-pathing.md` | TensorFlow를 활용한 자연스러운 경로 탐색 가이드를 설명합니다. |
 | `skills.md` | 용병 스킬 목록과 주요 태그를 정리합니다. |
 | `state-machine.md` | 게임 상태와 AI 상태 전환 흐름을 도식화한 문서입니다. |
 | `unit-features-plan.md` | MBTI 시스템, 신앙, 속도/턴 시스템 등 향후 유닛 관련 확장 계획을 모아둔 초안입니다. |
