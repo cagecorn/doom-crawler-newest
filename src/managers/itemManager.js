@@ -1,10 +1,11 @@
 import { Item } from '../entities.js';
 
 export class ItemManager {
-    constructor(count = 0, mapManager = null, assets = null) {
+    constructor(count = 0, mapManager = null, assets = null, tracker = null) {
         this.items = [];
         this.mapManager = mapManager;
         this.assets = assets;
+        this.tracker = tracker;
         console.log("[ItemManager] Initialized");
 
         if (count > 0 && this.mapManager && this.assets) {
@@ -17,9 +18,13 @@ export class ItemManager {
             const pos = this.mapManager.getRandomFloorPosition();
             if (pos) {
                 if (Math.random() < 0.5) {
-                    this.items.push(new Item(pos.x, pos.y, this.mapManager.tileSize, 'gold', this.assets.gold));
+                    const item = new Item(pos.x, pos.y, this.mapManager.tileSize, 'gold', this.assets.gold);
+                    this.items.push(item);
+                    if (this.tracker) this.tracker.register(item);
                 } else {
-                    this.items.push(new Item(pos.x, pos.y, this.mapManager.tileSize, 'potion', this.assets.potion));
+                    const item = new Item(pos.x, pos.y, this.mapManager.tileSize, 'potion', this.assets.potion);
+                    this.items.push(item);
+                    if (this.tracker) this.tracker.register(item);
                 }
             }
         }
@@ -27,12 +32,18 @@ export class ItemManager {
 
     addItem(item) {
         this.items.push(item);
+        if (this.tracker) {
+            this.tracker.register(item);
+        }
     }
 
     removeItem(item) {
         const idx = this.items.indexOf(item);
         if (idx !== -1) {
             this.items.splice(idx, 1);
+            if (this.tracker) {
+                this.tracker.unregister(item.id);
+            }
         }
     }
 

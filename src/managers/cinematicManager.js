@@ -13,10 +13,18 @@ export class CinematicManager {
 
     init() {
         this.eventManager.subscribe('weapon_disarmed', (data) => {
-            this.triggerMicroWorldJudgement(data.defender);
+            if (data.weapon) {
+                this.playItemCloseup(data.weapon);
+            } else {
+                this.triggerMicroWorldJudgement(data.defender);
+            }
         });
         this.eventManager.subscribe('armor_broken', (data) => {
-            this.triggerMicroWorldJudgement(data.defender);
+            if (data.armor) {
+                this.playItemCloseup(data.armor);
+            } else {
+                this.triggerMicroWorldJudgement(data.defender);
+            }
         });
     }
 
@@ -45,12 +53,38 @@ export class CinematicManager {
         }, duration);
     }
 
+    playItemCloseup(item) {
+        if (this.isPlaying) return;
+        this.isPlaying = true;
+        this.targetEntity = item;
+
+        this.originalZoom = this.game.gameState.zoomLevel;
+        this.originalTimeScale = this.game.gameLoop.timeScale;
+        this.targetZoom = this.originalZoom * 2.2;
+        this.game.gameLoop.timeScale = 0.1;
+
+        // simple WebGL highlight
+        const canvas = this.game.layerManager.layers.vfx;
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl && item.image) {
+            gl.clearColor(0, 0, 0, 0.5);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            // WebGL implementation placeholder - textured quad
+        }
+
+        setTimeout(() => {
+            this.reset();
+            this.eventManager.publish('cinematic_complete', { id: item.id });
+        }, 1500);
+    }
+
     reset() {
         this.targetZoom = this.originalZoom;
         this.game.gameLoop.timeScale = this.originalTimeScale;
         this.targetEntity = null;
         setTimeout(() => {
             this.isPlaying = false;
+            this.eventManager.publish('cinematic_complete');
         }, 500);
     }
 }
