@@ -44,6 +44,8 @@ export class CinematicManager {
         this.originalTimeScale = this.game.gameLoop.timeScale;
 
         this.targetZoom = this.originalZoom * 1.8;
+        console.log('계산된 카메라 줌 레벨:', this.targetZoom);
+        this.targetZoom = Math.min(this.targetZoom, 10);
         this.game.gameLoop.timeScale = 0.2;
 
         this.game.vfxManager.addCinematicText(text, duration);
@@ -61,6 +63,8 @@ export class CinematicManager {
         this.originalZoom = this.game.gameState.zoomLevel;
         this.originalTimeScale = this.game.gameLoop.timeScale;
         this.targetZoom = this.originalZoom * 2.2;
+        console.log('계산된 카메라 줌 레벨:', this.targetZoom);
+        this.targetZoom = Math.min(this.targetZoom, 10);
         this.game.gameLoop.timeScale = 0.1;
 
         // simple WebGL highlight
