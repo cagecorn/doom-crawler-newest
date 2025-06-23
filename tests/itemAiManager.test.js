@@ -25,7 +25,7 @@ describe('ItemAI', () => {
     assert.strictEqual(merc.consumables.length, 0, 'potion consumed');
   });
 
-  test('picks up and equips nearby weapon', () => {
+  test('does not auto equip nearby weapon', () => {
     const factory = new CharacterFactory(assets);
     const itemFactory = new ItemFactory(assets);
     const eventManager = new EventManager();
@@ -37,7 +37,7 @@ describe('ItemAI', () => {
     const itemManager = { items:[sword], removeItem(i){ this.items=this.items.filter(it=>it!==i); } };
     const context = { player:merc, mercenaryManager:{ mercenaries:[merc] }, monsterManager:{ monsters:[] }, itemManager, equipmentManager:{ equip(e,i){ e.equipment.weapon=i; } } };
     itemAI.update(context);
-    assert.strictEqual(merc.equipment.weapon, sword, 'weapon equipped');
-    assert.strictEqual(itemManager.items.length, 0, 'item removed from ground');
+    assert.strictEqual(merc.equipment.weapon, null, 'weapon should not be equipped');
+    assert.strictEqual(itemManager.items.length, 1, 'item should remain on ground');
   });
 });

@@ -35,11 +35,7 @@ export class ItemAIManager {
 
             this._handleHealingItems(ent, entities);
             this._handleArtifacts(ent);
-            this._pickupEquipment(ent, context);
-            this._pickupConsumables(ent, context);
-
             if (nearbyEnemies.length > 0) {
-                this._maybeThrowWeapon(ent, nearbyEnemies[0], context);
                 this._handleBuffItems(ent, entities);
             }
         }
@@ -153,67 +149,6 @@ export class ItemAIManager {
         }
     }
 
-    _pickupEquipment(entity, context) {
-        const { itemManager, equipmentManager } = context;
-        if (!itemManager || !equipmentManager) return;
-        const slots = ['main_hand','armor','helmet','gloves','boots','off_hand'];
-        for (const slot of slots) {
-            if (entity.equipment?.[slot]) continue;
-            const item = itemManager.items.find(it =>
-                this._matchesSlot(it, slot) &&
-                Math.hypot(it.x - entity.x, it.y - entity.y) <= entity.tileSize * 1.5);
-            if (item) {
-                const ok = this.decisionEngine.shouldPickup(true,
-                    Math.hypot(item.x - entity.x, item.y - entity.y),
-                    item.weight || 1,
-                    entity.hp / entity.maxHp);
-                if (ok) {
-                    itemManager.removeItem(item);
-                    equipmentManager.equip(entity, item, null);
-                    break;
-                }
-            }
-        }
-    }
-
-    _pickupConsumables(entity, context) {
-        const { itemManager } = context;
-        const capacity = entity.consumableCapacity || 0;
-        if (!itemManager || capacity <= (entity.consumables?.length || 0)) return;
-        const item = itemManager.items.find(it => it.tags?.includes('consumable') &&
-            Math.hypot(it.x - entity.x, it.y - entity.y) <= entity.tileSize * 1.5);
-        if (item) {
-            const ok = this.decisionEngine.shouldPickup(true,
-                Math.hypot(item.x - entity.x, item.y - entity.y),
-                item.weight || 1,
-                entity.hp / entity.maxHp);
-            if (ok) {
-                itemManager.removeItem(item);
-                entity.addConsumable?.(item);
-                this._useItem(entity, item, entity);
-            }
-        }
-    }
-
-    _maybeThrowWeapon(entity, target, context) {
-        const { projectileManager, itemManager, equipmentManager } = context;
-        const weapon = entity.equipment?.weapon;
-        if (!weapon || !projectileManager || !itemManager || !equipmentManager) return;
-        const dist = Math.hypot(target.x - entity.x, target.y - entity.y);
-        const hpRatio = entity.hp / entity.maxHp;
-        const ok = this.decisionEngine.shouldThrowWeapon(hpRatio, dist, weapon.weight || 1);
-        if (ok) {
-            equipmentManager.unequip(entity, 'weapon', null);
-            projectileManager.throwItem(entity, target, weapon, (weapon.weight || 1) + (entity.damageBonus || 0), itemManager);
-        }
-    }
-
-    _matchesSlot(item, slot) {
-        if (slot === 'main_hand') return item.tags?.includes('weapon') || item.type === 'weapon';
-        if (slot === 'off_hand') return item.tags?.includes('shield') || item.slot === 'off_hand';
-        if (slot === 'armor') return item.tags?.includes('armor') || item.type === 'armor';
-        return item.tags?.includes(slot);
-    }
 
     _useItem(user, item, target) {
         if (!item || (item.quantity && item.quantity <= 0)) return;
