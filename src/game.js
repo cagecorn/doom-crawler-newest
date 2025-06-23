@@ -1245,9 +1245,11 @@ export class Game {
 
         for (const key in layerManager.contexts) {
             const ctx = layerManager.contexts[key];
-            ctx.save();
-            ctx.scale(zoom, zoom);
-            ctx.translate(-camera.x, -camera.y);
+            if (ctx.save) {
+                ctx.save();
+                ctx.scale(zoom, zoom);
+                ctx.translate(-camera.x, -camera.y);
+            }
         }
 
         const contexts = layerManager.contexts;
@@ -1285,7 +1287,10 @@ export class Game {
         // weatherManager.render(contexts.weather); // (미래 구멍)
 
         for (const key in layerManager.contexts) {
-            layerManager.contexts[key].restore();
+            const ctx = layerManager.contexts[key];
+            if (ctx.restore) {
+                ctx.restore();
+            }
         }
 
         uiManager.updateUI(gameState);
