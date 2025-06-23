@@ -79,7 +79,9 @@ export class MbtiEngine {
         }
 
         const mbti = entity.properties.mbti;
-        let traitToPublish = this._predictTrait(entity, action);
+        const predictedTrait = this._predictTrait(entity, action);
+        let traitToPublish = predictedTrait;
+        let tfUsed = !!predictedTrait;
 
         // 기존 규칙 기반 판단(백업)
         if (!traitToPublish) {
@@ -121,7 +123,8 @@ export class MbtiEngine {
         if (traitToPublish) {
             this.eventManager.publish('ai_mbti_trait_triggered', {
                 entity,
-                trait: traitToPublish
+                trait: traitToPublish,
+                tfUsed
             });
             entity._mbtiCooldown = this.cooldown;
         }
