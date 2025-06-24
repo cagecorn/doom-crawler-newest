@@ -63,6 +63,7 @@ export class Game {
         this.loader.loadImage('wizard', 'assets/images/wizard.png');
         this.loader.loadImage('summoner', 'assets/images/summoner.png');
         this.loader.loadImage('bard', 'assets/images/bard.png');
+        this.loader.loadImage('fire-god', 'assets/images/fire-god.png');
         // 기존 호환성을 위해 기본 mercenary 키도 전사 이미지로 유지
         this.loader.loadImage('mercenary', 'assets/images/warrior.png');
         this.loader.loadImage('floor', 'assets/floor.png');
@@ -230,7 +231,11 @@ export class Game {
         this.dataRecorder.init();
         this.guidelineLoader = new GuidelineLoader(SETTINGS.GUIDELINE_REPO_URL);
         this.guidelineLoader.load();
-        this.possessionAIManager = new PossessionAIManager(this.eventManager);
+        if (SETTINGS.ENABLE_POSSESSION_SYSTEM) {
+            this.possessionAIManager = new PossessionAIManager(this.eventManager);
+        } else {
+            this.possessionAIManager = null;
+        }
         this.itemFactory.emblems = EMBLEMS;
 
         this.skillManager = new Managers.SkillManager(
@@ -250,11 +255,13 @@ export class Game {
             supporter: new SupporterGhostAI(),
             cc: new CCGhostAI()
         };
-        const ghostTypes = Object.keys(ghostAIs);
-        const numGhosts = Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < numGhosts; i++) {
-            const randomType = ghostTypes[Math.floor(Math.random() * ghostTypes.length)];
-            this.possessionAIManager.addGhost(new Ghost(randomType, ghostAIs[randomType]));
+        if (this.possessionAIManager) {
+            const ghostTypes = Object.keys(ghostAIs);
+            const numGhosts = Math.floor(Math.random() * 3) + 1;
+            for (let i = 0; i < numGhosts; i++) {
+                const randomType = ghostTypes[Math.floor(Math.random() * ghostTypes.length)];
+                this.possessionAIManager.addGhost(new Ghost(randomType, ghostAIs[randomType]));
+            }
         }
         this.petManager = new Managers.PetManager(this.eventManager, this.factory, this.metaAIManager, this.auraManager, this.vfxManager);
         this.managers.PetManager = this.petManager;
@@ -623,6 +630,30 @@ export class Game {
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `소환사 용병을 고용했습니다.` });
+                    }
+                } else {
+                    this.eventManager.publish('log', { message: `골드가 부족합니다.` });
+                }
+            };
+        }
+
+        const fireGodBtn = document.getElementById('hire-fire-god');
+        if (fireGodBtn) {
+            fireGodBtn.onclick = () => {
+                if (this.gameState.gold >= 100) {
+                    this.gameState.gold -= 100;
+                    const newMerc = this.mercenaryManager.hireMercenary(
+                        'fire_god',
+                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.y,
+                        this.mapManager.tileSize,
+                        'player_party'
+                    );
+
+                    if (newMerc) {
+                        this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
+                        this.eventManager.publish('log', { message: `불의 신을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -1352,7 +1383,7 @@ export class Game {
             enemies: metaAIManager.groups['dungeon_monsters']?.members || []
         };
         metaAIManager.update(context);
-        this.possessionAIManager.update(context);
+        if (this.possessionAIManager) this.possessionAIManager.update(context);
         this.itemAIManager.update(context);
         this.projectileManager.update(allEntities);
         this.vfxManager.update();
