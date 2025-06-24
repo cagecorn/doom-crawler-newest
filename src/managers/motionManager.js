@@ -16,9 +16,20 @@ export class MotionManager {
         const endX = Math.floor(target.x / tileSize);
         const endY = Math.floor(target.y / tileSize);
 
-        const path = this.pathfindingManager.findPath(startX, startY, endX, endY, () => false);
-        if (path.length === 0) return;
-        
+        const maybePromise = this.pathfindingManager.findPath(startX, startY, endX, endY, () => false);
+        if (maybePromise instanceof Promise) {
+            maybePromise.then(path => this._executeDash(entity, path, maxTiles, allEnemies, eventManager, vfxManager, strikeImage));
+        } else {
+            this._executeDash(entity, maybePromise, maxTiles, allEnemies, eventManager, vfxManager, strikeImage);
+        }
+    }
+
+    _executeDash(entity, path, maxTiles, allEnemies, eventManager, vfxManager, strikeImage) {
+        if (!path || path.length === 0) return;
+
+        const tileSize = this.mapManager.tileSize;
+        const startPos = { x: entity.x, y: entity.y };
+
         const actualMoveDistance = Math.min(maxTiles, path.length);
         const dest = path[actualMoveDistance - 1];
         const destX = dest.x * tileSize;
@@ -26,7 +37,6 @@ export class MotionManager {
 
         if (destX === startPos.x && destY === startPos.y) return;
 
-        // 잔상과 기본 대쉬 궤적 효과
         if (vfxManager) {
             vfxManager.createDashTrail(startPos.x, startPos.y, destX, destY);
 
@@ -52,22 +62,21 @@ export class MotionManager {
             const step = path[i];
             const worldX = step.x * tileSize + tileSize / 2;
             const worldY = step.y * tileSize + tileSize / 2;
-            
+
             const enemiesInPath = findEntitiesInRadius(worldX, worldY, tileSize, allEnemies, entity);
-            for(const enemy of enemiesInPath) {
-                if(!hitEnemies.has(enemy.id)) {
-                    if(eventManager) {
-                        // entity_attack 대신 charge_hit 이벤트를 발생시킵니다.
+            for (const enemy of enemiesInPath) {
+                if (!hitEnemies.has(enemy.id)) {
+                    if (eventManager) {
                         eventManager.publish('charge_hit', { attacker: entity, defender: enemy });
                     }
                     if (vfxManager && strikeImage) {
-                         vfxManager.addSpriteEffect(strikeImage, enemy.x + enemy.width/2, enemy.y + enemy.height/2, { blendMode: 'screen' });
+                        vfxManager.addSpriteEffect(strikeImage, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, { blendMode: 'screen' });
                     }
                     hitEnemies.add(enemy.id);
                 }
             }
         }
-        
+
         if (!this.mapManager.isWallAt(destX, destY, entity.width, entity.height)) {
             entity.x = destX;
             entity.y = destY;

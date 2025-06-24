@@ -2,6 +2,7 @@
 
 import { hasLineOfSight } from './utils/geometry.js';
 import { SKILLS } from './data/skills.js';
+import { SETTINGS } from '../config/gameSettings.js';
 
 // AI 내에서 직접 팝업을 호출하지 않고 이벤트만 발생시켜
 // 시각 효과 로직과 분리한다.  실제 팝업 처리는 game.js가 담당한다.
@@ -132,6 +133,7 @@ export class AIArchetype {
      * @returns {{x:number,y:number}}
      */
     _applyMbtiInfluence(self, pos, allies, base = 32) {
+        if (!SETTINGS.ENABLE_MBTI_INFLUENCE) return pos;
         const myLetter = self?.properties?.mbti?.charAt(0);
         if (!myLetter) return pos;
 
