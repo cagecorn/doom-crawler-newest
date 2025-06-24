@@ -2,6 +2,7 @@ import { ReputationManager } from '../../src/managers/ReputationManager.js';
 import { EventManager } from '../../src/managers/eventManager.js';
 import { memoryDB } from '../../src/persistence/MemoryDB.js';
 import { describe, test, assert } from '../helpers.js';
+import tfLoader from '../../src/utils/tf-loader.js';
 
 function createDummyEngine(predClass) {
     return {
@@ -54,6 +55,27 @@ describe('ReputationManager', () => {
         memoryDB.addEvent = originalAdd;
         assert.strictEqual(events.length, 1);
         assert.ok(events[0].reputationChange < 0);
+    });
+
+    test('loadReputationModel handles failure gracefully', async () => {
+        const eventManager = new EventManager();
+        const manager = new ReputationManager(eventManager);
+
+        const originalInit = tfLoader.init;
+        const originalGet = tfLoader.getTf;
+        let initCalled = false;
+        tfLoader.init = async () => { initCalled = true; };
+        tfLoader.getTf = () => ({
+            loadLayersModel: () => Promise.reject(new Error('bad'))
+        });
+
+        await manager.loadReputationModel();
+
+        tfLoader.init = originalInit;
+        tfLoader.getTf = originalGet;
+
+        assert.ok(initCalled);
+        assert.strictEqual(manager.model, null);
     });
 });
 

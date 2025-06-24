@@ -68,8 +68,12 @@ export class ReputationManager {
     async loadReputationModel() {
         await tfLoader.init();
         this.tf = tfLoader.getTf();
-        if (this.tf) {
+        if (!this.tf) return;
+        try {
             this.model = await this.tf.loadLayersModel('assets/models/reputation/model.json');
+        } catch (err) {
+            console.warn('[ReputationManager] Failed to load model:', err);
+            this.model = null;
         }
     }
 
