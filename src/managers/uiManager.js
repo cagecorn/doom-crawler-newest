@@ -9,7 +9,8 @@ import { SETTINGS } from '../../config/gameSettings.js';
 import { Draggable } from '../utils/Draggable.js';
 
 export class UIManager {
-    constructor() {
+    constructor(eventManager = null) {
+        this.eventManager = eventManager;
         this.levelElement = document.getElementById('ui-player-level');
         this.statPointsElement = document.getElementById('ui-player-statPoints');
         this.movementSpeedElement = document.getElementById('ui-player-movementSpeed');
@@ -534,42 +535,13 @@ export class UIManager {
         this.equippedItemsContainer.innerHTML = '';
         for (const slot in player.equipment) {
             const item = player.equipment[slot];
-            const slotDiv = document.createElement('div');
-            slotDiv.className = 'equip-slot';
-            slotDiv.dataset.slot = slot;
-            if (item && item.image) {
-                const img = document.createElement('img');
-                img.src = item.image.src;
-                slotDiv.appendChild(img);
-                this._attachTooltip(slotDiv, this._getItemTooltip(item));
-            } else {
-                slotDiv.textContent = slot;
-            }
+            const slotDiv = this.createSlotElement(player, slot, item);
             this.equippedItemsContainer.appendChild(slotDiv);
         }
 
         this.inventoryListContainer.innerHTML = '';
         gameState.inventory.forEach((item, index) => {
-            const slotDiv = document.createElement('div');
-            slotDiv.className = 'inventory-item-slot';
-            if (item.image) {
-                const img = document.createElement('img');
-                img.src = item.image.src;
-                img.alt = item.name;
-                slotDiv.appendChild(img);
-            } else {
-                slotDiv.textContent = item.name;
-            }
-            if (item.quantity > 1) {
-                const qty = document.createElement('span');
-                qty.className = 'item-qty';
-                qty.textContent = item.quantity;
-                slotDiv.appendChild(qty);
-            }
-            this._attachTooltip(slotDiv, this._getItemTooltip(item));
-            slotDiv.onclick = () => {
-                if (this.callbacks.onItemUse) this.callbacks.onItemUse(index);
-            };
+            const slotDiv = this.createSlotElement(player, 'inventory', item, index);
             this.inventoryListContainer.appendChild(slotDiv);
         });
     }
@@ -895,6 +867,81 @@ export class UIManager {
             if (stats) html += `<br><em>${stats}</em>`;
         }
         return html;
+    }
+
+    /**
+     * Create or update equipment UI for a character.
+     * @param {object} character
+     */
+    createEquipmentUI(character) {
+        const container = document.getElementById(`${character.id}-equipment`);
+        if (!container) return;
+        container.innerHTML = '';
+        const slotTypes = ['weapon', 'helmet'];
+        slotTypes.forEach(type => {
+            const el = this.createSlotElement(character, type, character.equipment[type]);
+            container.appendChild(el);
+        });
+    }
+
+    /**
+     * Create or update inventory UI for a character.
+     * @param {object} character
+     */
+    createInventoryUI(character) {
+        const container = document.getElementById(`${character.id}-inventory`);
+        if (!container) return;
+        container.innerHTML = '';
+        character.inventory.forEach((item, idx) => {
+            const el = this.createSlotElement(character, 'inventory', item, idx);
+            container.appendChild(el);
+        });
+    }
+
+    /**
+     * Build a slot element with drag & drop handlers.
+     */
+    createSlotElement(owner, slotType, item, inventoryIndex = -1) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.ownerId = owner.id;
+        slot.dataset.slotType = slotType;
+        if (inventoryIndex > -1) slot.dataset.inventoryIndex = inventoryIndex;
+
+        slot.addEventListener('dragover', e => {
+            e.preventDefault();
+            slot.classList.add('drag-over');
+        });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', e => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
+            try {
+                const dropped = JSON.parse(e.dataTransfer.getData('application/json'));
+                this.eventManager?.publish('ui_equip_request', {
+                    ownerId: owner.id,
+                    itemId: dropped.itemId,
+                    from: dropped.from,
+                    to: { type: slotType, index: inventoryIndex }
+                });
+            } catch (_) {}
+        });
+
+        if (item) {
+            const img = document.createElement('img');
+            img.src = item.iconPath || item.image?.src || '';
+            img.draggable = true;
+            img.addEventListener('dragstart', e => {
+                const fromData = { type: slotType, index: inventoryIndex };
+                e.dataTransfer.setData('application/json', JSON.stringify({ itemId: item.id, from: fromData }));
+                img.classList.add('dragging');
+            });
+            img.addEventListener('dragend', () => img.classList.remove('dragging'));
+            slot.appendChild(img);
+            this._attachTooltip(slot, this._getItemTooltip(item));
+        }
+
+        return slot;
     }
 
     _initDraggables() {
