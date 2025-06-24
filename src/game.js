@@ -156,6 +156,7 @@ export class Game {
         this.vfxManager = this.managers.VFXManager;
         this.vfxManager.game = this;
         this.soundManager = this.managers.SoundManager;
+        this.bgmManager = this.managers.BgmManager;
         this.effectManager = this.managers.EffectManager;
         this.auraManager = new Managers.AuraManager(this.effectManager, this.eventManager, this.vfxManager);
         this.microItemAIManager = new Managers.MicroItemAIManager();
@@ -1398,6 +1399,12 @@ export class Game {
             this.gameState.statPoints--;
             this.gameState.player.stats.allocatePoint(stat);
             this.gameState.player.stats.recalculate();
+        }
+    }
+
+    startBGM() {
+        if (this.bgmManager && !this.bgmManager.isInitialized) {
+            this.bgmManager.start();
         }
     }
 }
