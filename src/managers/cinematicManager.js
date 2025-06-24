@@ -16,12 +16,14 @@ export class CinematicManager {
             const target = data.owner || data.defender;
             if (target) {
                 this.triggerMicroWorldJudgement(target);
+                this.eventManager.publish('micro_world_event', { type: 'disarm', entity: target });
             }
         });
         this.eventManager.subscribe('armor_broken', (data) => {
             const target = data.owner || data.defender;
             if (target) {
                 this.triggerMicroWorldJudgement(target);
+                this.eventManager.publish('micro_world_event', { type: 'armor_break', entity: target });
             }
         });
     }

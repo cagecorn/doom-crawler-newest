@@ -815,6 +815,16 @@ export class Game {
             }
         });
 
+        // 미시세계 판정 결과 텍스트 및 추가 연출
+        eventManager.subscribe('micro_world_event', ({ type, entity }) => {
+            if (!entity) return;
+            if (type === 'disarm') {
+                this.vfxManager.showEventText('[무장해제!]');
+            } else if (type === 'armor_break') {
+                this.vfxManager.showEventText('[방어구 파괴!]');
+            }
+        });
+
         eventManager.subscribe('skill_used', (data) => {
             const { caster, skill, target } = data;
             eventManager.publish('log', { message: `${caster.constructor.name} (이)가 ${skill.name} 스킬 사용!`, color: 'aqua' });
