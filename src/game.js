@@ -713,6 +713,7 @@ export class Game {
 
         // 평판 시스템을 위한 몬스터 처치 이벤트
         eventManager.subscribe('monster_defeated', (data) => {
+            if (!this.reputationManager) return;
             const action = {
                 type: 'combat',
                 outcome: 'victory',
