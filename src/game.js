@@ -38,6 +38,7 @@ import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
+import GuidelineLoader from './managers/guidelineLoader.js';
 import { AspirationManager } from './managers/aspirationManager.js';
 import { MicroWorldWorker } from './micro/MicroWorldWorker.js';
 import { CinematicManager } from './managers/cinematicManager.js';
@@ -207,6 +208,8 @@ export class Game {
         this.cinematicManager = new CinematicManager(this);
         this.dataRecorder = new DataRecorder(this);
         this.dataRecorder.init();
+        this.guidelineLoader = new GuidelineLoader(SETTINGS.GUIDELINE_REPO_URL);
+        this.guidelineLoader.load();
         this.possessionAIManager = new PossessionAIManager(this.eventManager);
         this.itemFactory.emblems = EMBLEMS;
 

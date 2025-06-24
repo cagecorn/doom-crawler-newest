@@ -95,6 +95,12 @@ await recorder.init();
 
 기본 포맷은 JSONL이며 `training.jsonl` 파일에 누적 기록됩니다.
 
+## Guideline Loader
+게임 시작 시 `GuidelineLoader`가 지정한 GitHub 경로에서 Markdown 가이드를 읽어
+JSON 형식으로 변환합니다. 설정 파일 `config/gameSettings.js`의 `GUIDELINE_REPO_URL`
+값을 `user/repo/contents/guidelines?ref=main` 형태로 지정하면 활성화됩니다. 게임을
+다시 시작하면 최신 가이드가 자동으로 로드됩니다.
+
 
 ## 결함 주입 테스트
 MBTI AI와 힐러 AI의 오류 처리 능력을 확인하는 시나리오가 `tests/faultInjection.test.js`에 있습니다. 버퍼/디버퍼 AI가 추가되면 동일한 파일에서 함께 관리합니다.
