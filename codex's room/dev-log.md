@@ -65,3 +65,8 @@
 - 이동 속도 증가 버프 `haste` 효과 및 스킬 추가.
 - 스킬 목록 문서에 `haste` 항목을 기록.
 - `effectManager.test.js`에 신속 효과 테스트를 작성.
+
+## 세션 15
+- 신규 감전 디버프 `shock` 효과 추가.
+- 근접 스킬 `thunder_strike`와 무기 `stun_baton`을 데이터에 정의.
+- `skills.md`에 뇌전 일격 항목을 기록.

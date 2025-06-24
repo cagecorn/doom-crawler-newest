@@ -276,6 +276,18 @@ export const ITEMS = {
         imageKey: 'dagger', stats: { attackSpeed: 0.3 },
         tier: 'normal', durability: 80, weight: 3, toughness: 2
     },
+    stun_baton: {
+        name: '스턴 바톤', type: 'weapon', damageDice: '1d6',
+        tags: ['melee', 'mace', 'electric'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'mace', stats: { attackPower: 4 },
+        tier: 'normal', durability: 120, weight: 7, toughness: 4
+    },
     // --- 여기까지 ---
 
     // Parasite samples

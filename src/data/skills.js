@@ -275,6 +275,16 @@ export const SKILLS = {
         cooldown: 150,
         tags: ['skill', 'summon', 'magic', 'minion'],
     },
+    thunder_strike: {
+        id: 'thunder_strike',
+        name: '뇌전 일격',
+        description: '대상을 타격하여 감전 상태를 부여합니다.',
+        manaCost: 12,
+        cooldown: 80,
+        damageDice: '1d8+2',
+        tags: ['skill', 'attack', 'melee', 'electric'],
+        effects: { target: ['shock'] },
+    },
     teleport: {
         id: 'teleport',
         name: '텔레포트',

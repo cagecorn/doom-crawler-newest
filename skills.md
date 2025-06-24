@@ -33,6 +33,7 @@
 | regression | 퇴행 | debuff, magic_down |
 | spell_weakness | 마법 취약 | debuff, magic_resist_down |
 | elemental_weakness | 원소 취약 | debuff, resist_down |
+| thunder_strike | 뇌전 일격 | attack, melee, electric |
 
 ### 스킬 비고
 
