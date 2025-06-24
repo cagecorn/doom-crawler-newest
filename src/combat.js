@@ -76,6 +76,12 @@ export class CombatCalculator {
         }
         // --- 패링 로직 끝 ---
 
+        const accuracy = attacker.stats?.get?.('accuracy');
+        if (typeof accuracy === 'number' && Math.random() > accuracy) {
+            this.eventManager.publish('attack_missed', { attacker, defender, skill });
+            return;
+        }
+
         let finalDamage = 0;
         const details = { base: 0, fromSkill: 0, fromTags: 0, fromRunes: 0, defenseReduction: 0, isBackstab: false };
 

@@ -1,4 +1,5 @@
 import { MicroTurnManager } from './MicroTurnManager.js';
+import { AspirationEngine } from './AspirationEngine.js';
 
 // src/micro/MicroEngine.js
 
@@ -8,6 +9,7 @@ export class MicroEngine {
     constructor(eventManager) {
         this.eventManager = eventManager;
         this.turnManager = new MicroTurnManager();
+        this.aspirationEngine = new AspirationEngine(this.eventManager);
 
         if (this.eventManager) {
             this.eventManager.subscribe('attack_landed', data => this.handleAttackLanded(data));
