@@ -22,6 +22,7 @@ import { ParasiteManager } from './parasiteManager.js';
 import { MicroItemAIManager } from './microItemAIManager.js';
 import { EffectIconManager } from './effectIconManager.js';
 import { PetManager } from './petManager.js';
+import { SquadManager } from './squadManager.js';
 import { MetaAIManager } from './metaAIManager.js';
 import { SynergyManager } from '../micro/SynergyManager.js';
 import { SpeechBubbleManager } from './speechBubbleManager.js';
@@ -67,6 +68,7 @@ export {
     AuraManager,
     SynergyManager,
     SpeechBubbleManager,
+    SquadManager,
     ReputationManager,
     CombatDecisionEngine,
     GuidelineLoader,

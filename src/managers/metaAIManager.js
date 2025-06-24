@@ -4,6 +4,11 @@ import { MistakeEngine } from './ai/MistakeEngine.js';
 import { SETTINGS } from '../../config/gameSettings.js';
 
 export class MetaAIManager extends BaseMetaAI {
+    constructor(eventManager, squadManager = null) {
+        super(eventManager);
+        this.squadManager = squadManager;
+    }
+
     executeAction(entity, action, context) {
         if (!action) return;
         const { player, mapManager, onPlayerAttack, onMonsterAttacked } = context;
@@ -50,6 +55,9 @@ export class MetaAIManager extends BaseMetaAI {
 
     update(context) {
         const currentContext = { ...context, metaAIManager: this, settings: SETTINGS };
+        if (this.squadManager) {
+            this.updateCombatStrategy(currentContext);
+        }
         for (const groupId in this.groups) {
             const group = this.groups[groupId];
             const membersSorted = [...group.members].sort((a,b)=>(b.attackSpeed||1)-(a.attackSpeed||1));
@@ -92,5 +100,48 @@ export class MetaAIManager extends BaseMetaAI {
                 }
             }
         }
+    }
+
+    updateCombatStrategy(context) {
+        const player = context.player;
+        const enemies = context.enemies || [];
+        const mercs = this.squadManager?.mercenaryManager.getMercenaries() || [];
+        if (enemies.length === 0) return;
+        for (const merc of mercs) {
+            const squad = this.squadManager.getSquadForMerc(merc.id);
+            const strategy = squad ? squad.strategy : 'defensive';
+            merc.squadStrategy = strategy;
+            this.assignGoalToUnit(merc, strategy, player, enemies);
+        }
+    }
+
+    assignGoalToUnit(merc, strategy, player, enemies) {
+        if (!merc.ai) return;
+        switch (strategy) {
+            case 'aggressive': {
+                const target = this.findNearestTarget(merc, enemies);
+                if (target && merc.ai.setGoal) {
+                    merc.ai.setGoal('ATTACK', { target });
+                }
+                break;
+            }
+            case 'defensive':
+            default: {
+                if (merc.ai.setGoal) {
+                    merc.ai.setGoal('GUARD_AREA', { position: { x: player.x, y: player.y }, radius: 5 });
+                }
+                break;
+            }
+        }
+    }
+
+    findNearestTarget(unit, targets) {
+        let closest = null;
+        let minD = Infinity;
+        for (const t of targets) {
+            const d = Math.hypot(unit.x - t.x, unit.y - t.y);
+            if (d < minD) { minD = d; closest = t; }
+        }
+        return closest;
     }
 }
