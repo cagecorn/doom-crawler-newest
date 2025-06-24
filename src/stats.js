@@ -32,6 +32,7 @@ export class StatManager {
             sizeInTiles_h: config.sizeInTiles_h || 1,
             visionRange: config.visionRange || 192 * 4,
             attackRange: config.attackRange || 192,
+            carryCapacity: config.carryCapacity || 30,
             // 지나치게 빠른 전투 템포를 완화하기 위해 기본 시전/공격 속도를 하향한다
             castingSpeed: config.castingSpeed || 0.5,
             attackSpeed: config.attackSpeed || 0.5,
@@ -59,13 +60,14 @@ export class StatManager {
             poisonResist: 0, freezeResist: 0, sleepResist: 0, paralysisResist: 0,
             burnResist: 0, bleedResist: 0, petrifyResist: 0, silenceResist: 0,
             blindResist: 0, fearResist: 0, confusionResist: 0, charmResist: 0,
-            movementResist: 0,
+            movementResist: 0, carryCapacity: 0,
         };
 
         // 장비로부터 적용되는 스탯 저장용
         this._fromEquipment = {};
 
         this.derivedStats = {};
+        this.totalWeight = 0;
         this.recalculate();
     }
 
@@ -78,11 +80,13 @@ export class StatManager {
     // 장비 스탯을 업데이트하는 함수
     updateEquipmentStats() {
         this._fromEquipment = {};
+        this.totalWeight = 0;
         if (!this.entity || !this.entity.equipment) return;
 
         for (const slot in this.entity.equipment) {
             const item = this.entity.equipment[slot];
             if (!item) continue;
+            this.totalWeight += item.weight || 0;
 
             // 1. 아이템 자체 스탯
             if (item.stats) {
@@ -145,7 +149,13 @@ export class StatManager {
         final.maxHp = 10 + final.endurance * 5;
         final.attackPower = (final.attackPower || 0) + 1 + final.strength * 2;
         final.maxMp = 10 + final.focus * 10;
-        final.movementSpeed = final.movement;
+        final.equipmentWeight = this.totalWeight;
+        let speed = final.movement;
+        const overweight = Math.max(0, this.totalWeight - final.carryCapacity);
+        if (overweight > 0) {
+            speed -= overweight / 10;
+        }
+        final.movementSpeed = Math.max(1, speed);
         // 체력/마나 재생률이 지나치게 높아 전투 테스트가 어려웠다.
         // 기본 회복 공식을 완화하여 초당 회복량을 대폭 줄인다.
         final.hpRegen = (final.hpRegen || 0) + final.endurance * 0.01;

@@ -6,8 +6,8 @@ export const JOBS = {
             strength: 8,
             agility: 4,
             endurance: 6,
-            // 초반 밸런스에 맞춰 이동 속도를 낮춘다
-            movement: 4,
+            // 묵직한 갑옷으로 인해 다소 느리다
+            movement: 3,
             hp: 40,
             attackPower: 17,
         }
@@ -19,7 +19,8 @@ export const JOBS = {
             strength: 5,
             agility: 8,
             endurance: 4,
-            movement: 4,
+            // 가벼운 몸놀림을 살려 빠르게 이동한다
+            movement: 5,
             hp: 30,
             attackPower: 15,
         }
@@ -46,7 +47,8 @@ export const JOBS = {
             endurance: 3,
             focus: 9,
             intelligence: 8,
-            movement: 4,
+            // 무거운 로브 때문에 약간 둔하다
+            movement: 3,
             hp: 24,
             attackPower: 12,
         }
@@ -60,7 +62,8 @@ export const JOBS = {
             endurance: 3,
             focus: 10,
             intelligence: 9,
-            movement: 4,
+            // 의식을 준비하느라 움직임이 느리다
+            movement: 3,
             hp: 22,
             attackPower: 11,
         }
@@ -73,7 +76,8 @@ export const JOBS = {
             agility: 6,
             endurance: 4,
             focus: 8,
-            movement: 4,
+            // 악기를 들고도 민첩하게 움직인다
+            movement: 5,
             hp: 26,
             attackPower: 10,
         }
@@ -87,7 +91,8 @@ export const JOBS = {
             endurance: 12,
             focus: 10,
             intelligence: 10,
-            movement: 5,
+            // 신답게 빠른 기동력을 지닌다
+            movement: 6,
             hp: 80,
             attackPower: 35,
             sizeInTiles_w: 2,
