@@ -372,15 +372,6 @@ export class Item {
         if (this.image) {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
-        if (this.aspiration) {
-            if (this.aspiration.state === 'inspired') {
-                ctx.fillStyle = 'rgba(255,0,0,0.4)';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            } else if (this.aspiration.state === 'despairing') {
-                ctx.fillStyle = 'rgba(50,50,255,0.4)';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
-        }
     }
 
     getSaveState() {
