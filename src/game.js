@@ -8,6 +8,7 @@ import { EventManager } from './managers/eventManager.js';
 import { CombatLogManager, SystemLogManager } from './managers/logManager.js';
 import { CombatCalculator } from './combat.js';
 import { TagManager } from './managers/tagManager.js';
+import { WorldEngine } from './worldEngine.js';
 import { MapManager } from './map.js';
 import { AquariumMapManager } from './aquariumMap.js';
 import { AquariumManager, AquariumInspector } from './managers/aquariumManager.js';
@@ -48,6 +49,7 @@ import { ItemTracker } from './managers/itemTracker.js';
 export class Game {
     constructor() {
         this.loader = new AssetLoader();
+        this.gameState = { currentState: 'LOADING' };
     }
 
     start() {
@@ -91,6 +93,8 @@ export class Game {
         this.loader.loadImage('parasite', 'assets/images/parasite.png');
         this.loader.loadImage('leech', 'assets/images/parasite.png');
         this.loader.loadImage('worm', 'assets/images/parasite.png');
+        // 월드맵 타일 이미지 로드
+        this.loader.loadImage('world-tile', 'assets/images/world-tile.png');
         this.loader.loadImage('talisman1', 'assets/images/talisman-1.png');
         this.loader.loadImage('talisman2', 'assets/images/talisman-2.png');
         // 휘장 아이템 이미지 로드
@@ -119,6 +123,8 @@ export class Game {
         this.narrativeManager = new NarrativeManager();
         this.supportEngine = new SupportEngine();
         this.factory = new CharacterFactory(assets, this);
+        // 월드맵 로직을 담당하는 엔진
+        this.worldEngine = new WorldEngine(this, assets);
 
         // --- 매니저 생성 부분 수정 ---
         this.managers = {};
@@ -325,6 +331,7 @@ export class Game {
         if (pBoots) this.equipmentManager.equip(player, pBoots, null);
         if (pArmor) this.equipmentManager.equip(player, pArmor, null);
         this.gameState = {
+            currentState: 'WORLD',
             player,
             inventory: [],
             gold: 1000,
@@ -335,6 +342,8 @@ export class Game {
             isPaused: false
         };
         this.playerGroup.addMember(player);
+        // 월드 엔진에서도 동일한 플레이어 데이터를 사용하도록 설정
+        this.worldEngine.setPlayer(player);
 
         // 초기 아이템 배치
         const potion = this.itemFactory.create(
@@ -641,6 +650,22 @@ export class Game {
     setupEventListeners(assets, canvas) {
         const { eventManager, combatCalculator, monsterManager, mercenaryManager, mapManager, metaAIManager, pathfindingManager } = this;
         const gameState = this.gameState;
+
+        // 월드맵과 전투 상태 전환 이벤트 처리
+        eventManager.subscribe('start_combat', (data) => {
+            console.log(`전투 시작! 상대 부대 규모: ${data.monsterParty.troopSize}`);
+            gameState.currentState = 'COMBAT';
+            this.worldEngine.monsters.forEach(m => m.isActive = false);
+        });
+
+        eventManager.subscribe('end_combat', (result) => {
+            console.log(`전투 종료! 결과: ${result.outcome}`);
+            gameState.currentState = 'WORLD';
+            if (result.outcome === 'victory') {
+                this.worldEngine.monsters = this.worldEngine.monsters.filter(m => m.isActive === false);
+            }
+            this.worldEngine.monsters.forEach(m => m.isActive = true);
+        });
 
         // 공격 이벤트 처리
         eventManager.subscribe('entity_attack', (data) => {
@@ -1169,6 +1194,13 @@ export class Game {
     }
 
     update = (deltaTime) => {
+        if (this.gameState.currentState === 'WORLD') {
+            this.worldEngine.update();
+            return;
+        } else if (this.gameState.currentState !== 'COMBAT') {
+            return;
+        }
+
         const { gameState, mercenaryManager, monsterManager, itemManager, mapManager, inputHandler, effectManager, turnManager, metaAIManager, eventManager, equipmentManager, pathfindingManager, microEngine, microItemAIManager } = this;
         if (gameState.isPaused || gameState.isGameOver) return;
 
@@ -1300,6 +1332,14 @@ export class Game {
 
         layerManager.clear();
 
+        if (gameState.currentState === 'WORLD') {
+            this.worldEngine.render(layerManager.contexts.entity);
+            if (this.uiManager) this.uiManager.updateUI(gameState);
+            return;
+        } else if (gameState.currentState !== 'COMBAT') {
+            return;
+        }
+
         const camera = gameState.camera;
         let zoom = gameState.zoomLevel;
 
@@ -1377,7 +1417,9 @@ export class Game {
             }
         }
 
-        uiManager.updateUI(gameState);
+        if (this.uiManager && this.gameState.currentState === 'COMBAT') {
+            uiManager.updateUI(gameState);
+        }
     }
 
     handleAttack(attacker, defender, skill = null) {
