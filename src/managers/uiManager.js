@@ -4,6 +4,7 @@ import { FAITHS } from '../data/faiths.js';
 import { TRAITS } from '../data/traits.js';
 import { SYNERGIES } from '../data/synergies.js';
 import { ARTIFACTS } from '../data/artifacts.js';
+import { memoryDB } from '../persistence/MemoryDB.js';
 
 export class UIManager {
     constructor() {
@@ -30,6 +31,7 @@ export class UIManager {
         this.mercInventory = document.getElementById('merc-inventory');
         this.mercEquipment = document.getElementById('merc-equipment');
         this.mercSkills = document.getElementById('merc-skills');
+        this.reputationHistoryPanel = document.getElementById('reputation-history-panel');
         this.closeMercDetailBtn = document.getElementById('close-merc-detail-btn');
         this.mercenaryPanel = document.getElementById('mercenary-panel');
         this.mercenaryList = document.getElementById('mercenary-list');
@@ -140,7 +142,7 @@ export class UIManager {
         this.init(cb);
     }
 
-    showMercenaryDetail(mercenary) {
+    async showMercenaryDetail(mercenary) {
         if (!this.mercDetailPanel) return;
 
         this.mercDetailName.textContent = `${mercenary.constructor.name} (Lv.${mercenary.stats.get('level')})`;
@@ -283,6 +285,17 @@ export class UIManager {
                 div.style.backgroundSize = 'cover';
                 this._attachTooltip(div, `<strong>${skill.name}</strong><br>${skill.description}`);
                 this.mercSkills.appendChild(div);
+            });
+        }
+
+        if (this.reputationHistoryPanel) {
+            this.reputationHistoryPanel.innerHTML = '';
+            const history = await memoryDB.getEventsFor(mercenary.id);
+            history.forEach(ev => {
+                const div = document.createElement('div');
+                div.textContent = `[${new Date(ev.timestamp).toLocaleTimeString()}] ${ev.description}`;
+                div.style.color = ev.reputationChange > 0 ? 'green' : 'red';
+                this.reputationHistoryPanel.appendChild(div);
             });
         }
 

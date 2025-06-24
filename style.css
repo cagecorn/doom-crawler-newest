@@ -362,6 +362,12 @@ body, html {
 .sheet-container { display: flex; gap: 15px; }
 .sheet-left { flex-basis: 300px; flex-shrink: 0; }
 .sheet-right { flex-grow: 1; }
+#reputation-history-panel {
+    margin-top: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 12px;
+}
 
 #equipment-target-panel {
     z-index: 250;
