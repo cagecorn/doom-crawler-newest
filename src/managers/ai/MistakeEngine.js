@@ -1,10 +1,23 @@
 export class MistakeEngine {
-    static getFinalAction(entity, optimalAction, context) {
+    static getFinalAction(entity, optimalAction, context, mbtiEngine) {
         const enabled = context?.settings?.ENABLE_MISTAKE_ENGINE !== false;
         if (!enabled) return optimalAction;
-        const chance = entity.properties?.mistakeChance ?? 0;
-        if (chance <= 0) return optimalAction;
-        if (Math.random() >= chance) return optimalAction;
+
+        let mistakeProbability = entity.properties?.mistakeChance ?? 0;
+
+        if (mbtiEngine?.model && mbtiEngine.tf && typeof mbtiEngine.buildInput === 'function') {
+            try {
+                const inputTensor = mbtiEngine.buildInput(entity, optimalAction, context.game);
+                const outputTensor = mbtiEngine.model.predict(inputTensor);
+                mistakeProbability = outputTensor.dataSync()[0];
+                mbtiEngine.tf.dispose([inputTensor, outputTensor]);
+            } catch (err) {
+                console.warn('[MistakeEngine] Failed to run model:', err);
+            }
+        }
+
+        if (mistakeProbability <= 0) return optimalAction;
+        if (Math.random() >= mistakeProbability) return optimalAction;
         console.log(`[MistakeEngine] ${entity.name} makes a mistake`);
         const types = ['bad_target','bad_position','waste_action'];
         const mistakeType = types[Math.floor(Math.random() * types.length)];
