@@ -451,10 +451,7 @@ export class RangedAI extends AIArchetype {
     decideAction(self, context) {
         const { player, allies, enemies, mapManager } = context;
 
-        const currentVisionRange = self.stats?.get('visionRange') ?? self.visionRange;
-        const targetList = enemies.filter(e =>
-            Math.hypot(e.x - self.x, e.y - self.y) < currentVisionRange
-        );
+        const targetList = this._filterVisibleEnemies(self, enemies);
 
         if (targetList.length === 0) {
             if (self.isFriendly && !self.isPlayer) {
@@ -463,7 +460,10 @@ export class RangedAI extends AIArchetype {
                     return { type: 'move', target: player };
                 }
                 const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
-                if (Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
+                if (
+                    Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) >
+                    self.tileSize * 0.3
+                ) {
                     return { type: 'move', target: wanderTarget };
                 }
             }
@@ -489,21 +489,16 @@ export class RangedAI extends AIArchetype {
 
         if (nearestTarget) {
             const hasLOS = hasLineOfSight(
-                Math.floor(self.x / mapManager.tileSize),
-                Math.floor(self.y / mapManager.tileSize),
-                Math.floor(nearestTarget.x / mapManager.tileSize),
-                Math.floor(nearestTarget.y / mapManager.tileSize),
+                { x: self.x + self.width / 2, y: self.y + self.height / 2 },
+                {
+                    x: nearestTarget.x + nearestTarget.width / 2,
+                    y: nearestTarget.y + nearestTarget.height / 2,
+                },
                 mapManager
             );
 
             if (!hasLOS) {
-                if (self.isFriendly && !self.isPlayer) {
-                    const wanderTarget = this._getWanderPosition(self, player, allies, mapManager);
-                    if (Math.hypot(wanderTarget.x - self.x, wanderTarget.y - self.y) > self.tileSize * 0.3) {
-                        return { type: 'move', target: wanderTarget };
-                    }
-                }
-                return { type: 'idle' };
+                return { type: 'move', target: player };
             }
 
             const minDistance = Math.hypot(nearestTarget.x - self.x, nearestTarget.y - self.y);

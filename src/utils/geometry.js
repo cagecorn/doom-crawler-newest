@@ -2,6 +2,15 @@
 
 // 두 점 사이에 벽이 있는지 확인하는 시야선(Line of Sight) 함수
 export function hasLineOfSight(x0, y0, x1, y1, mapManager) {
+    // allow calling with (posA, posB, mapManager)
+    if (typeof x0 === 'object' && typeof y0 === 'object' && x1 && x1.isWallAt) {
+        mapManager = x1;
+        x1 = Math.floor(y0.x / mapManager.tileSize);
+        y1 = Math.floor(y0.y / mapManager.tileSize);
+        y0 = Math.floor(x0.y / mapManager.tileSize);
+        x0 = Math.floor(x0.x / mapManager.tileSize);
+    }
+
     const dx = Math.abs(x1 - x0);
     const dy = -Math.abs(y1 - y0);
     let sx = x0 < x1 ? 1 : -1;
