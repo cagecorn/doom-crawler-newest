@@ -101,8 +101,8 @@ export class Game {
 
     init(assets) {
         this.assets = assets;
-        // 현재 WebGL 레이어가 충분히 구현되지 않았으므로 2D 캔버스만 사용한다
-        this.layerManager = new LayerManager(false);
+        // 설정에 따라 WebGL 레이어를 활성화한다
+        this.layerManager = new LayerManager(SETTINGS.ENABLE_WEBGL_RENDERER);
         const canvas = this.layerManager.layers.mapBase;
 
         // === 1. 모든 매니저 및 시스템 생성 ===
