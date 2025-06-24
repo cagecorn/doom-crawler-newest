@@ -19,6 +19,7 @@
 | regeneration_aura | 재생 오라 | buff, aura, passive |
 | meditation_aura | 명상 오라 | buff, aura, passive |
 | haste_aura | 가속 오라 | buff, aura, passive |
+| fire_nova | 화염 폭발 | attack, magic, aoe, fire |
 | haste | 신속 | buff, speed_up |
 | concentration_aura | 집중 오라 | buff, aura, passive |
 | condemn_aura | 단죄 오라 | buff, aura, passive |

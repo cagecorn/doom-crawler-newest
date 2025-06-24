@@ -70,3 +70,5 @@
 - 신규 감전 디버프 `shock` 효과 추가.
 - 근접 스킬 `thunder_strike`와 무기 `stun_baton`을 데이터에 정의.
 - `skills.md`에 뇌전 일격 항목을 기록.
+- 새로운 광역 화염 스킬 `fire_nova` 구현.
+- `skills.md`에 해당 항목을 추가하고 데미지 주는 효과를 정의.
