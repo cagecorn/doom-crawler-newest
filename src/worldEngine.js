@@ -124,7 +124,7 @@ export class WorldEngine {
         const tileWidth = worldWidth / numTilesHorizontal;
         const tileHeight = worldHeight / numTilesVertical;
 
-        const worldTileSize = worldTileImg.width / 9;
+        const worldTileSize = worldTileImg.width / 3;
 
         // 전체 영역을 바다 타일 패턴으로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
