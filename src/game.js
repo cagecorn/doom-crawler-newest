@@ -1178,6 +1178,22 @@ export class Game {
                 return;
             }
         });
+
+        const weatherLayer = this.layerManager.layers.weather;
+        weatherLayer.addEventListener('mousedown', (e) => {
+            if (this.gameState.currentState !== 'WORLD') return;
+            this.worldEngine.startDrag(e.clientX, e.clientY);
+        });
+        weatherLayer.addEventListener('mousemove', (e) => {
+            if (this.gameState.currentState !== 'WORLD') return;
+            this.worldEngine.drag(e.clientX, e.clientY);
+        });
+        ['mouseup', 'mouseleave'].forEach(ev => {
+            weatherLayer.addEventListener(ev, () => {
+                if (this.gameState.currentState !== 'WORLD') return;
+                this.worldEngine.endDrag();
+            });
+        });
     }
 
     findNearestEnemy(caster, enemies, range = Infinity) {
