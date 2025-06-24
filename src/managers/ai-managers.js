@@ -2,6 +2,8 @@
 import { SKILLS } from '../data/skills.js';
 import { WEAPON_SKILLS } from '../data/weapon-skills.js';
 import { MbtiEngine } from './ai/MbtiEngine.js';
+import { MistakeEngine } from './ai/MistakeEngine.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export const STRATEGY = {
     IDLE: 'idle',
@@ -214,7 +216,8 @@ export class MetaAIManager {
             const currentContext = {
                 ...context,
                 allies: group.members,
-                enemies: Object.values(this.groups).filter(g => g.id !== groupId).flatMap(g => g.members)
+                enemies: Object.values(this.groups).filter(g => g.id !== groupId).flatMap(g => g.members),
+                settings: SETTINGS
             };
 
             const membersSorted = [...group.members].sort((a,b) => (b.attackSpeed || 1) - (a.attackSpeed || 1));
@@ -261,10 +264,13 @@ export class MetaAIManager {
                     }
                 }
                 
-                // AI가 행동을 결정한 직후 MBTI 엔진 처리
-                this.processMbti(member, { ...action, context: currentContext });
+                // 실수 엔진을 통해 최종 행동 결정
+                const finalAction = MistakeEngine.getFinalAction(member, action, currentContext);
 
-                this.executeAction(member, action, currentContext);
+                // AI가 행동을 결정한 직후 MBTI 엔진 처리
+                this.processMbti(member, { ...finalAction, context: currentContext });
+
+                this.executeAction(member, finalAction, currentContext);
             }
         }
     }

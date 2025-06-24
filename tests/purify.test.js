@@ -2,8 +2,10 @@ import { PurifierAI, HealerAI, CompositeAI } from '../src/ai.js';
 import { CharacterFactory } from '../src/factory.js';
 import { SKILLS } from '../src/data/skills.js';
 import { describe, test, assert } from './helpers.js';
+import { SETTINGS } from '../config/gameSettings.js';
 
 const assets = { player:{}, mercenary:{} };
+SETTINGS.ENABLE_MISTAKE_ENGINE = false;
 
 describe('Purify', () => {
   test('healer removes ailment from ally', () => {
