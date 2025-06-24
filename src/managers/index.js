@@ -9,6 +9,7 @@ import { UIManager } from './uiManager.js';
 import { VFXManager } from './vfxManager.js';
 import { SkillManager } from './skillManager.js';
 import { SoundManager } from './soundManager.js';
+import { BgmManager } from './bgmManager.js';
 import { EffectManager } from './effectManager.js';
 import { ProjectileManager } from './projectileManager.js';
 import { ItemAIManager } from './item-ai-manager.js';
@@ -46,6 +47,7 @@ export {
     VFXManager,
     SkillManager,
     SoundManager,
+    BgmManager,
     EffectManager,
     ProjectileManager,
     ItemAIManager,
