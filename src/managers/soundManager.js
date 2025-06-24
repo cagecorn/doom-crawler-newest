@@ -38,6 +38,7 @@ export class SoundManager {
             'micro-judgement-1',
             'rock-1',
             'simple-attack-1',
+            'whiplash-1',
             'simple-attack-2',
             'simple-attack-3',
             'simple-attack-4',
@@ -67,10 +68,19 @@ export class SoundManager {
     _registerEvents() {
         const ev = this.eventManager;
 
-        ev.subscribe('entity_attack', ({ skill }) => {
-            if (skill?.tags?.includes('magic')) this.play('magic-hit-1');
-            else if (skill?.tags?.includes('ranged')) this.play('thrust-1');
-            else this.play('slash-1');
+        ev.subscribe('entity_attack', ({ attacker, skill }) => {
+            const weapon = attacker?.equipment?.weapon;
+            if (skill?.projectile === 'arrow' || weapon?.tags?.includes('bow')) {
+                this.play('simple-attack-1');
+            } else if (weapon?.tags?.includes('whip')) {
+                this.play('whiplash-1');
+            } else if (skill?.tags?.includes('magic')) {
+                this.play('magic-hit-1');
+            } else if (skill?.tags?.includes('ranged')) {
+                this.play('thrust-1');
+            } else {
+                this.play('slash-1');
+            }
         });
 
         ev.subscribe('attack_landed', () => this.play('hitting-2'));
