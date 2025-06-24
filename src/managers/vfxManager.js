@@ -373,33 +373,57 @@ export class VFXManager {
         this.particleEngine.removeEmitter(emitter);
     }
 
+    /**
+     * 무작위 범위를 실제 값으로 변환하는 내부 헬퍼 함수
+     * @param {number | Array<number>} value
+     * @returns {number}
+     */
+    _resolveValue(value) {
+        if (Array.isArray(value)) {
+            return value[0] + Math.random() * (value[1] - value[0]);
+        }
+        return value;
+    }
+
     // '열망 시스템' 시각 효과 적용 함수 추가
     applyWeaponAspirationEffect(entity, state) {
         this.removeWeaponAspirationEffect(entity);
         if (state === 'stable') return;
 
-        const color = state === 'inspired' ? 0xff0000 : 0x800080;
+        const color = state === 'inspired' ? 'gold' : 'purple';
         const effectId = `aspiration_vfx_${entity.id}`;
 
+        // 여러 파티클을 한 번에 터뜨리는 방식으로 변경
+        this.addParticleBurst(entity.x + entity.width / 2, entity.y + entity.height / 2, {
+            count: state === 'inspired' ? 20 : 10,
+            color: color,
+            speed: 2,
+            gravity: -0.05, // 위로 떠오르는 효과
+            lifespan: 80
+        });
+
+        // 지속적으로 파티클을 생성하는 이미터 추가
         this.particleEngine.createEmitter({
             id: effectId,
             target: entity,
-            offset: { x: 0, y: -entity.tileSize / 2 },
+            offset: { x: entity.width / 2, y: entity.height / 2 },
             particleOptions: {
-                colors: [color],
-                size: [2, 4],
-                lifetime: [0.3, 0.6],
-                speed: [10, 20],
-                count: state === 'inspired' ? 20 : 5,
+                color: color,
+                size: 3,
+                lifetime: 60,
+                speed: 1,
+                gravity: -0.03
             },
-            duration: Infinity,
+            spawnRate: state === 'inspired' ? 3 : 1,
+            duration: -1, // 무한 지속
         });
     }
 
     removeWeaponAspirationEffect(entity) {
         const effectId = `aspiration_vfx_${entity.id}`;
-        if (this.particleEngine.hasEmitter(effectId)) {
-            this.particleEngine.removeEmitter(effectId);
+        const emitterToRemove = this.particleEngine.emitters.find(e => e.id === effectId);
+        if (emitterToRemove) {
+            this.particleEngine.removeEmitter(emitterToRemove);
         }
     }
 
