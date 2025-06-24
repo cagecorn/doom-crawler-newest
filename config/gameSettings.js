@@ -4,7 +4,7 @@ export const SETTINGS = {
     // 포그 오브 워 표시 여부를 제어합니다.
     ENABLE_FOG_OF_WAR: true,
     // AI의 인간적인 실수 허용 여부를 제어합니다.
-    ENABLE_MISTAKE_ENGINE: false,
+    ENABLE_MISTAKE_ENGINE: true,
     // guideline markdown files will be loaded from this GitHub API path
     // example: 'user/repo/contents/guidelines?ref=main'
     GUIDELINE_REPO_URL: '',
