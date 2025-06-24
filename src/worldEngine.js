@@ -3,20 +3,19 @@ export class WorldEngine {
         this.game = game;
         this.assets = assets;
         this.worldMapImage = this.assets['world-tile'];
-        // 화면보다 큰 월드맵 지원을 위해 월드 전체 크기를 정의
-        const baseWidth = this.game.layerManager.layers.entity.width;
-        const baseHeight = this.game.layerManager.layers.entity.height;
-        this.worldWidth = baseWidth * 2;
-        this.worldHeight = baseHeight * 2;
+        this.tileSize = this.game.mapManager?.tileSize || 64;
+        // 전투 맵과 동일한 배율을 유지하기 위해 고정된 타일 크기를 사용
+        this.worldWidth = this.tileSize * 40;
+        this.worldHeight = this.tileSize * 40;
         this.camera = { x: 0, y: 0 };
         // 플레이어 정보는 Game 초기화 이후 setPlayer()로 전달된다
         this.player = null;
         this.monsters = [
             {
-                x: 600,
-                y: 300,
-                width: 50,
-                height: 50,
+                x: this.tileSize * 3,
+                y: this.tileSize * 1.5,
+                width: this.tileSize,
+                height: this.tileSize,
                 image: this.assets['monster'],
                 troopSize: 10,
             },
@@ -29,10 +28,10 @@ export class WorldEngine {
      */
     setPlayer(entity) {
         this.player = {
-            x: 400,
-            y: 400,
-            width: 50,
-            height: 50,
+            x: this.tileSize * 2,
+            y: this.tileSize * 2,
+            width: entity?.width || this.tileSize,
+            height: entity?.height || this.tileSize,
             speed: 5,
             image: entity?.image || this.assets['player'],
             entity
@@ -119,12 +118,13 @@ export class WorldEngine {
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        const numTilesHorizontal = 40;
-        const numTilesVertical = 40;
-        const tileWidth = worldWidth / numTilesHorizontal;
-        const tileHeight = worldHeight / numTilesVertical;
+        const tileWidth = this.tileSize;
+        const tileHeight = this.tileSize;
+        const numTilesHorizontal = Math.ceil(worldWidth / tileWidth);
+        const numTilesVertical = Math.ceil(worldHeight / tileHeight);
 
-        const worldTileSize = worldTileImg.width / 3;
+        const worldTileSize = this.tileSize;
+        const tileCropSize = worldTileImg.width / 3;
 
         // 전체 영역을 바다 타일 패턴으로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
@@ -141,10 +141,10 @@ export class WorldEngine {
             .getContext('2d')
             .drawImage(
                 worldTileImg,
-                worldTileSize,
-                worldTileSize,
-                worldTileSize,
-                worldTileSize,
+                tileCropSize,
+                tileCropSize,
+                tileCropSize,
+                tileCropSize,
                 0,
                 0,
                 worldTileSize,
