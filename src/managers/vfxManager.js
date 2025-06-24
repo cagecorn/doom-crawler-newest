@@ -284,6 +284,33 @@ export class VFXManager {
         this.textPopupEngine.add(text, target, options);
     }
 
+    /**
+     * 화면 중앙 상단에 큰 이벤트 텍스트를 표시합니다.
+     * 주로 미시세계 판정 결과 등을 강조할 때 사용합니다.
+     * @param {string} text
+     * @param {number} [duration=120] 프레임 단위 지속 시간
+     */
+    showEventText(text, duration = 120) {
+        if (!this.game || !this.game.layerManager) return;
+        const layer = this.game.layerManager.layers.vfx;
+        const popup = {
+            text,
+            x: layer.width / 2,
+            y: layer.height / 3,
+            duration,
+            life: duration,
+            font: 'bold 64px Arial',
+            fillStyle: 'gold',
+            strokeStyle: 'black',
+            lineWidth: 4,
+            alignment: 'center',
+            isUI: true,
+            vy: -0.5,
+            alpha: 1.0
+        };
+        this.textPopupEngine.popups.push(popup);
+    }
+
     addCinematicText(text, duration = 2000) {
         const frames = Math.round(duration / 16.67);
         const centerX = this.game.layerManager.layers.vfx.width / 2;
@@ -307,6 +334,29 @@ export class VFXManager {
         };
 
         this.textPopupEngine.popups.push(textEffect);
+    }
+
+    /**
+     * 유닛이 들고 있는 무기가 화면 밖으로 날아가는 애니메이션을 실행합니다.
+     * 기존 addEjectAnimation을 간편하게 감싸는 헬퍼입니다.
+     * @param {object} entity 무기를 가진 엔티티
+     */
+    playWeaponFlyAway(entity) {
+        const weapon = entity?.equipment?.weapon;
+        if (!weapon) return;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 100 + Math.random() * 50;
+        this.addEjectAnimation(weapon, { x: entity.x, y: entity.y }, angle, distance);
+    }
+
+    /**
+     * 방어구 파괴 효과를 재생합니다. 내부적으로 addArmorBreakAnimation을 호출합니다.
+     * @param {object} entity 방어구를 착용한 엔티티
+     */
+    playArmorBreak(entity) {
+        const armor = entity?.equipment?.armor;
+        if (!armor) return;
+        this.addArmorBreakAnimation(armor, entity);
     }
 
     /**
