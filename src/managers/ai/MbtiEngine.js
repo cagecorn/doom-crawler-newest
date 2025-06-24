@@ -1,5 +1,6 @@
 import { calculateDistance } from "../../utils/geometry.js";
 import tfLoader from '../../utils/tf-loader.js';
+import { ScenarioEngine } from './ScenarioEngine.js';
 
 export class MbtiEngine {
     constructor(eventManager, options = {}) {
@@ -7,7 +8,8 @@ export class MbtiEngine {
             throw new Error('MbtiEngine requires an EventManager');
         }
         this.eventManager = eventManager;
-        this.cooldown = 120; // 2 seconds at 60fps
+        // 판단 빈도가 너무 잦지 않도록 짧은 쿨다운을 둔다
+        this.cooldown = 30; // 0.5초 기준 프레임(60fps)
 
         this.model = null;
         this.modelLoaded = false;
@@ -33,7 +35,7 @@ export class MbtiEngine {
                 console.warn('[MbtiEngine] Failed to load model:', err);
             });
         }
-        console.log('[MbtiEngine] Initialized');
+        console.log('[MbtiEngine] Initialized with ScenarioEngine');
     }
 
     async loadModel(url) {
@@ -134,12 +136,12 @@ export class MbtiEngine {
             return;
         }
 
-        if (this.tf && this.model) {
+        let traitToPublish = ScenarioEngine.getLabelForScenario(entity, action, game);
+        let tfUsed = false;
 
-            // buildInput에 game 객체를 전달합니다.
+        if (!traitToPublish && this.tf && this.model) {
             const tensor = this.buildInput(entity, action, game);
             const trait = this._predictTrait(tensor);
-
             if (trait) {
                 this.eventManager.publish('ai_mbti_trait_triggered', { entity, trait, tfUsed: true });
                 this.setCooldown();
@@ -148,8 +150,6 @@ export class MbtiEngine {
         }
 
         const mbti = entity.properties.mbti;
-        let traitToPublish = null;
-        let tfUsed = false;
 
         switch (action.type) {
             case 'attack':
