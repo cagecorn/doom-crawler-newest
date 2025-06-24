@@ -7,7 +7,7 @@ export const SETTINGS = {
     ENABLE_MISTAKE_ENGINE: false,
     // guideline markdown files will be loaded from this GitHub API path
     // example: 'user/repo/contents/guidelines?ref=main'
-    GUIDELINE_REPO_URL: '',
+    GUIDELINE_REPO_URL: 'https://github.com/cagecorn/doom-crawler-newest/blob/main/TensorFlow's%20room/guideline.md',
     // 이동 속도는 StatManager의 'movement' 스탯으로부터 파생됩니다.
     // ... 나중에 더 많은 설정 추가
 };
