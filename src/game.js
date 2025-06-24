@@ -146,6 +146,7 @@ export class Game {
                 name !== 'EffectManager' &&
                 name !== 'SkillManager' &&
                 name !== 'ProjectileManager' &&
+                name !== 'SquadManager' &&
                 name !== 'DataRecorder'
         );
         for (const managerName of otherManagerNames) {
