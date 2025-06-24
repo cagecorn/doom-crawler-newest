@@ -177,8 +177,8 @@ export class CharacterFactory {
                         if (merc.stats) merc.stats.updateEquipmentStats();
                         if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
-                    merc.roleAI = null;
-                    merc.fallbackAI = new FireGodAI();
+                    merc.roleAI = new FireGodAI();
+                    merc.fallbackAI = new MeleeAI();
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);

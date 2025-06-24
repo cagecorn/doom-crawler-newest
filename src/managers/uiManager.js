@@ -198,6 +198,21 @@ export class UIManager {
             slots.forEach(slot => {
                 const item = entity.equipment ? entity.equipment[slot] : null;
                 const el = this.createSlotElement(entity, slot, item);
+
+                // 용병 장비 클릭 시 공용 인벤토리로 이동
+                if (!entity.isPlayer && item) {
+                    el.style.cursor = 'pointer';
+                    el.title = '클릭하여 공용 인벤토리로 이동';
+                    el.onclick = () => {
+                        const g = this.game || (typeof game !== 'undefined' ? game : null);
+                        if (g) {
+                            g.equipmentManager.unequip(entity, slot, g.gameState.inventory);
+                            this.renderCharacterSheet(entity);
+                            this.renderInventory(g.gameState);
+                        }
+                    };
+                }
+
                 this.sheetEquipment.appendChild(el);
             });
         }
@@ -795,6 +810,23 @@ export class UIManager {
             img.addEventListener('dragend', () => img.classList.remove('dragging'));
             slot.appendChild(img);
             this._attachTooltip(slot, this._getItemTooltip(item));
+
+            // 클릭하여 장비 해제 후 공용 인벤토리로 이동
+            if (slotType !== 'inventory') {
+                slot.style.cursor = 'pointer';
+                slot.onclick = () => {
+                    const g = this.game || (typeof game !== 'undefined' ? game : null);
+                    if (g) {
+                        g.equipmentManager.unequip(owner, slotType, g.gameState.inventory);
+                        if (owner === g.gameState.player) {
+                            this.renderInventory(g.gameState);
+                        } else {
+                            this.renderCharacterSheet(owner);
+                            this.renderInventory(g.gameState);
+                        }
+                    }
+                };
+            }
         }
 
         return slot;
