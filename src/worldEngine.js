@@ -3,6 +3,12 @@ export class WorldEngine {
         this.game = game;
         this.assets = assets;
         this.worldMapImage = this.assets['world-tile'];
+        // 화면보다 큰 월드맵 지원을 위해 월드 전체 크기를 정의
+        const baseWidth = this.game.layerManager.layers.entity.width;
+        const baseHeight = this.game.layerManager.layers.entity.height;
+        this.worldWidth = baseWidth * 2;
+        this.worldHeight = baseHeight * 2;
+        this.camera = { x: 0, y: 0 };
         // 플레이어 정보는 Game 초기화 이후 setPlayer()로 전달된다
         this.player = null;
         this.monsters = [
@@ -36,6 +42,7 @@ export class WorldEngine {
     update() {
         if (!this.player) return;
         this.handlePlayerMovement();
+        this.updateCamera();
         this.checkCollisions();
     }
 
@@ -49,16 +56,33 @@ export class WorldEngine {
         if (keys['ArrowRight']) dx += this.player.speed;
         const newX = this.player.x + dx;
         const newY = this.player.y + dy;
-        const mapWidth = this.game.layerManager.layers.entity.width;
-        const mapHeight = this.game.layerManager.layers.entity.height;
-        const borderX = mapWidth / 3.5;
-        const borderY = mapHeight / 3.5;
-        if (newX > borderX && newX < mapWidth - borderX - this.player.width) {
+        const mapWidth = this.worldWidth;
+        const mapHeight = this.worldHeight;
+        if (newX >= 0 && newX <= mapWidth - this.player.width) {
             this.player.x = newX;
         }
-        if (newY > borderY && newY < mapHeight - borderY - this.player.height) {
+        if (newY >= 0 && newY <= mapHeight - this.player.height) {
             this.player.y = newY;
         }
+    }
+
+    updateCamera() {
+        const canvasWidth = this.game.layerManager.layers.entity.width;
+        const canvasHeight = this.game.layerManager.layers.entity.height;
+        this.camera.x = Math.max(
+            0,
+            Math.min(
+                this.player.x - canvasWidth / 2,
+                this.worldWidth - canvasWidth
+            )
+        );
+        this.camera.y = Math.max(
+            0,
+            Math.min(
+                this.player.y - canvasHeight / 2,
+                this.worldHeight - canvasHeight
+            )
+        );
     }
 
     checkCollisions() {
@@ -78,8 +102,11 @@ export class WorldEngine {
 
     render(ctx) {
         if (!this.player) return;
+        ctx.save();
+        ctx.translate(-this.camera.x, -this.camera.y);
         this._drawWorldMap(ctx);
         this._drawEntities(ctx);
+        ctx.restore();
     }
 
     _drawWorldMap(ctx) {
@@ -89,11 +116,13 @@ export class WorldEngine {
 
         const canvasWidth = ctx.canvas.width;
         const canvasHeight = ctx.canvas.height;
+        const worldWidth = this.worldWidth;
+        const worldHeight = this.worldHeight;
 
         const numTilesHorizontal = 20;
         const numTilesVertical = 20;
-        const tileWidth = canvasWidth / numTilesHorizontal;
-        const tileHeight = canvasHeight / numTilesVertical;
+        const tileWidth = worldWidth / numTilesHorizontal;
+        const tileHeight = worldHeight / numTilesVertical;
 
         const worldTileSize = worldTileImg.width / 3;
 
@@ -101,7 +130,7 @@ export class WorldEngine {
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
         if (seaPattern) {
             ctx.fillStyle = seaPattern;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillRect(0, 0, worldWidth, worldHeight);
         }
 
         // 중앙 육지 패턴 준비 (world-tile의 가운데 부분만 사용)
@@ -128,8 +157,8 @@ export class WorldEngine {
             ctx.fillRect(
                 tileWidth,
                 tileHeight,
-                canvasWidth - 2 * tileWidth,
-                canvasHeight - 2 * tileHeight
+                worldWidth - 2 * tileWidth,
+                worldHeight - 2 * tileHeight
             );
         }
     }
