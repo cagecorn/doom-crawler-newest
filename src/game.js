@@ -342,6 +342,12 @@ export class Game {
             zoomLevel: SETTINGS.DEFAULT_ZOOM,
             isPaused: false
         };
+        this.cameraDrag = {
+            isDragging: false,
+            dragStart: { x: 0, y: 0 },
+            cameraStart: { x: 0, y: 0 },
+            followPlayer: true
+        };
         this.playerGroup.addMember(player);
         // 월드 엔진에서도 동일한 플레이어 데이터를 사용하도록 설정
         this.worldEngine.setPlayer(player);
@@ -1181,17 +1187,26 @@ export class Game {
 
         const weatherLayer = this.layerManager.layers.weather;
         weatherLayer.addEventListener('mousedown', (e) => {
-            if (this.gameState.currentState !== 'WORLD') return;
-            this.worldEngine.startDrag(e.clientX, e.clientY);
+            if (this.gameState.currentState === 'WORLD') {
+                this.worldEngine.startDrag(e.clientX, e.clientY);
+            } else if (this.gameState.currentState === 'COMBAT') {
+                this.startDragCamera(e.clientX, e.clientY);
+            }
         });
         weatherLayer.addEventListener('mousemove', (e) => {
-            if (this.gameState.currentState !== 'WORLD') return;
-            this.worldEngine.drag(e.clientX, e.clientY);
+            if (this.gameState.currentState === 'WORLD') {
+                this.worldEngine.drag(e.clientX, e.clientY);
+            } else if (this.gameState.currentState === 'COMBAT') {
+                this.dragCamera(e.clientX, e.clientY);
+            }
         });
         ['mouseup', 'mouseleave'].forEach(ev => {
             weatherLayer.addEventListener(ev, () => {
-                if (this.gameState.currentState !== 'WORLD') return;
-                this.worldEngine.endDrag();
+                if (this.gameState.currentState === 'WORLD') {
+                    this.worldEngine.endDrag();
+                } else if (this.gameState.currentState === 'COMBAT') {
+                    this.endDragCamera();
+                }
             });
         });
     }
@@ -1218,6 +1233,8 @@ export class Game {
         } else if (this.gameState.currentState !== 'COMBAT') {
             return;
         }
+
+        this.handleCameraReset();
 
         const { gameState, mercenaryManager, monsterManager, itemManager, mapManager, inputHandler, effectManager, turnManager, metaAIManager, eventManager, equipmentManager, pathfindingManager, microEngine, microItemAIManager } = this;
         if (gameState.isPaused || gameState.isGameOver) return;
@@ -1372,13 +1389,18 @@ export class Game {
             const targetZoom = this.cinematicManager.targetZoom;
             zoom += (targetZoom - zoom) * 0.08;
         } else {
-            const cameraTarget = gameState.player;
-            const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
-            const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
             const mapPixelWidth = mapManager.width * mapManager.tileSize;
             const mapPixelHeight = mapManager.height * mapManager.tileSize;
-            camera.x = Math.max(0, Math.min(targetCameraX, mapPixelWidth - canvas.width / zoom));
-            camera.y = Math.max(0, Math.min(targetCameraY, mapPixelHeight - canvas.height / zoom));
+            if (this.cameraDrag.followPlayer) {
+                const cameraTarget = gameState.player;
+                const targetCameraX = cameraTarget.x - canvas.width / (2 * zoom);
+                const targetCameraY = cameraTarget.y - canvas.height / (2 * zoom);
+                camera.x = Math.max(0, Math.min(targetCameraX, mapPixelWidth - canvas.width / zoom));
+                camera.y = Math.max(0, Math.min(targetCameraY, mapPixelHeight - canvas.height / zoom));
+            } else {
+                camera.x = Math.max(0, Math.min(camera.x, mapPixelWidth - canvas.width / zoom));
+                camera.y = Math.max(0, Math.min(camera.y, mapPixelHeight - canvas.height / zoom));
+            }
         }
         gameState.zoomLevel = zoom;
 
@@ -1442,6 +1464,42 @@ export class Game {
 
     handleAttack(attacker, defender, skill = null) {
         this.eventManager.publish('entity_attack', { attacker, defender, skill });
+    }
+
+    startDragCamera(screenX, screenY) {
+        const { cameraDrag, gameState } = this;
+        cameraDrag.isDragging = true;
+        cameraDrag.followPlayer = false;
+        cameraDrag.dragStart.x = screenX;
+        cameraDrag.dragStart.y = screenY;
+        cameraDrag.cameraStart.x = gameState.camera.x;
+        cameraDrag.cameraStart.y = gameState.camera.y;
+    }
+
+    dragCamera(screenX, screenY) {
+        const { cameraDrag, gameState, layerManager, mapManager } = this;
+        if (!cameraDrag.isDragging) return;
+        const zoom = gameState.zoomLevel || 1;
+        const deltaX = (screenX - cameraDrag.dragStart.x) / zoom;
+        const deltaY = (screenY - cameraDrag.dragStart.y) / zoom;
+        gameState.camera.x = cameraDrag.cameraStart.x - deltaX;
+        gameState.camera.y = cameraDrag.cameraStart.y - deltaY;
+        const canvas = layerManager.layers.mapBase;
+        const mapPixelWidth = mapManager.width * mapManager.tileSize;
+        const mapPixelHeight = mapManager.height * mapManager.tileSize;
+        gameState.camera.x = Math.max(0, Math.min(gameState.camera.x, mapPixelWidth - canvas.width / zoom));
+        gameState.camera.y = Math.max(0, Math.min(gameState.camera.y, mapPixelHeight - canvas.height / zoom));
+    }
+
+    endDragCamera() {
+        this.cameraDrag.isDragging = false;
+    }
+
+    handleCameraReset() {
+        if (!this.cameraDrag.followPlayer && Object.keys(this.inputHandler.keysPressed).length > 0) {
+            this.cameraDrag.followPlayer = true;
+            this.cameraDrag.isDragging = false;
+        }
     }
 
 
