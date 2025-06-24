@@ -18,6 +18,14 @@ export class EquipmentRenderManager {
         const drawY = entity.height * -1;
 
         ctx.drawImage(weapon.image, drawX, drawY, drawWidth, drawHeight);
+
+        if (weapon.aspiration && weapon.aspiration.state && weapon.aspiration.state !== 'stable') {
+            const color = weapon.aspiration.state === 'inspired' ? 'gold' : 'purple';
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.fillStyle = color;
+            ctx.fillRect(drawX, drawY, drawWidth, drawHeight);
+            ctx.globalCompositeOperation = 'source-over';
+        }
     }
 
     drawShield(ctx, entity) {
