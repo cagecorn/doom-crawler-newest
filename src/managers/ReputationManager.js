@@ -1,28 +1,36 @@
 import { memoryDB } from '../persistence/MemoryDB.js';
-import { ScenarioEngine } from './ai/ScenarioEngine.js';
+import { MbtiEngine } from './ai/MbtiEngine.js';
 
 export class ReputationManager {
-    constructor(eventManager, mercenaryManager) {
+    constructor(eventManager, mercenaryManager, mbtiEngine) {
         this.eventManager = eventManager;
         this.mercenaryManager = mercenaryManager;
+        this.mbtiEngine = mbtiEngine;
         eventManager.subscribe('action_performed', (data) => this._onAction(data));
     }
 
     async _onAction({ entity, action, context }) {
         if (!entity.isFriendly || entity.isPlayer) return;
 
-        const label = ScenarioEngine.getLabelForScenario(entity, action, context);
         let change = 0;
         let desc = '';
-        if (label) {
-            change = 1;
-            desc = `${action.type} 행동으로 훌륭한 판단(${label})을 보였습니다.`;
-        } else if (action.isMistake) {
-            change = -1;
-            desc = action.mistakeDescription || '실수를 저질렀습니다.';
-        } else {
-            return;
+
+        if (this.mbtiEngine && this.mbtiEngine.model && this.mbtiEngine.tf) {
+            const tf = this.mbtiEngine.tf;
+            const inputTensor = this.mbtiEngine.buildInput(entity, action, context.game);
+            const prediction = this.mbtiEngine.model.predict(inputTensor);
+            const predictedClass = prediction.argMax(-1).dataSync()[0];
+            change = predictedClass - 2;
+            desc = `${action.type} 행동 평가 결과 점수: ${predictedClass}`;
+            tf.dispose([inputTensor, prediction]);
         }
+
+        if (action.isMistake) {
+            change -= 1;
+            desc = action.mistakeDescription || '실수를 저질렀습니다.';
+        }
+
+        if (change === 0) return;
 
         const allies = this.mercenaryManager.mercenaries.filter(m => m.id !== entity.id && !m.isDead);
         for (const ally of allies) {
