@@ -6,6 +6,7 @@ import { SYNERGIES } from '../data/synergies.js';
 import { ARTIFACTS } from '../data/artifacts.js';
 import { memoryDB } from '../persistence/MemoryDB.js';
 import { SETTINGS } from '../../config/gameSettings.js';
+import { Draggable } from '../utils/Draggable.js';
 
 export class UIManager {
     constructor() {
@@ -59,6 +60,9 @@ export class UIManager {
         this._isInitialized = false;
         this.particleDecoratorManager = null;
         this.vfxManager = null;
+
+        this.draggables = [];
+        this._initDraggables();
 
         // 스탯 표시용 이름 매핑
         this.statDisplayNames = {
@@ -891,6 +895,22 @@ export class UIManager {
             if (stats) html += `<br><em>${stats}</em>`;
         }
         return html;
+    }
+
+    _initDraggables() {
+        const pairs = [
+            [this.mercDetailPanel, this.mercDetailPanel?.querySelector('.window-header')],
+            [this.equipTargetPanel, this.equipTargetPanel?.querySelector('.window-header')],
+            [this.inventoryPanel, this.inventoryPanel?.querySelector('.window-header')],
+            [this.mercenaryPanel, this.mercenaryPanel?.querySelector('.window-header')],
+            [this.characterSheetPanel, this.characterSheetPanel?.querySelector('.window-header')],
+        ];
+        pairs.forEach(([panel, header]) => {
+            if (panel) {
+                panel.classList.add('draggable-window', 'window');
+                new Draggable(panel, header || panel);
+            }
+        });
     }
 
     _attachTooltip(element, html) {

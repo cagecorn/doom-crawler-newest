@@ -440,3 +440,17 @@ body, html {
 .menu-btn:last-child {
     margin-right: 0;
 }
+
+/* Draggable window styling */
+.window {
+    position: absolute;
+    z-index: 100;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.window-header {
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    cursor: grab;
+}

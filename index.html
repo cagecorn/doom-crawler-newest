@@ -80,9 +80,9 @@
         <div class="log-title">-- SYSTEM LOG --</div>
         <div id="system-log-content"></div>
     </div>
-    <div id="mercenary-detail-panel" class="modal-panel ui-frame hidden">
+    <div id="mercenary-detail-panel" class="modal-panel ui-frame window draggable-window hidden">
         <button id="close-merc-detail-btn" class="close-btn">X</button>
-        <h2 id="merc-detail-name">용병 이름</h2>
+        <h2 id="merc-detail-name" class="window-header">용병 이름</h2>
         <div class="stats-content-box sheet-container">
             <div class="sheet-left">
                 <div id="merc-equipment-section">
@@ -114,16 +114,16 @@
         </div>
     </div>
 
-    <div id="equipment-target-panel" class="modal-panel ui-frame hidden">
+    <div id="equipment-target-panel" class="modal-panel ui-frame window draggable-window hidden">
         <button id="close-equip-target-btn" class="close-btn">X</button>
-        <h2>누구에게 장착하시겠습니까?</h2>
+        <h2 class="window-header">누구에게 장착하시겠습니까?</h2>
         <div id="equipment-target-list">
         </div>
     </div>
 
-    <div id="inventory-panel" class="modal-panel wide ui-frame hidden">
+    <div id="inventory-panel" class="modal-panel wide ui-frame window draggable-window hidden">
         <button class="close-btn" data-panel-id="inventory">X</button>
-        <h2>🎒 인벤토리</h2>
+        <h2 class="window-header">🎒 인벤토리</h2>
         <div class="inventory-container">
             <div class="inventory-left">
                 <h3>✨ 장착 중</h3>
@@ -152,16 +152,16 @@
         </div>
     </div>
 
-    <div id="mercenary-panel" class="modal-panel wide ui-frame hidden">
+    <div id="mercenary-panel" class="modal-panel wide ui-frame window draggable-window hidden">
         <button class="close-btn" data-panel-id="mercenary-panel">X</button>
-        <h2>🗡️ 용병 부대</h2>
+        <h2 class="window-header">🗡️ 용병 부대</h2>
         <div id="mercenary-list"></div>
     </div>
 
     <!-- 캐릭터 스탯을 표시하는 패널 -->
-    <div id="character-sheet-panel" class="modal-panel ui-frame hidden">
+    <div id="character-sheet-panel" class="modal-panel ui-frame window draggable-window hidden">
         <button class="close-btn" data-panel-id="character-sheet-panel">X</button>
-        <h2 id="sheet-character-name">캐릭터</h2>
+        <h2 id="sheet-character-name" class="window-header">캐릭터</h2>
         <div class="stats-content-box sheet-container">
             <div class="sheet-left">
                 <div id="sheet-equipment" class="equipment-slots">
