@@ -10,7 +10,7 @@ import { EMBLEMS } from './data/emblems.js';
 import { PREFIXES, SUFFIXES } from './data/affixes.js';
 import { JOBS } from './data/jobs.js';
 import { SKILLS } from './data/skills.js';
-import { MeleeAI, RangedAI, HealerAI, BardAI, SummonerAI, WizardAI, WarriorAI, ArcherAI } from './ai.js';
+import { MeleeAI, RangedAI, HealerAI, BardAI, SummonerAI, WizardAI, WarriorAI, ArcherAI, FireGodAI } from './ai.js';
 import { SupportAI } from './ai/SupportAI.js';
 import { SupportEngine } from './systems/SupportEngine.js';
 import { MBTI_TYPES } from './data/mbti.js';
@@ -178,7 +178,7 @@ export class CharacterFactory {
                         if (typeof merc.updateAI === 'function') merc.updateAI();
                     }
                     merc.roleAI = null;
-                    merc.fallbackAI = new MeleeAI();
+                    merc.fallbackAI = new FireGodAI();
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);
