@@ -8,6 +8,9 @@ export const SETTINGS = {
     // TensorFlow 기반 길찾기 모델 사용 여부입니다.
     // 모델 파일이 없거나 실험적인 기능을 끄고 싶다면 false로 두세요.
     ENABLE_TENSORFLOW_PATHING: false,
+    // 평판 시스템 사용 여부입니다. 성능 문제가 있을 때 비활성화하면
+    // 메모리 기록과 모델 로드를 생략해 속도를 높일 수 있습니다.
+    ENABLE_REPUTATION_SYSTEM: true,
     // guideline markdown files will be loaded from this GitHub API path
     // example: 'user/repo/contents/guidelines?ref=main'
     GUIDELINE_REPO_URL: "https://github.com/cagecorn/doom-crawler-newest/blob/main/TensorFlow's%20room/guideline.md",

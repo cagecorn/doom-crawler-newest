@@ -5,6 +5,7 @@ import { TRAITS } from '../data/traits.js';
 import { SYNERGIES } from '../data/synergies.js';
 import { ARTIFACTS } from '../data/artifacts.js';
 import { memoryDB } from '../persistence/MemoryDB.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export class UIManager {
     constructor() {
@@ -35,6 +36,10 @@ export class UIManager {
         this.closeMercDetailBtn = document.getElementById('close-merc-detail-btn');
         this.mercenaryPanel = document.getElementById('mercenary-panel');
         this.mercenaryList = document.getElementById('mercenary-list');
+        this.settings = SETTINGS;
+        if (this.reputationHistoryPanel && !this.settings.ENABLE_REPUTATION_SYSTEM) {
+            this.reputationHistoryPanel.style.display = 'none';
+        }
         // 장착 대상 선택 패널 요소
         this.equipTargetPanel = document.getElementById('equipment-target-panel');
         this.equipTargetList = document.getElementById('equipment-target-list');
@@ -288,7 +293,7 @@ export class UIManager {
             });
         }
 
-        if (this.reputationHistoryPanel) {
+        if (this.settings.ENABLE_REPUTATION_SYSTEM && this.reputationHistoryPanel) {
             this.reputationHistoryPanel.innerHTML = '';
             const history = await memoryDB.getEventsFor(mercenary.id);
             history.forEach(ev => {
@@ -297,6 +302,8 @@ export class UIManager {
                 div.style.color = ev.reputationChange > 0 ? 'green' : 'red';
                 this.reputationHistoryPanel.appendChild(div);
             });
+        } else if (this.reputationHistoryPanel) {
+            this.reputationHistoryPanel.innerHTML = '';
         }
 
         this.mercDetailPanel.classList.remove('hidden');
