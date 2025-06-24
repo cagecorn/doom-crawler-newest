@@ -34,7 +34,7 @@ export class ScenarioEngine {
         switch (weaponType) {
             case 'sword':
                 if (action.type === 'attack') {
-                    const enemies = context.monsterManager?.monsters || [];
+                    const enemies = context?.monsterManager?.monsters || [];
                     let strongest = null;
                     for (const e of enemies) {
                         if (e.isDead) continue;
@@ -58,7 +58,7 @@ export class ScenarioEngine {
             case 'spear':
             case 'estoc':
                 if (action.type === 'skill' && action.skill?.effect === 'charge') {
-                    const enemies = context.monsterManager?.monsters || [];
+                    const enemies = context?.monsterManager?.monsters || [];
                     const radius = action.skill.radius || entity.tileSize;
                     let count = 0;
                     for (const m of enemies) {
@@ -71,7 +71,7 @@ export class ScenarioEngine {
             case 'bow':
             case 'violin_bow':
                 if (action.type === 'skill' && action.skill?.effect === 'knockback') {
-                    const allies = context.mercenaryManager?.mercenaries || [];
+                    const allies = context?.mercenaryManager?.mercenaries || [];
                     for (const ally of allies) {
                         if (ally.jobId === 'healer' || ally.jobId === 'bard') {
                             if (calculateDistance(action.target, ally) <= (entity.tileSize || 1) * 3) {
@@ -96,7 +96,7 @@ export class ScenarioEngine {
 
         if (action.type === 'attack') {
             const targetEnemy = action.target;
-            const allies = context.mercenaryManager?.mercenaries || [];
+            const allies = context?.mercenaryManager?.mercenaries || [];
             const lowHpAlly = allies.find(m => m.hp < m.maxHp * 0.4 && !m.isDead);
             if (lowHpAlly && targetEnemy?.ai?.target?.id === lowHpAlly.id) {
                 return 'F';
@@ -108,7 +108,7 @@ export class ScenarioEngine {
     /** 효율성을 중시하는 T 시나리오 */
     static getThinkingScenario(entity, action, context) {
         if (action.type === 'skill' && action.skill?.isAoE) {
-            const enemies = context.monsterManager?.monsters || [];
+            const enemies = context?.monsterManager?.monsters || [];
             const radius = action.skill.radius || entity.tileSize;
             let count = 0;
             for (const m of enemies) {
@@ -140,7 +140,7 @@ export class ScenarioEngine {
             }
         }
         if (action.type === 'attack') {
-            const enemies = context.monsterManager?.monsters || [];
+            const enemies = context?.monsterManager?.monsters || [];
             const nearest = this._getNearestEnemy(entity, enemies);
             if (nearest && action.target?.id === nearest.id) {
                 return 'S';
