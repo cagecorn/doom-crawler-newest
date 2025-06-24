@@ -25,10 +25,10 @@
 * **오컴의 면도날:** 무용한 효과나 중복된 행동, 과도한 수치 계산을 미리 걸러내어 가장 단순한 로직으로 운용합니다.
 
 ## 마이크로 스모크 테스트
-`tests/microSmoke.test.js`에서는 게임의 핵심 로직을 짧게 검증하는 시나리오를 실행합니다. 새 콘텐츠가 추가될 때마다 이 테스트도 함께 업데이트하여 기본 동작을 계속 확인합니다.
+`tests/micro/microSmoke.test.js`에서는 게임의 핵심 로직을 짧게 검증하는 시나리오를 실행합니다. 새 콘텐츠가 추가될 때마다 이 테스트도 함께 업데이트하여 기본 동작을 계속 확인합니다.
 
 ## 데이터 무결성 테스트
-`tests/dataIntegrity.test.js`에 각 데이터 구조를 검증하는 테스트를 모아 둡니다.
+`tests/unit/dataIntegrity.test.js`에 각 데이터 구조를 검증하는 테스트를 모아 둡니다.
 - 모든 스킬은 `manaCost` 속성을 포함해야 합니다.
 - 무기 아이템에는 `damageDice`가 반드시 있어야 합니다.
 - 스킬과 아이템의 `tags` 배열이 비어 있지 않은지 확인합니다.
@@ -104,7 +104,7 @@ JSON 형식으로 변환합니다. 설정 파일 `config/gameSettings.js`의 `GU
 
 
 ## 결함 주입 테스트
-MBTI AI와 힐러 AI의 오류 처리 능력을 확인하는 시나리오가 `tests/faultInjection.test.js`에 있습니다. 버퍼/디버퍼 AI가 추가되면 동일한 파일에서 함께 관리합니다.
+MBTI AI와 힐러 AI의 오류 처리 능력을 확인하는 시나리오가 `tests/unit/faultInjection.test.js`에 있습니다. 버퍼/디버퍼 AI가 추가되면 동일한 파일에서 함께 관리합니다.
 이 테스트들은 매 패치마다 돌릴 필요는 없으며, 엠바고 테스트를 실행할 때 같이 수행하는 것을 권장합니다.
 자세한 지침은 [FAULT_INJECTION_GUIDE.md](FAULT_INJECTION_GUIDE.md)를 참고하세요.
 

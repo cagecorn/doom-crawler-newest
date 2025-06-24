@@ -7,11 +7,11 @@
 - 버그 수정이나 AI 로직 변경 시 의도치 않은 크래시를 미연에 방지합니다.
 
 ## 테스트 파일
-- `tests/faultInjection.test.js`에서 관련 시나리오를 다룹니다.
+ - `tests/unit/faultInjection.test.js`에서 관련 시나리오를 다룹니다.
 - BufferAI와 DebufferAI가 구현되면 이 파일을 계속 확장해 주세요.
 
 ## 실행 주기
 - 매 패치마다 수행할 필요는 없습니다.
-- 대신 엠바고 테스트(`tests/embargo.test.js`)를 실행할 때 함께 돌리는 것을 권장합니다.
+ - 대신 엠바고 테스트(`tests/unit/embargo.test.js`)를 실행할 때 함께 돌리는 것을 권장합니다.
 - MBTI 데이터나 AI 행동 로직을 수정한 경우에는 즉시 테스트를 갱신하세요.
 
