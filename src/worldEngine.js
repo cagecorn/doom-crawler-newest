@@ -3,8 +3,10 @@ export class WorldEngine {
         this.game = game;
         this.assets = assets;
         this.worldMapImage = this.assets['world-tile'];
-        this.tileSize = this.game.mapManager?.tileSize || 64;
-        // 전투 맵과 동일한 배율을 유지하기 위해 고정된 타일 크기를 사용
+        // 월드맵은 전투 맵보다 멀리서 보기 때문에, 유닛 도트 이미지 크기(64px)에
+        // 맞춰 더 작은 타일을 사용한다
+        this.tileSize = 64;
+        // 고정된 타일 크기를 기준으로 월드 전체 크기를 계산한다
         this.worldWidth = this.tileSize * 40;
         this.worldHeight = this.tileSize * 40;
         this.camera = { x: 0, y: 0 };
@@ -34,8 +36,9 @@ export class WorldEngine {
         this.player = {
             x: this.tileSize * 2,
             y: this.tileSize * 2,
-            width: entity?.width || this.tileSize,
-            height: entity?.height || this.tileSize,
+            // 월드맵에서는 플레이어 크기를 고정된 타일 크기로 단순화한다
+            width: this.tileSize,
+            height: this.tileSize,
             speed: 5,
             image: entity?.image || this.assets['player'],
             entity
