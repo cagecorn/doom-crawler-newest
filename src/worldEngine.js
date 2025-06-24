@@ -8,6 +8,10 @@ export class WorldEngine {
         this.worldWidth = this.tileSize * 40;
         this.worldHeight = this.tileSize * 40;
         this.camera = { x: 0, y: 0 };
+        this.cameraStart = { x: 0, y: 0 };
+        this.dragStart = { x: 0, y: 0 };
+        this.isDragging = false;
+        this.followPlayer = true;
         // 플레이어 정보는 Game 초기화 이후 setPlayer()로 전달된다
         this.player = null;
         this.monsters = [
@@ -40,9 +44,17 @@ export class WorldEngine {
 
     update() {
         if (!this.player) return;
+        this.handleResetFollow();
         this.handlePlayerMovement();
         this.updateCamera();
         this.checkCollisions();
+    }
+
+    handleResetFollow() {
+        if (!this.followPlayer && Object.keys(this.game.inputHandler.keysPressed).length > 0) {
+            this.followPlayer = true;
+            this.isDragging = false;
+        }
     }
 
     handlePlayerMovement() {
@@ -65,23 +77,48 @@ export class WorldEngine {
         }
     }
 
+    startDrag(screenX, screenY) {
+        this.isDragging = true;
+        this.followPlayer = false;
+        this.dragStart.x = screenX;
+        this.dragStart.y = screenY;
+        this.cameraStart.x = this.camera.x;
+        this.cameraStart.y = this.camera.y;
+    }
+
+    drag(screenX, screenY) {
+        if (!this.isDragging) return;
+        const zoom = this.game.gameState.zoomLevel || 1;
+        const deltaX = (screenX - this.dragStart.x) / zoom;
+        const deltaY = (screenY - this.dragStart.y) / zoom;
+        this.camera.x = this.cameraStart.x - deltaX;
+        this.camera.y = this.cameraStart.y - deltaY;
+        this.clampCamera();
+    }
+
+    endDrag() {
+        this.isDragging = false;
+    }
+
     updateCamera() {
         const canvasWidth = this.game.layerManager.layers.entity.width;
         const canvasHeight = this.game.layerManager.layers.entity.height;
-        this.camera.x = Math.max(
-            0,
-            Math.min(
-                this.player.x - canvasWidth / 2,
-                this.worldWidth - canvasWidth
-            )
-        );
-        this.camera.y = Math.max(
-            0,
-            Math.min(
-                this.player.y - canvasHeight / 2,
-                this.worldHeight - canvasHeight
-            )
-        );
+        const zoom = this.game.gameState.zoomLevel || 1;
+        if (this.followPlayer) {
+            const targetX = this.player.x - canvasWidth / (2 * zoom);
+            const targetY = this.player.y - canvasHeight / (2 * zoom);
+            this.camera.x = targetX;
+            this.camera.y = targetY;
+        }
+        this.clampCamera();
+    }
+
+    clampCamera() {
+        const canvasWidth = this.game.layerManager.layers.entity.width;
+        const canvasHeight = this.game.layerManager.layers.entity.height;
+        const zoom = this.game.gameState.zoomLevel || 1;
+        this.camera.x = Math.max(0, Math.min(this.camera.x, this.worldWidth - canvasWidth / zoom));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, this.worldHeight - canvasHeight / zoom));
     }
 
     checkCollisions() {
@@ -101,7 +138,9 @@ export class WorldEngine {
 
     render(ctx) {
         if (!this.player) return;
+        const zoom = this.game.gameState.zoomLevel || 1;
         ctx.save();
+        ctx.scale(zoom, zoom);
         ctx.translate(-this.camera.x, -this.camera.y);
         this._drawWorldMap(ctx);
         this._drawEntities(ctx);
