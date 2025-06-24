@@ -973,20 +973,6 @@ export class Game {
             data.entity.stats.recalculate();
         });
 
-        eventManager.subscribe('aspiration_state_changed', (data) => {
-            const { weapon, newState } = data;
-            const wielder = this.findEntityByWeapon(weapon);
-            if (!wielder) return;
-            this.effectManager.removeEffectsByTag(wielder, 'aspiration_effect');
-            let effectId = null;
-            if (newState === 'inspired') effectId = 'inspired_weapon';
-            else if (newState === 'despairing') effectId = 'despairing_weapon';
-            if (effectId) {
-                this.effectManager.addEffect(wielder, effectId);
-                this.eventManager.publish('log', { message: `[열망] ${weapon.name} 상태가 ${newState} 상태가 되었습니다.`, color: 'magenta' });
-            }
-        });
-
         eventManager.subscribe('key_pressed', (data) => {
             const key = data.key;
             if (gameState.isPaused || gameState.isGameOver) return;
@@ -1114,17 +1100,6 @@ export class Game {
                 return;
             }
         });
-    }
-
-    findEntityByWeapon(weapon) {
-        if (this.gameState.player.equipment.weapon === weapon) return this.gameState.player;
-        for (const m of this.mercenaryManager.mercenaries) {
-            if (m.equipment.weapon === weapon) return m;
-        }
-        for (const m of this.monsterManager.monsters) {
-            if (m.equipment.weapon === weapon) return m;
-        }
-        return null;
     }
 
     findNearestEnemy(caster, enemies, range = Infinity) {

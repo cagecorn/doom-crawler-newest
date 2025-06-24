@@ -249,9 +249,6 @@ export class ItemFactory {
         item.baseId = itemId;
         item.type = baseItem.type;
         item.tags = [...baseItem.tags];
-        if (baseItem.aspiration) {
-            item.aspiration = { ...baseItem.aspiration };
-        }
 
         if (baseItem.tier) item.tier = baseItem.tier;
         if (baseItem.durability) item.durability = baseItem.durability;

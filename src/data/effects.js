@@ -319,21 +319,5 @@ export const EFFECTS = {
         duration: 300,
         tags: ['alphabet_state', 'J_state'],
         stats: { movement: -1 }
-    },
-
-    inspired_weapon: {
-        name: '열망 고양',
-        type: 'buff',
-        duration: 400,
-        stats: { attackPower: 1 },
-        tags: ['aspiration', 'buff', 'aspiration_effect']
-    },
-
-    despairing_weapon: {
-        name: '열망 절망',
-        type: 'debuff',
-        duration: 400,
-        stats: { attackPower: -1 },
-        tags: ['aspiration', 'debuff', 'aspiration_effect']
     }
 };
