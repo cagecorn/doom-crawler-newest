@@ -49,6 +49,8 @@ export class UIManager {
         this.inventoryPanel = document.getElementById('inventory-panel');
         this.equippedItemsContainer = document.getElementById('equipped-items');
         this.inventoryListContainer = document.getElementById('inventory-list');
+        this.inventoryFilters = document.querySelectorAll('#inventory-filters .inv-filter-btn');
+        this.currentInventoryFilter = 'all';
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetPanel = document.getElementById('character-sheet-panel');
         this.sheetCharacterName = document.getElementById('sheet-character-name');
@@ -128,6 +130,17 @@ export class UIManager {
         const closeEquipBtn = document.getElementById('close-equip-target-btn');
         if (closeEquipBtn) closeEquipBtn.onclick = () => this.hideEquipTargetPanel();
 
+        if (this.inventoryFilters) {
+            this.inventoryFilters.forEach(btn => {
+                btn.onclick = () => {
+                    this.inventoryFilters.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.currentInventoryFilter = btn.dataset.filter || 'all';
+                    if (this.gameState) this.renderInventory(this.gameState);
+                };
+            });
+        }
+
         if (this.characterSheetPanel) {
             this.characterSheetPanel.querySelectorAll('.stat-tab-btn').forEach(btn => {
                 btn.onclick = () => {
@@ -153,167 +166,12 @@ export class UIManager {
     }
 
     async showMercenaryDetail(mercenary) {
-        if (!this.mercDetailPanel) return;
-
-        this.mercDetailName.textContent = `${mercenary.constructor.name} (Lv.${mercenary.stats.get('level')})`;
-
-        const statsToShow = ['attackPower', 'strength', 'agility', 'endurance', 'visionRange', 'movementSpeed', 'hpRegen', 'mpRegen'];
-        this.mercStatsContainer.innerHTML = '';
-
-        // 레벨 및 경험치 표시
-        const levelDiv = document.createElement('div');
-        levelDiv.className = 'stat-line';
-        levelDiv.textContent = `레벨: ${mercenary.stats.get('level')}`;
-        this.mercStatsContainer.appendChild(levelDiv);
-
-        const expDiv = document.createElement('div');
-        expDiv.className = 'stat-line';
-        expDiv.textContent = `EXP: ${mercenary.stats.get('exp')} / ${mercenary.stats.get('expNeeded')}`;
-        this.mercStatsContainer.appendChild(expDiv);
-
-        const hpDiv = document.createElement('div');
-        hpDiv.className = 'stat-line';
-        const shieldText = mercenary.shield > 0 ? ` <span style="color: blue">+${mercenary.shield.toFixed(1)}</span>` : '';
-        hpDiv.innerHTML = `HP: ${mercenary.hp.toFixed(1)} / ${mercenary.maxHp}${shieldText}`;
-        this.mercStatsContainer.appendChild(hpDiv);
-
-        const mpDiv = document.createElement('div');
-        mpDiv.className = 'stat-line';
-        mpDiv.textContent = `MP: ${mercenary.mp.toFixed(1)} / ${mercenary.maxMp}`;
-        this.mercStatsContainer.appendChild(mpDiv);
-
-        const fullDiv = document.createElement('div');
-        fullDiv.className = 'stat-line';
-        fullDiv.textContent = `🍗 배부름: ${mercenary.fullness.toFixed(1)} / ${mercenary.maxFullness}`;
-        this.mercStatsContainer.appendChild(fullDiv);
-
-        const affinityDiv = document.createElement('div');
-        affinityDiv.className = 'stat-line';
-        affinityDiv.textContent = `💕 호감도: ${mercenary.affinity.toFixed(1)} / ${mercenary.maxAffinity}`;
-        this.mercStatsContainer.appendChild(affinityDiv);
-
-        const mbtiDiv = document.createElement('div');
-        mbtiDiv.className = 'stat-line';
-        const mbtiSpan = document.createElement('span');
-        mbtiSpan.textContent = mercenary.properties.mbti;
-        this._attachTooltip(mbtiSpan, this._getMBTITooltip(mercenary.properties.mbti));
-        mbtiDiv.innerHTML = 'MBTI: ';
-        mbtiDiv.appendChild(mbtiSpan);
-        this.mercStatsContainer.appendChild(mbtiDiv);
-
-        const faithDiv = document.createElement('div');
-        faithDiv.className = 'stat-line';
-        const faithSpan = document.createElement('span');
-        const fId = mercenary.properties.faith;
-        faithSpan.textContent = fId ? FAITHS[fId].name : FAITHS.NONE.name;
-        this._attachTooltip(faithSpan, this._getFaithTooltip(fId));
-        faithDiv.innerHTML = '신앙: ';
-        faithDiv.appendChild(faithSpan);
-        this.mercStatsContainer.appendChild(faithDiv);
-
-        if (mercenary.properties.traits && mercenary.properties.traits.length) {
-            const traitDiv = document.createElement('div');
-            traitDiv.className = 'stat-line';
-            traitDiv.innerHTML = '특성: ';
-            mercenary.properties.traits.forEach(id => {
-                const span = document.createElement('span');
-                span.textContent = TRAITS[id]?.name || id;
-                this._attachTooltip(span, this._getTraitTooltip(id));
-                traitDiv.appendChild(span);
-                traitDiv.appendChild(document.createTextNode(' '));
-            });
-            this.mercStatsContainer.appendChild(traitDiv);
+        if (this.characterSheetPanel) {
+            this.renderCharacterSheet(mercenary);
+            this.showPanel("character-sheet-panel");
         }
-
-        statsToShow.forEach(stat => {
-            const statDiv = document.createElement('div');
-            statDiv.className = 'stat-line';
-            const displayName = this.statDisplayNames[stat] || stat;
-            const statValue = mercenary.stats.get(stat);
-            if (stat === 'attackPower') {
-                const bonus = mercenary.damageBonus || 0;
-                const bonusText = bonus > 0 ? ` <span style="color:red">+${bonus}</span>` : '';
-                statDiv.innerHTML = `${displayName}: ${statValue}${bonusText}`;
-            } else {
-                statDiv.textContent = `${displayName}: ${statValue}`;
-            }
-            this.mercStatsContainer.appendChild(statDiv);
-        });
-
-        if (mercenary.effects && mercenary.effects.length > 0) {
-            const effDiv = document.createElement('div');
-            effDiv.className = 'stat-line';
-            const list = mercenary.effects.map(e => `${e.name}(${Math.ceil(e.remaining / 100)}턴)`);
-            effDiv.textContent = `효과: ${list.join(', ')}`;
-            this.mercStatsContainer.appendChild(effDiv);
-        }
-
-        if (this.mercEquipment) {
-            this.mercEquipment.innerHTML = '';
-            for (const slot in mercenary.equipment) {
-                const item = mercenary.equipment[slot];
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'equip-slot';
-                if (item && item.image) {
-                    const img = document.createElement('img');
-                    img.src = item.image.src;
-                    slotDiv.appendChild(img);
-                    this._attachTooltip(slotDiv, this._getItemTooltip(item));
-                } else {
-                    slotDiv.textContent = slot;
-                }
-                this.mercEquipment.appendChild(slotDiv);
-            }
-        }
-
-        if (this.mercInventory) {
-            this.mercInventory.innerHTML = '';
-            const inventory = mercenary.consumables || mercenary.inventory || [];
-            inventory.forEach(item => {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'inventory-item-slot';
-                if (item.image) {
-                    const img = document.createElement('img');
-                    img.src = item.image.src;
-                    slotDiv.appendChild(img);
-                } else {
-                    slotDiv.textContent = item.name;
-                }
-                this._attachTooltip(slotDiv, this._getItemTooltip(item));
-                this.mercInventory.appendChild(slotDiv);
-            });
-        }
-
-        if (this.mercSkills) {
-            this.mercSkills.innerHTML = '';
-            (mercenary.skills || []).forEach(skillId => {
-                const skill = SKILLS[skillId];
-                if (!skill) return;
-                const div = document.createElement('div');
-                div.className = 'skill-slot';
-                div.style.backgroundImage = `url(${skill.icon})`;
-                div.style.backgroundSize = 'cover';
-                this._attachTooltip(div, `<strong>${skill.name}</strong><br>${skill.description}`);
-                this.mercSkills.appendChild(div);
-            });
-        }
-
-        if (this.settings.ENABLE_REPUTATION_SYSTEM && this.reputationHistoryPanel) {
-            this.reputationHistoryPanel.innerHTML = '';
-            const history = await memoryDB.getEventsFor(mercenary.id);
-            history.forEach(ev => {
-                const div = document.createElement('div');
-                div.textContent = `[${new Date(ev.timestamp).toLocaleTimeString()}] ${ev.description}`;
-                div.style.color = ev.reputationChange > 0 ? 'green' : 'red';
-                this.reputationHistoryPanel.appendChild(div);
-            });
-        } else if (this.reputationHistoryPanel) {
-            this.reputationHistoryPanel.innerHTML = '';
-        }
-
-        this.mercDetailPanel.classList.remove('hidden');
-        if (this.gameState) this.gameState.isPaused = true;
     }
+
 
     hideMercenaryDetail() {
         if (this.mercDetailPanel) {
@@ -338,43 +196,32 @@ export class UIManager {
             const slots = ['main_hand', 'off_hand', 'armor', 'helmet', 'gloves', 'boots', 'accessory1', 'accessory2'];
             slots.forEach(slot => {
                 const item = entity.equipment ? entity.equipment[slot] : null;
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'equip-slot';
-                slotDiv.dataset.slot = slot;
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = slot;
-                slotDiv.appendChild(nameSpan);
-
-                const itemSpan = document.createElement('span');
-                itemSpan.textContent = item ? item.name : '없음';
-                slotDiv.appendChild(itemSpan);
-                
-                if(item) {
-                    this._attachTooltip(slotDiv, this._getItemTooltip(item));
-                } else {
-                    this._attachTooltip(slotDiv, `<strong>${slot}</strong><br>비어있음`);
-                }
-
-                this.sheetEquipment.appendChild(slotDiv);
+                const el = this.createSlotElement(entity, slot, item);
+                this.sheetEquipment.appendChild(el);
             });
         }
 
         if (this.sheetInventory) {
             this.sheetInventory.innerHTML = '';
             const inventory = entity.consumables || entity.inventory || [];
-            inventory.forEach(item => {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'inventory-item-slot';
-                if (item.image) {
-                    const img = document.createElement('img');
-                    img.src = item.image.src;
-                    slotDiv.appendChild(img);
-                } else {
-                    slotDiv.textContent = item.name;
-                }
-                this._attachTooltip(slotDiv, this._getItemTooltip(item));
-                this.sheetInventory.appendChild(slotDiv);
+            inventory.forEach((item, idx) => {
+                const el = this.createSlotElement(entity, 'inventory', item, idx);
+                this.sheetInventory.appendChild(el);
+            });
+        }
+
+        const skillBox = this.characterSheetPanel.querySelector('#sheet-skills');
+        if (skillBox) {
+            skillBox.innerHTML = '';
+            (entity.skills || []).forEach(skillId => {
+                const skill = SKILLS[skillId];
+                if (!skill) return;
+                const div = document.createElement('div');
+                div.className = 'skill-slot';
+                div.style.backgroundImage = `url(${skill.icon})`;
+                div.style.backgroundSize = 'cover';
+                this._attachTooltip(div, `<strong>${skill.name}</strong><br>${skill.description}`);
+                skillBox.appendChild(div);
             });
         }
 
@@ -540,7 +387,11 @@ export class UIManager {
         }
 
         this.inventoryListContainer.innerHTML = '';
-        gameState.inventory.forEach((item, index) => {
+        const filtered = gameState.inventory.filter(it => {
+            if (this.currentInventoryFilter === 'all') return true;
+            return it.type === this.currentInventoryFilter || it.tags?.includes(this.currentInventoryFilter);
+        });
+        filtered.forEach((item, index) => {
             const slotDiv = this.createSlotElement(player, 'inventory', item, index);
             this.inventoryListContainer.appendChild(slotDiv);
         });
@@ -919,10 +770,9 @@ export class UIManager {
             try {
                 const dropped = JSON.parse(e.dataTransfer.getData('application/json'));
                 this.eventManager?.publish('ui_equip_request', {
-                    ownerId: owner.id,
                     itemId: dropped.itemId,
                     from: dropped.from,
-                    to: { type: slotType, index: inventoryIndex }
+                    to: { ownerId: owner.id, type: slotType, index: inventoryIndex }
                 });
             } catch (_) {}
         });
@@ -932,7 +782,7 @@ export class UIManager {
             img.src = item.iconPath || item.image?.src || '';
             img.draggable = true;
             img.addEventListener('dragstart', e => {
-                const fromData = { type: slotType, index: inventoryIndex };
+                const fromData = { ownerId: owner.id, type: slotType, index: inventoryIndex };
                 e.dataTransfer.setData('application/json', JSON.stringify({ itemId: item.id, from: fromData }));
                 img.classList.add('dragging');
             });

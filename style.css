@@ -259,8 +259,8 @@ body, html {
 }
 
 .modal-panel.wide {
-    width: 60vw;
-    max-width: 800px;
+    width: 80vw;
+    max-width: 1000px;
 }
 
 .inventory-container {
@@ -417,6 +417,12 @@ body, html {
 }
 
 #merc-skills {
+    display: flex;
+    gap: 5px;
+    padding: 5px 0;
+}
+
+#sheet-skills {
     display: flex;
     gap: 5px;
     padding: 5px 0;

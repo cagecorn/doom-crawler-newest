@@ -83,18 +83,27 @@ export class EquipmentManager {
     }
 
     handleEquipRequest(data) {
-        const { ownerId, itemId, from, to } = data;
-        const character = this.entityManager?.getEntityById ? this.entityManager.getEntityById(ownerId) : null;
-        if (!character) return;
-        const itemToMove = this.findItem(character, itemId, from);
+        const { itemId, from, to } = data;
+        const fromChar = this.entityManager?.getEntityById ? this.entityManager.getEntityById(from.ownerId) : null;
+        const toChar = this.entityManager?.getEntityById ? this.entityManager.getEntityById(to.ownerId) : null;
+        if (!fromChar || !toChar) return;
+
+        const itemToMove = this.findItem(fromChar, itemId, from);
         if (!itemToMove) return;
         if (!this.canEquip(itemToMove, to.type)) return;
 
-        const targetItem = this.getItemFromSlot(character, to);
-        this.setItemInSlot(character, from, targetItem);
-        this.setItemInSlot(character, to, itemToMove);
-        this.recalculateStats(character);
-        this.eventManager?.publish('character_equipment_changed', { characterId: ownerId });
+        const targetItem = this.getItemFromSlot(toChar, to);
+
+        this.setItemInSlot(fromChar, from, targetItem);
+        this.setItemInSlot(toChar, to, itemToMove);
+
+        this.recalculateStats(fromChar);
+        if (toChar !== fromChar) this.recalculateStats(toChar);
+
+        this.eventManager?.publish('character_equipment_changed', { characterId: from.ownerId });
+        if (to.ownerId !== from.ownerId) {
+            this.eventManager?.publish('character_equipment_changed', { characterId: to.ownerId });
+        }
     }
 
     findItem(character, itemId, from) {
