@@ -266,7 +266,7 @@ export class MetaAIManager {
                 }
                 
                 // 실수 엔진을 통해 최종 행동 결정
-                const finalAction = MistakeEngine.getFinalAction(member, action, currentContext);
+                const finalAction = MistakeEngine.getFinalAction(member, action, currentContext, this.mbtiEngine);
 
                 // AI가 행동을 결정한 직후 MBTI 엔진 처리
                 this.processMbti(member, { ...finalAction, context: currentContext });

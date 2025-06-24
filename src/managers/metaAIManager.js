@@ -87,7 +87,7 @@ export class MetaAIManager extends BaseMetaAI {
 
                 if (member.ai) {
                     const action = member.ai.decideAction(member, currentContext);
-                    const finalAction = MistakeEngine.getFinalAction(member, action, currentContext);
+                    const finalAction = MistakeEngine.getFinalAction(member, action, currentContext, this.mbtiEngine);
                     this.executeAction(member, finalAction, currentContext);
                 }
             }
