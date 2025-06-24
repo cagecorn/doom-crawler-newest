@@ -211,6 +211,7 @@ export class Game {
         this.uiManager.mercenaryManager = this.mercenaryManager;
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
+        this.uiManager.eventManager = this.eventManager;
         this.metaAIManager = new MetaAIManager(this.eventManager);
         if (SETTINGS.ENABLE_REPUTATION_SYSTEM) {
             this.reputationManager = new ReputationManager(this.eventManager);
@@ -471,8 +472,13 @@ export class Game {
             findEntityByWeaponId: (weaponId) => {
                 const list = [this.gameState.player, ...this.mercenaryManager.mercenaries, ...this.monsterManager.monsters, ...(this.petManager?.pets || [])];
                 return list.find(e => e.equipment?.weapon && e.equipment.weapon.id === weaponId) || null;
+            },
+            getEntityById: (id) => {
+                const list = [this.gameState.player, ...this.mercenaryManager.mercenaries, ...this.monsterManager.monsters, ...(this.petManager?.pets || [])];
+                return list.find(e => e.id === id) || null;
             }
         };
+        this.equipmentManager.entityManager = this.entityManager;
         this.aspirationManager = new AspirationManager(this.eventManager, this.microWorld, this.effectManager, this.vfxManager, this.entityManager);
 
         // === 4. 용병 고용 로직 ===

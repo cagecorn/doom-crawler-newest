@@ -454,3 +454,25 @@ body, html {
     color: white;
     cursor: grab;
 }
+/* Drag & Drop inventory slots */
+.slot {
+    width: 64px;
+    height: 64px;
+    border: 1px solid #555;
+    background-color: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.slot.drag-over {
+    background-color: #444;
+    border-color: #fff;
+}
+.slot img {
+    max-width: 100%;
+    max-height: 100%;
+    cursor: grab;
+}
+.slot img.dragging {
+    opacity: 0.5;
+}

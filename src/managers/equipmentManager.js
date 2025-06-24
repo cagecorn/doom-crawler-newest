@@ -1,7 +1,11 @@
 export class EquipmentManager {
-    constructor(eventManager = null) {
+    constructor(eventManager = null, entityManager = null) {
         this.eventManager = eventManager;
+        this.entityManager = entityManager;
         this.tagManager = null;
+        if (this.eventManager) {
+            this.eventManager.subscribe('ui_equip_request', (d) => this.handleEquipRequest(d));
+        }
         console.log('[EquipmentManager] Initialized');
     }
 
@@ -76,6 +80,58 @@ export class EquipmentManager {
             this.eventManager.publish('log', { message: `${entity.constructor.name}(이)가 ${slot}을/를 해제했습니다.` });
             this.eventManager.publish('equipment_changed', { entity });
         }
+    }
+
+    handleEquipRequest(data) {
+        const { ownerId, itemId, from, to } = data;
+        const character = this.entityManager?.getEntityById ? this.entityManager.getEntityById(ownerId) : null;
+        if (!character) return;
+        const itemToMove = this.findItem(character, itemId, from);
+        if (!itemToMove) return;
+        if (!this.canEquip(itemToMove, to.type)) return;
+
+        const targetItem = this.getItemFromSlot(character, to);
+        this.setItemInSlot(character, from, targetItem);
+        this.setItemInSlot(character, to, itemToMove);
+        this.recalculateStats(character);
+        this.eventManager?.publish('character_equipment_changed', { characterId: ownerId });
+    }
+
+    findItem(character, itemId, from) {
+        if (from.type === 'inventory') {
+            const item = character.inventory[from.index];
+            if (item?.id === itemId) return item;
+        } else if (character.equipment[from.type]?.id === itemId) {
+            return character.equipment[from.type];
+        }
+        return null;
+    }
+
+    getItemFromSlot(character, slot) {
+        if (slot.type === 'inventory') {
+            return character.inventory[slot.index];
+        }
+        return character.equipment[slot.type];
+    }
+
+    setItemInSlot(character, slot, item) {
+        if (slot.type === 'inventory') {
+            character.inventory[slot.index] = item || null;
+        } else {
+            character.equipment[slot.type] = item || null;
+        }
+    }
+
+    canEquip(item, slotType) {
+        if (slotType === 'inventory') return true;
+        return item.type === slotType || item.tags?.includes(slotType);
+    }
+
+    recalculateStats(character) {
+        if (character.stats && typeof character.stats.updateEquipmentStats === 'function') {
+            character.stats.updateEquipmentStats();
+        }
+        if (typeof character.updateAI === 'function') character.updateAI();
     }
 
     /**
