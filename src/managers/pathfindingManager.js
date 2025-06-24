@@ -1,5 +1,6 @@
 // src/pathfindingManager.js
 import tfLoader from '../utils/tf-loader.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export class PathfindingManager {
     constructor(mapManager) {
@@ -123,6 +124,10 @@ export class PathfindingManager {
     }
 
     async findPathTensor(startX, startY, endX, endY) {
+        if (!SETTINGS.ENABLE_TENSORFLOW_PATHING) {
+            return this.findPath(startX, startY, endX, endY);
+        }
+
         try {
             await tfLoader.init();
             const tf = tfLoader.getTf();
