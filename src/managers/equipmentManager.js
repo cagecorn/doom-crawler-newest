@@ -21,19 +21,11 @@ export class EquipmentManager {
         if (oldItem?.tags.includes('emblem')) {
             this.eventManager?.publish('emblem_unequipped', { entity });
         }
-        // 장착 해제되는 아이템을 지정된 인벤토리로 이동
         if (oldItem && inventory) {
             inventory.push(oldItem);
         }
 
-        // 새 아이템 장착
         entity.equipment[slot] = item;
-
-        // 인벤토리에서 새 아이템 제거
-        if (inventory) {
-            const idx = inventory.indexOf(item);
-            if (idx > -1) inventory.splice(idx, 1);
-        }
 
         if (entity.stats && typeof entity.stats.updateEquipmentStats === 'function') {
             entity.stats.updateEquipmentStats();
