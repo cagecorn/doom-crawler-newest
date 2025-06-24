@@ -78,5 +78,21 @@ export const JOBS = {
             attackPower: 10,
         }
     },
+    fire_god: {
+        name: '불의 신',
+        description: '화염을 다루는 강력한 존재입니다.',
+        stats: {
+            strength: 12,
+            agility: 8,
+            endurance: 12,
+            focus: 10,
+            intelligence: 10,
+            movement: 5,
+            hp: 80,
+            attackPower: 35,
+            sizeInTiles_w: 2,
+            sizeInTiles_h: 2,
+        }
+    },
 };
 

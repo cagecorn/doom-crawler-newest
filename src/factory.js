@@ -166,6 +166,19 @@ export class CharacterFactory {
                     merc.roleAI = new BardAI(gameRef);
                     merc.defaultRoleAI = merc.roleAI;
                     merc.fallbackAI = null; // disable default AI for bards
+                } else if (config.jobId === 'fire_god') {
+                    merc.skills.push(SKILLS.fire_nova.id);
+                    // 불의 신은 무기를 랜덤하게 지급합니다.
+                    const weaponIds = ['sword', 'axe', 'mace', 'staff', 'spear', 'estoc', 'scythe', 'whip'];
+                    const randId = weaponIds[Math.floor(Math.random() * weaponIds.length)];
+                    const weapon = this.itemFactory.create(randId, 0, 0, tileSize);
+                    if (weapon) {
+                        merc.equipment.weapon = weapon;
+                        if (merc.stats) merc.stats.updateEquipmentStats();
+                        if (typeof merc.updateAI === 'function') merc.updateAI();
+                    }
+                    merc.roleAI = null;
+                    merc.fallbackAI = new MeleeAI();
                 } else {
                     const skillId = Math.random() < 0.5 ? SKILLS.double_strike.id : SKILLS.charge_attack.id;
                     merc.skills.push(skillId);

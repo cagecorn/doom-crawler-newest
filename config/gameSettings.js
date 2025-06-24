@@ -21,6 +21,8 @@ export const SETTINGS = {
     // 평판 시스템 사용 여부입니다. 성능 문제가 있을 때 비활성화하면
     // 메모리 기록과 모델 로드를 생략해 속도를 높일 수 있습니다.
     ENABLE_REPUTATION_SYSTEM: false,
+    // 유령 빙의 AI 시스템 사용 여부입니다.
+    ENABLE_POSSESSION_SYSTEM: false,
     // guideline markdown files will be loaded from this GitHub API path
     // example: 'user/repo/contents/guidelines?ref=main'
     // Remote markdown guidelines are fetched via the GitHub API.
