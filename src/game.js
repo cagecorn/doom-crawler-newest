@@ -205,10 +205,14 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.metaAIManager = new MetaAIManager(this.eventManager);
-        this.reputationManager = new ReputationManager(this.eventManager);
-        this.reputationManager.mercenaryManager = this.mercenaryManager;
-        this.reputationManager.mbtiEngine = this.metaAIManager.mbtiEngine;
-        this.reputationManager.loadReputationModel();
+        if (SETTINGS.ENABLE_REPUTATION_SYSTEM) {
+            this.reputationManager = new ReputationManager(this.eventManager);
+            this.reputationManager.mercenaryManager = this.mercenaryManager;
+            this.reputationManager.mbtiEngine = this.metaAIManager.mbtiEngine;
+            this.reputationManager.loadReputationModel();
+        } else {
+            this.reputationManager = null;
+        }
         this.cinematicManager = new CinematicManager(this);
         this.dataRecorder = new DataRecorder(this);
         this.dataRecorder.init();
