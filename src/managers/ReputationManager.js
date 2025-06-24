@@ -32,7 +32,13 @@ export class ReputationManager {
 
         if (change === 0) return;
 
-        const allies = this.mercenaryManager.mercenaries.filter(m => m.id !== entity.id && !m.isDead);
+        if (!this.mercenaryManager || !Array.isArray(this.mercenaryManager.mercenaries)) {
+            return;
+        }
+
+        const allies = this.mercenaryManager.mercenaries.filter(
+            (m) => m.id !== entity.id && !m.isDead
+        );
         for (const ally of allies) {
             memoryDB.addEvent({
                 actorId: entity.id,
