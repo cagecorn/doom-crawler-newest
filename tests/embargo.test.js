@@ -11,8 +11,10 @@ import { MeleeAI, PurifierAI, HealerAI, CompositeAI } from '../src/ai.js';
 import { Item } from '../src/entities.js';
 import { SKILLS } from '../src/data/skills.js';
 import { describe, test, assert } from './helpers.js';
+import { SETTINGS } from '../config/gameSettings.js';
 // TensorFlow is not needed in the test environment
 const tf = {};
+SETTINGS.ENABLE_MISTAKE_ENGINE = false;
 
 // 업데이트된 엠바고 테스트
 

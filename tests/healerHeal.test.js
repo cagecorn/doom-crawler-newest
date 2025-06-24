@@ -1,9 +1,11 @@
 import { HealerAI } from '../src/ai.js';
 import { CharacterFactory } from '../src/factory.js';
 import { SKILLS } from '../src/data/skills.js';
+import { SETTINGS } from '../config/gameSettings.js';
 import { describe, test, assert } from './helpers.js';
 
 const assets = { player:{}, mercenary:{} };
+SETTINGS.ENABLE_MISTAKE_ENGINE = false;
 
 describe('Healing', () => {
   test('healer skill restores ally hp', () => {

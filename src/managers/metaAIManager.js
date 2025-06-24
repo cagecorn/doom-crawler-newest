@@ -1,5 +1,7 @@
 import { MetaAIManager as BaseMetaAI } from './ai-managers.js';
 import { FearAI, ConfusionAI, BerserkAI, CharmAI } from '../ai.js';
+import { MistakeEngine } from './ai/MistakeEngine.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export class MetaAIManager extends BaseMetaAI {
     executeAction(entity, action, context) {
@@ -46,7 +48,7 @@ export class MetaAIManager extends BaseMetaAI {
     }
 
     update(context) {
-        const currentContext = { ...context, metaAIManager: this };
+        const currentContext = { ...context, metaAIManager: this, settings: SETTINGS };
         for (const groupId in this.groups) {
             const group = this.groups[groupId];
             const membersSorted = [...group.members].sort((a,b)=>(b.attackSpeed||1)-(a.attackSpeed||1));
@@ -84,7 +86,8 @@ export class MetaAIManager extends BaseMetaAI {
 
                 if (member.ai) {
                     const action = member.ai.decideAction(member, currentContext);
-                    this.executeAction(member, action, currentContext);
+                    const finalAction = MistakeEngine.getFinalAction(member, action, currentContext);
+                    this.executeAction(member, finalAction, currentContext);
                 }
             }
         }
