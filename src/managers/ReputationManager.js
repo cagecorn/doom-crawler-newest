@@ -1,12 +1,17 @@
 import { memoryDB } from '../persistence/MemoryDB.js';
 import { MbtiEngine } from './ai/MbtiEngine.js';
+import tfLoader from '../utils/tf-loader.js';
 
 export class ReputationManager {
     constructor(eventManager, mercenaryManager, mbtiEngine) {
         this.eventManager = eventManager;
         this.mercenaryManager = mercenaryManager;
         this.mbtiEngine = mbtiEngine;
-        eventManager.subscribe('action_performed', (data) => this._onAction(data));
+        this.model = null;
+        this.tf = null;
+        if (this.eventManager) {
+            this.eventManager.subscribe('action_performed', (data) => this._onAction(data));
+        }
     }
 
     async _onAction({ entity, action, context }) {
@@ -58,5 +63,21 @@ export class ReputationManager {
 
     async getHistory(actorId) {
         return memoryDB.getEventsFor(actorId);
+    }
+
+    async loadReputationModel() {
+        await tfLoader.init();
+        this.tf = tfLoader.getTf();
+        if (this.tf) {
+            this.model = await this.tf.loadLayersModel('assets/models/reputation/model.json');
+        }
+    }
+
+    handleGameEvent(action) {
+        if (!this.model || !this.tf) return;
+        // TODO: convert action to meaningful input tensor
+        const tensor = this.tf.tensor([[0]]);
+        this.model.predict(tensor);
+        this.tf.dispose(tensor);
     }
 }

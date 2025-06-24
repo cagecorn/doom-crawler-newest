@@ -12,6 +12,7 @@ import { MapManager } from './map.js';
 import { AquariumMapManager } from './aquariumMap.js';
 import { AquariumManager, AquariumInspector } from './managers/aquariumManager.js';
 import * as Managers from './managers/index.js'; // managers/index.js에서 모든 매니저를 한 번에 불러옴
+import { ReputationManager } from './managers/ReputationManager.js';
 import { AssetLoader } from './assetLoader.js';
 import { MetaAIManager, STRATEGY } from './managers/ai-managers.js';
 import { SaveLoadManager } from './managers/saveLoadManager.js';
@@ -204,11 +205,10 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.metaAIManager = new MetaAIManager(this.eventManager);
-        this.reputationManager = new Managers.ReputationManager(
-            this.eventManager,
-            this.mercenaryManager,
-            this.metaAIManager.mbtiEngine
-        );
+        this.reputationManager = new ReputationManager(this.eventManager);
+        this.reputationManager.mercenaryManager = this.mercenaryManager;
+        this.reputationManager.mbtiEngine = this.metaAIManager.mbtiEngine;
+        this.reputationManager.loadReputationModel();
         this.cinematicManager = new CinematicManager(this);
         this.dataRecorder = new DataRecorder(this);
         this.dataRecorder.init();
@@ -707,6 +707,16 @@ export class Game {
             }
         });
 
+        // 평판 시스템을 위한 몬스터 처치 이벤트
+        eventManager.subscribe('monster_defeated', (data) => {
+            const action = {
+                type: 'combat',
+                outcome: 'victory',
+                enemy: data.monster.type
+            };
+            this.reputationManager.handleGameEvent(action);
+        });
+
         // 죽음 이벤트가 발생하면 경험치 획득 및 애니메이션을 시작
         eventManager.subscribe('entity_death', (data) => {
             const { attacker, victim } = data;
@@ -717,6 +727,7 @@ export class Game {
             eventManager.publish('log', { message: `${victim.constructor.name}가 쓰러졌습니다.`, color: 'red' });
 
             if (victim.unitType === 'monster') {
+                this.eventManager.publish('monster_defeated', { monster: victim, attacker });
                 const dropPool = [];
                 if (victim.consumables) dropPool.push(...victim.consumables);
                 if (victim.equipment) {
