@@ -45,6 +45,7 @@ export class MetaAIManager extends BaseMetaAI {
                 super.executeAction(entity, action, context);
                 break;
         }
+        context.eventManager?.publish('action_performed', { entity, action, context });
     }
 
     update(context) {

@@ -208,6 +208,7 @@ export class MetaAIManager {
                 }
                 break;
         }
+        eventManager.publish('action_performed', { entity, action, context });
     }
 
     update(context) {

@@ -20,7 +20,12 @@ export class MistakeEngine {
                 mistake = this.generateWasteAction(entity, optimalAction, context);
                 break;
         }
-        return mistake || optimalAction;
+        if (mistake) {
+            mistake.isMistake = true;
+            mistake.mistakeDescription = this.getMistakeDescription(mistake);
+            return mistake;
+        }
+        return optimalAction;
     }
 
     static generateBadTargetAction(entity, optimalAction, context) {
@@ -68,6 +73,12 @@ export class MistakeEngine {
             if (fullHpAlly) return { ...optimalAction, target: fullHpAlly };
         }
         return null;
+    }
+
+    static getMistakeDescription(action) {
+        if (action.type === 'move') return '진형을 이탈하여 혼자 움직였습니다.';
+        if (action.type === 'skill' && action.skill?.effect === 'heal') return '엉뚱한 대상에게 치유를 사용했습니다.';
+        return '이해할 수 없는 행동으로 실수를 저질렀습니다.';
     }
 }
 

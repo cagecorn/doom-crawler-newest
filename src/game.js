@@ -163,6 +163,7 @@ export class Game {
         this.microEngine = new MicroEngine(this.eventManager);
         this.microCombatManager = new MicroCombatManager(this.eventManager);
         this.synergyManager = new Managers.SynergyManager(this.eventManager);
+        this.reputationManager = new Managers.ReputationManager(this.eventManager, this.mercenaryManager);
         this.speechBubbleManager = this.managers.SpeechBubbleManager;
         this.equipmentRenderManager = this.managers.EquipmentRenderManager;
         this.mercenaryManager.equipmentRenderManager = this.equipmentRenderManager;
