@@ -188,6 +188,15 @@ export const EFFECTS = {
         overlayColor: 'rgba(255, 255, 0, 0.4)',
         particle: { type: 'electric', color: 'yellow' }
     },
+    shock: {
+        name: '감전',
+        type: 'dot',
+        duration: 300,
+        damagePerTurn: 4,
+        tags: ['status_ailment', 'shock', 'dot'],
+        overlayColor: 'rgba(230, 230, 50, 0.4)',
+        particle: { type: 'electric', color: 'yellow' }
+    },
     burn: {
         name: '화상',
         type: 'dot',
