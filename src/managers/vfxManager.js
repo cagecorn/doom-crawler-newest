@@ -373,6 +373,36 @@ export class VFXManager {
         this.particleEngine.removeEmitter(emitter);
     }
 
+    // '열망 시스템' 시각 효과 적용 함수 추가
+    applyWeaponAspirationEffect(entity, state) {
+        this.removeWeaponAspirationEffect(entity);
+        if (state === 'stable') return;
+
+        const color = state === 'inspired' ? 0xff0000 : 0x800080;
+        const effectId = `aspiration_vfx_${entity.id}`;
+
+        this.particleEngine.createEmitter({
+            id: effectId,
+            target: entity,
+            offset: { x: 0, y: -entity.tileSize / 2 },
+            particleOptions: {
+                colors: [color],
+                size: [2, 4],
+                lifetime: [0.3, 0.6],
+                speed: [10, 20],
+                count: state === 'inspired' ? 20 : 5,
+            },
+            duration: Infinity,
+        });
+    }
+
+    removeWeaponAspirationEffect(entity) {
+        const effectId = `aspiration_vfx_${entity.id}`;
+        if (this.particleEngine.hasEmitter(effectId)) {
+            this.particleEngine.removeEmitter(effectId);
+        }
+    }
+
     /**
      * 이미지 스프라이트 이펙트를 추가합니다.
      * 대상 위치에 밝게 표시되며 일정 시간 후 사라집니다.

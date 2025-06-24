@@ -98,6 +98,15 @@ export class EffectManager {
         }
     }
 
+    removeEffectBySource(target, source) {
+        if (!target.effects) return;
+        for (const effect of [...target.effects]) {
+            if (effect.caster === source) {
+                this.removeEffect(target, effect);
+            }
+        }
+    }
+
     update(entities) {
         entities.forEach(entity => {
             if (entity.effects.length === 0) return;
