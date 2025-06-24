@@ -33,13 +33,27 @@ export class AspirationManager {
                     id: value.id,
                     isFriendly: value.isFriendly,
                     isPlayer: value.isPlayer,
-                    equipment: value.equipment ? { weapon: value.equipment.weapon } : undefined,
+                    equipment: value.equipment ? { weapon: this.sanitizeItemData(value.equipment.weapon) } : undefined,
                 };
             } else {
                 sanitized[key] = value;
             }
         }
         return sanitized;
+    }
+
+    sanitizeItemData(item) {
+        if (!item) return undefined;
+        return {
+            id: item.id,
+            baseId: item.baseId,
+            type: item.type,
+            tier: item.tier,
+            weight: item.weight,
+            toughness: item.toughness,
+            durability: item.durability,
+            aspiration: item.aspiration ? { ...item.aspiration } : undefined,
+        };
     }
 
     applyAspirationState(weaponId, newState) {
