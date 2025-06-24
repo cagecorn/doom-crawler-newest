@@ -198,18 +198,6 @@ export class UIManager {
             slots.forEach(slot => {
                 const item = entity.equipment ? entity.equipment[slot] : null;
                 const el = this.createSlotElement(entity, slot, item);
-
-                // 용병 장비 클릭 시 공용 인벤토리로 이동
-                if (!entity.isPlayer && item) {
-                    el.style.cursor = 'pointer';
-                    el.title = '클릭하여 공용 인벤토리로 이동';
-                    el.onclick = () => {
-                        this.game.equipmentManager.unequip(entity, slot, this.game.gameState.inventory);
-                        this.renderCharacterSheet(entity);
-                        this.renderInventory(this.game.gameState);
-                    };
-                }
-
                 this.sheetEquipment.appendChild(el);
             });
         }
