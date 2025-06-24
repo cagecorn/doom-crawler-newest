@@ -216,6 +216,7 @@ export class Player extends Entity {
         super(config);
         this.isPlayer = true;
         this.isFriendly = true;
+        this.jobId = 'player';
         this.unitType = 'human'; // 플레이어의 타입은 '인간'
         this.fullness = this.maxFullness;
         this.consumables = [];
@@ -242,6 +243,7 @@ export class Mercenary extends Entity {
         this.isFriendly = true;
         this.unitType = 'human'; // 용병의 타입도 '인간'
         this.ai = new MeleeAI();
+        this.jobId = config.jobId || 'mercenary';
         this.fullness = this.maxFullness;
         this.affinity = this.maxAffinity;
         this.consumables = [];

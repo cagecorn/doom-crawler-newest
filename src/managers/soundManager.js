@@ -18,6 +18,14 @@ export class SoundManager {
         const names = [
             'airial-1',
             'airial-2',
+            // === Voice lines ===
+            'player_kill_1',
+            'player_kill_2',
+            'warrior_hire', 'warrior_kill_1', 'warrior_kill_2', 'warrior_death',
+            'archer_hire', 'archer_kill_1', 'archer_kill_2', 'archer_death',
+            'healer_hire', 'healer_kill_1', 'healer_kill_2', 'healer_death',
+            'wizard_hire', 'wizard_kill_1', 'wizard_kill_2', 'wizard_death',
+            'bard_hire', 'bard_kill_1', 'bard_kill_2', 'bard_death',
             'courage-hymn',
             'crack-1',
             'crack-2',
@@ -68,6 +76,13 @@ export class SoundManager {
     _registerEvents() {
         const ev = this.eventManager;
 
+        ev.subscribe('mercenary_hired', ({ mercenary }) => {
+            const job = mercenary?.jobId;
+            if (job && job !== 'summoner') {
+                this.play(`${job}_hire`);
+            }
+        });
+
         ev.subscribe('entity_attack', ({ attacker, skill }) => {
             const weapon = attacker?.equipment?.weapon;
             if (skill?.projectile === 'arrow' || weapon?.tags?.includes('bow')) {
@@ -86,7 +101,19 @@ export class SoundManager {
         ev.subscribe('attack_landed', () => this.play('hitting-2'));
         ev.subscribe('weapon_disarmed', () => this.play('crash-1'));
         ev.subscribe('armor_broken', () => this.play('crack-2'));
-        ev.subscribe('entity_death', () => this.play('fallen-1'));
+        ev.subscribe('entity_death', ({ attacker, victim }) => {
+            this.play('fallen-1');
+            if (victim?.isFriendly && !victim.isPlayer && victim.jobId && victim.jobId !== 'summoner') {
+                this.play(`${victim.jobId}_death`);
+            }
+            if (attacker) {
+                const key = attacker.isPlayer ? 'player' : attacker.jobId;
+                if (key && key !== 'summoner') {
+                    const idx = Math.random() < 0.5 ? 1 : 2;
+                    this.play(`${key}_kill_${idx}`);
+                }
+            }
+        });
         ev.subscribe('drop_loot', () => this.play('hitting-3'));
         ev.subscribe('charge_hit', () => this.play('airial-1'));
         ev.subscribe('knockback_success', () => this.play('rock-1'));

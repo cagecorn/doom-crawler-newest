@@ -462,6 +462,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `전사 용병을 고용했습니다.` });
                     }
                 } else {
@@ -485,6 +486,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `궁수 용병을 고용했습니다.` });
                     }
                 } else {
@@ -508,6 +510,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `힐러 용병을 고용했습니다.` });
                     }
                 } else {
@@ -531,6 +534,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `마법사 용병을 고용했습니다.` });
                     }
                 } else {
@@ -554,6 +558,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `음유시인 용병을 고용했습니다.` });
                     }
                 } else {
@@ -577,6 +582,7 @@ export class Game {
 
                     if (newMerc) {
                         this.playerGroup.addMember(newMerc);
+                        this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
                         this.eventManager.publish('log', { message: `소환사 용병을 고용했습니다.` });
                     }
                 } else {
