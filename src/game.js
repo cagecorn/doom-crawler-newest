@@ -38,6 +38,8 @@ import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
+import { AspirationManager } from './managers/aspirationManager.js';
+import { MicroWorldWorker } from './micro/MicroWorldWorker.js';
 import { CinematicManager } from './managers/cinematicManager.js';
 import { ItemTracker } from './managers/itemTracker.js';
 
@@ -167,6 +169,7 @@ export class Game {
         this.mercenaryManager.setTraitManager(this.traitManager);
         this.monsterManager.setTraitManager(this.traitManager);
         this.parasiteManager = this.managers.ParasiteManager;
+        this.microWorld = new MicroWorldWorker();
 
         // 매니저 간 의존성 연결
         this.equipmentManager.setTagManager(this.tagManager);
@@ -434,6 +437,14 @@ export class Game {
         }
         this.monsterManager.monsters.push(...monsters);
         this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
+
+        this.entityManager = {
+            findEntityByWeaponId: (weaponId) => {
+                const list = [this.gameState.player, ...this.mercenaryManager.mercenaries, ...this.monsterManager.monsters, ...(this.petManager?.pets || [])];
+                return list.find(e => e.equipment?.weapon && e.equipment.weapon.id === weaponId) || null;
+            }
+        };
+        this.aspirationManager = new AspirationManager(this.eventManager, this.microWorld, this.effectManager, this.vfxManager, this.entityManager);
 
         // === 4. 용병 고용 로직 ===
         const hireBtn = document.getElementById('hire-mercenary');

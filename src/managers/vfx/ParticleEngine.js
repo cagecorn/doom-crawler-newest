@@ -38,6 +38,26 @@ export class ParticleEngine {
         return emitter;
     }
 
+    createEmitter(options = {}) {
+        const emitter = {
+            id: options.id || Math.random().toString(36).substr(2, 9),
+            x: options.target?.x || 0,
+            y: options.target?.y || 0,
+            spawnRate: 2,
+            duration: options.duration !== undefined ? options.duration : 60,
+            particleOptions: options.particleOptions || {},
+            followTarget: options.target || null,
+            offsetX: options.offset?.x || 0,
+            offsetY: options.offset?.y || 0,
+        };
+        this.emitters.push(emitter);
+        return emitter;
+    }
+
+    hasEmitter(id) {
+        return this.emitters.some(e => e.id === id);
+    }
+
     createTrail(target, options = {}) {
         return this.addEmitter(target.x, target.y, {
             followTarget: target,

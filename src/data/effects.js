@@ -319,5 +319,25 @@ export const EFFECTS = {
         duration: 300,
         tags: ['alphabet_state', 'J_state'],
         stats: { movement: -1 }
+    },
+
+    // '열망 시스템' 효과 추가
+    inspired_weapon: {
+        name: '고양된 무기',
+        duration: Infinity,
+        stats: {
+            damage_mult: 0.15,
+            attack_speed_mult: 0.1,
+        },
+        description: '무기의 열망이 최고조에 달해, 성능이 강화됩니다.'
+    },
+    despairing_weapon: {
+        name: '절망한 무기',
+        duration: Infinity,
+        stats: {
+            damage_mult: -0.15,
+            accuracy_add: -10,
+        },
+        description: '무기의 열망이 바닥나, 제 성능을 발휘하지 못합니다.'
     }
 };

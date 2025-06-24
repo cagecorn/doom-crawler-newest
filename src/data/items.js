@@ -5,6 +5,12 @@ export const ITEMS = {
         type: 'weapon',
         damageDice: '1d6',
         tags: ['melee', 'sword'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
         knockbackChance: 0.1,
         imageKey: 'sword',
         stats: { attackPower: 2 },
@@ -18,6 +24,12 @@ export const ITEMS = {
         type: 'weapon',
         damageDice: '1d6',
         tags: ['ranged', 'bow', 'finesse_weapon'],
+        aspiration: {
+            personality: 'focused',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
         imageKey: 'bow',
         stats: { attackPower: 2, attackRange: 384 },
         tier: 'normal',
@@ -31,6 +43,12 @@ export const ITEMS = {
         type: 'weapon',
         damageDice: '1d6',
         tags: ['ranged', 'bow', 'finesse_weapon', 'song'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
         imageKey: 'violin-bow',
         stats: { attackPower: 2, attackRange: 384 },
         tier: 'normal',
@@ -135,6 +153,12 @@ export const ITEMS = {
         type: 'weapon',
         damageDice: '1d6',
         tags: ['melee', 'sword'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
         knockbackChance: 0.15,
         imageKey: 'sword',
         stats: { attackPower: 2 },
@@ -149,6 +173,12 @@ export const ITEMS = {
         type: 'weapon',
         damageDice: '1d8',
         tags: ['melee', 'sword', 'finesse_weapon'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
         knockbackChance: 0.2,
         imageKey: 'sword',
         stats: {
@@ -164,37 +194,86 @@ export const ITEMS = {
     // --- 신규 무기 아이템 정의 ---
     axe: {
         name: '도끼', type: 'weapon', damageDice: '1d10',
-        tags: ['melee', 'axe'], imageKey: 'axe', stats: { attackPower: 5 },
+        tags: ['melee', 'axe'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'axe', stats: { attackPower: 5 },
         tier: 'normal', durability: 150, weight: 15, toughness: 4
     },
     mace: {
         name: '메이스', type: 'weapon', damageDice: '2d6',
-        tags: ['melee', 'mace'], imageKey: 'mace', stats: { attackPower: 4 },
+        tags: ['melee', 'mace'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'mace', stats: { attackPower: 4 },
         tier: 'normal', durability: 200, weight: 18, toughness: 6
     },
     staff: {
         name: '지팡이', type: 'weapon', damageDice: '1d4',
-        tags: ['ranged', 'staff', 'magic_weapon'], imageKey: 'staff', stats: { intelligence: 3 },
+        tags: ['ranged', 'staff', 'magic_weapon'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'staff', stats: { intelligence: 3 },
         tier: 'normal', durability: 70, weight: 5, toughness: 2
     },
     spear: {
         name: '창', type: 'weapon', damageDice: '1d8',
-        tags: ['melee', 'spear', 'reach'], imageKey: 'spear', stats: { attackPower: 3, attackRange: 256 },
+        tags: ['melee', 'spear', 'reach'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'spear', stats: { attackPower: 3, attackRange: 256 },
         tier: 'normal', durability: 100, weight: 9, toughness: 5
     },
     scythe: {
         name: '낫', type: 'weapon', damageDice: '1d12',
-        tags: ['melee', 'scythe', 'reach'], imageKey: 'scythe', stats: { attackPower: 6, attackRange: 224 },
+        tags: ['melee', 'scythe', 'reach'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'scythe', stats: { attackPower: 6, attackRange: 224 },
         tier: 'rare', durability: 90, weight: 11, toughness: 3
     },
     whip: {
         name: '채찍', type: 'weapon', damageDice: '1d6',
-        tags: ['ranged', 'whip', 'finesse_weapon'], imageKey: 'whip', stats: { agility: 2, attackRange: 288 },
+        tags: ['ranged', 'whip', 'finesse_weapon'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'whip', stats: { agility: 2, attackRange: 288 },
         tier: 'normal', durability: 60, weight: 4, toughness: 1
     },
     dagger: {
         name: '단검', type: 'weapon', damageDice: '1d4',
-        tags: ['melee', 'dagger', 'finesse_weapon'], imageKey: 'dagger', stats: { attackSpeed: 0.3 },
+        tags: ['melee', 'dagger', 'finesse_weapon'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'dagger', stats: { attackSpeed: 0.3 },
         tier: 'normal', durability: 80, weight: 3, toughness: 2
     },
     // --- 여기까지 ---
