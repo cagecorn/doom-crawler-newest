@@ -63,7 +63,8 @@ export class Game {
         this.loader.loadImage('wizard', 'assets/images/wizard.png');
         this.loader.loadImage('summoner', 'assets/images/summoner.png');
         this.loader.loadImage('bard', 'assets/images/bard.png');
-        this.loader.loadImage('fire-god', 'assets/images/fire-god.png');
+        // 불의 신 이미지 키를 jobId와 맞춰 'fire_god'으로 로드한다
+        this.loader.loadImage('fire_god', 'assets/images/fire-god.png');
         // 기존 호환성을 위해 기본 mercenary 키도 전사 이미지로 유지
         this.loader.loadImage('mercenary', 'assets/images/warrior.png');
         this.loader.loadImage('floor', 'assets/floor.png');

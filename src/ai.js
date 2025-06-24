@@ -1084,3 +1084,22 @@ export class ArcherAI extends AIArchetype {
         return { type: 'idle' };
     }
 }
+
+// --- 불의 신 전용 AI ---
+export class FireGodAI extends AIArchetype {
+    constructor() {
+        super();
+        this.melee = new MeleeAI();
+    }
+
+    decideAction(self, context) {
+        const { enemies } = context;
+        const nearEnemy = (enemies || []).find(e =>
+            Math.hypot(e.x - self.x, e.y - self.y) <= self.attackRange * 1.5);
+        const fireNova = this._findReadySkill(self, s => s.id === SKILLS.fire_nova.id);
+        if (fireNova && nearEnemy) {
+            return { type: 'skill', target: nearEnemy, skillId: SKILLS.fire_nova.id };
+        }
+        return this.melee.decideAction(self, context);
+    }
+}
