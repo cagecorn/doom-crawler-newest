@@ -51,4 +51,8 @@ export class MercenaryManager {
             if (merc.render) merc.render(ctx);
         }
     }
+
+    getMercenaries() {
+        return this.mercenaries;
+    }
 }

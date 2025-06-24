@@ -50,6 +50,7 @@ export class UIManager {
         this.equippedItemsContainer = document.getElementById('equipped-items');
         this.inventoryListContainer = document.getElementById('inventory-list');
         this.inventoryFilters = document.querySelectorAll('#inventory-filters .inv-filter-btn');
+        this.squadManagementPanel = document.getElementById('squad-management-ui');
         this.currentInventoryFilter = 'all';
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetPanel = document.getElementById('character-sheet-panel');
@@ -361,6 +362,9 @@ export class UIManager {
         } else if (panelId === 'mercenary-panel' && this.mercenaryPanel) {
             this.mercenaryPanel.classList.remove('hidden');
             if (this.mercenaryManager) this.renderMercenaryList();
+        } else if (panelId === 'squad-management-ui' && this.squadManagementPanel) {
+            this.squadManagementPanel.classList.remove('hidden');
+            this.createSquadManagementUI();
         } else if (panelId === 'character-sheet-panel' && this.characterSheetPanel) {
             this.characterSheetPanel.classList.remove('hidden');
         }
@@ -371,6 +375,8 @@ export class UIManager {
             this.inventoryPanel.classList.add('hidden');
         } else if (panelId === 'mercenary-panel' && this.mercenaryPanel) {
             this.mercenaryPanel.classList.add('hidden');
+        } else if (panelId === 'squad-management-ui' && this.squadManagementPanel) {
+            this.squadManagementPanel.classList.add('hidden');
         } else if (panelId === 'character-sheet-panel' && this.characterSheetPanel) {
             this.characterSheetPanel.classList.add('hidden');
         }
@@ -801,6 +807,7 @@ export class UIManager {
             [this.inventoryPanel, this.inventoryPanel?.querySelector('.window-header')],
             [this.mercenaryPanel, this.mercenaryPanel?.querySelector('.window-header')],
             [this.characterSheetPanel, this.characterSheetPanel?.querySelector('.window-header')],
+            [this.squadManagementPanel, this.squadManagementPanel?.querySelector('.window-header')],
         ];
         pairs.forEach(([panel, header]) => {
             if (panel) {
@@ -823,5 +830,51 @@ export class UIManager {
              this.tooltip.style.left = `${e.pageX + 10}px`;
              this.tooltip.style.top = `${e.pageY + 10}px`;
         }
+    }
+
+    createSquadManagementUI() {
+        const container = this.squadManagementPanel;
+        if (!container || !this.mercenaryManager) return;
+        container.innerHTML = '';
+
+        const squads = [
+            { id: 'unassigned', name: '미편성' },
+            { id: 'squad_1', name: '1분대' },
+            { id: 'squad_2', name: '2분대' },
+            { id: 'squad_3', name: '3분대' }
+        ];
+
+        const panelMap = {};
+        squads.forEach(sq => {
+            const panel = document.createElement('div');
+            panel.className = 'squad-panel';
+            panel.dataset.squadId = sq.id === 'unassigned' ? '' : sq.id;
+            panel.textContent = sq.name;
+            panel.addEventListener('dragover', e => e.preventDefault());
+            panel.addEventListener('drop', e => {
+                e.preventDefault();
+                const mercId = e.dataTransfer.getData('text/plain');
+                const toSquadId = panel.dataset.squadId || null;
+                this.eventManager?.publish('squad_assign_request', { mercId, toSquadId });
+            });
+            container.appendChild(panel);
+            panelMap[sq.id] = panel;
+        });
+
+        this.mercenaryManager.getMercenaries().forEach(merc => {
+            const el = document.createElement('div');
+            el.className = 'merc-portrait';
+            el.textContent = merc.id;
+            el.dataset.mercId = merc.id;
+            el.draggable = true;
+            el.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', merc.id);
+            });
+            const squadId = merc.squadId || 'unassigned';
+            const parent = panelMap[squadId] || container;
+            parent.appendChild(el);
+        });
+
+        this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
     }
 }

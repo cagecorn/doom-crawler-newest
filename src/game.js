@@ -212,7 +212,10 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.uiManager.eventManager = this.eventManager;
-        this.metaAIManager = new MetaAIManager(this.eventManager);
+        this.squadManager = new Managers.SquadManager(this.eventManager, this.mercenaryManager);
+        this.uiManager.squadManager = this.squadManager;
+        this.uiManager.createSquadManagementUI?.();
+        this.metaAIManager = new MetaAIManager(this.eventManager, this.squadManager);
         if (SETTINGS.ENABLE_REPUTATION_SYSTEM) {
             this.reputationManager = new ReputationManager(this.eventManager);
             this.reputationManager.mercenaryManager = this.mercenaryManager;
