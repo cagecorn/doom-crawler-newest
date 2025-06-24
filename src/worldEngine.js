@@ -119,12 +119,12 @@ export class WorldEngine {
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        const numTilesHorizontal = 20;
-        const numTilesVertical = 20;
+        const numTilesHorizontal = 40;
+        const numTilesVertical = 40;
         const tileWidth = worldWidth / numTilesHorizontal;
         const tileHeight = worldHeight / numTilesVertical;
 
-        const worldTileSize = worldTileImg.width / 3;
+        const worldTileSize = worldTileImg.width / 9;
 
         // 전체 영역을 바다 타일 패턴으로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
