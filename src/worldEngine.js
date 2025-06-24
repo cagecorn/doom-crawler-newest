@@ -3,8 +3,8 @@ export class WorldEngine {
         this.game = game;
         this.assets = assets;
         this.worldMapImage = this.assets['world-tile'];
-        // 전투 맵 타일 크기와 맞추기 위해 월드맵 계산용 타일 크기를 조금 크게 사용
-        this.tileSize = 192;
+        // 전투 맵과 동일한 타일 크기를 사용해 월드맵 크기를 계산
+        this.tileSize = this.game.mapManager?.tileSize || 192;
         this.worldWidth = this.tileSize * 40;
         this.worldHeight = this.tileSize * 40;
         this.camera = { x: 0, y: 0 };
@@ -155,8 +155,8 @@ export class WorldEngine {
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        // 렌더링에 사용할 작은 타일 크기
-        const renderTileSize = 64;
+        // 전투 맵과 같은 크기의 타일을 반복하여 월드맵을 그린다
+        const renderTileSize = this.tileSize;
 
         // 전체 영역을 바다 타일로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
