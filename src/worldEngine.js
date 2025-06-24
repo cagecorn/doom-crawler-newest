@@ -152,18 +152,8 @@ export class WorldEngine {
         const seaTileImg = this.assets['sea-tile'];
         if (!worldTileImg || !seaTileImg) return;
 
-        const canvasWidth = ctx.canvas.width;
-        const canvasHeight = ctx.canvas.height;
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
-
-        const tileWidth = this.tileSize;
-        const tileHeight = this.tileSize;
-        const numTilesHorizontal = Math.ceil(worldWidth / tileWidth);
-        const numTilesVertical = Math.ceil(worldHeight / tileHeight);
-
-        const worldTileSize = this.tileSize;
-        const tileCropSize = worldTileImg.width / 3;
 
         // 전체 영역을 바다 타일 패턴으로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
@@ -172,32 +162,15 @@ export class WorldEngine {
             ctx.fillRect(0, 0, worldWidth, worldHeight);
         }
 
-        // 중앙 육지 패턴 준비 (world-tile의 가운데 부분만 사용)
-        const landCanvas = document.createElement('canvas');
-        landCanvas.width = worldTileSize;
-        landCanvas.height = worldTileSize;
-        landCanvas
-            .getContext('2d')
-            .drawImage(
-                worldTileImg,
-                tileCropSize,
-                tileCropSize,
-                tileCropSize,
-                tileCropSize,
-                0,
-                0,
-                worldTileSize,
-                worldTileSize
-            );
-
-        const landPattern = ctx.createPattern(landCanvas, 'repeat');
+        // world-tile 이미지를 그대로 반복해 육지 패턴 생성
+        const landPattern = ctx.createPattern(worldTileImg, 'repeat');
         if (landPattern) {
             ctx.fillStyle = landPattern;
             ctx.fillRect(
-                tileWidth,
-                tileHeight,
-                worldWidth - 2 * tileWidth,
-                worldHeight - 2 * tileHeight
+                this.tileSize,
+                this.tileSize,
+                worldWidth - 2 * this.tileSize,
+                worldHeight - 2 * this.tileSize
             );
         }
     }
