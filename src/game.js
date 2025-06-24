@@ -95,6 +95,7 @@ export class Game {
         this.loader.loadImage('worm', 'assets/images/parasite.png');
         // 월드맵 타일 이미지 로드
         this.loader.loadImage('world-tile', 'assets/images/world-tile.png');
+        this.loader.loadImage('sea-tile', 'assets/images/sea-tile.png');
         this.loader.loadImage('talisman1', 'assets/images/talisman-1.png');
         this.loader.loadImage('talisman2', 'assets/images/talisman-2.png');
         // 휘장 아이템 이미지 로드

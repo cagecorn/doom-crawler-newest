@@ -83,30 +83,55 @@ export class WorldEngine {
     }
 
     _drawWorldMap(ctx) {
-        const img = this.worldMapImage;
-        if (!img) return;
+        const worldTileImg = this.worldMapImage;
+        const seaTileImg = this.assets['sea-tile'];
+        if (!worldTileImg || !seaTileImg) return;
+
         const canvasWidth = ctx.canvas.width;
         const canvasHeight = ctx.canvas.height;
-        const sliceW = img.width / 3;
-        const sliceH = img.height / 3;
-        const parts = [
-            { sx: 0, sy: 0, dx: 0, dy: 0 },
-            { sx: sliceW, sy: 0, dx: sliceW, dy: 0, dw: canvasWidth - 2 * sliceW },
-            { sx: 2 * sliceW, sy: 0, dx: canvasWidth - sliceW, dy: 0 },
-            { sx: 0, sy: sliceH, dx: 0, dy: sliceH, dh: canvasHeight - 2 * sliceH },
-            { sx: sliceW, sy: sliceH, dx: sliceW, dy: sliceH, dw: canvasWidth - 2 * sliceW, dh: canvasHeight - 2 * sliceH },
-            { sx: 2 * sliceW, sy: sliceH, dx: canvasWidth - sliceW, dy: sliceH, dh: canvasHeight - 2 * sliceH },
-            { sx: 0, sy: 2 * sliceH, dx: 0, dy: canvasHeight - sliceH },
-            { sx: sliceW, sy: 2 * sliceH, dx: sliceW, dy: canvasHeight - sliceH, dw: canvasWidth - 2 * sliceW },
-            { sx: 2 * sliceW, sy: 2 * sliceH, dx: canvasWidth - sliceW, dy: canvasHeight - sliceH },
-        ];
-        parts.forEach(p => {
-            ctx.drawImage(
-                img,
-                p.sx, p.sy, sliceW, sliceH,
-                p.dx, p.dy, p.dw || sliceW, p.dh || sliceH
+
+        const numTilesHorizontal = 20;
+        const numTilesVertical = 20;
+        const tileWidth = canvasWidth / numTilesHorizontal;
+        const tileHeight = canvasHeight / numTilesVertical;
+
+        const worldTileSize = worldTileImg.width / 3;
+
+        // 전체 영역을 바다 타일 패턴으로 채움
+        const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
+        if (seaPattern) {
+            ctx.fillStyle = seaPattern;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        // 중앙 육지 패턴 준비 (world-tile의 가운데 부분만 사용)
+        const landCanvas = document.createElement('canvas');
+        landCanvas.width = worldTileSize;
+        landCanvas.height = worldTileSize;
+        landCanvas
+            .getContext('2d')
+            .drawImage(
+                worldTileImg,
+                worldTileSize,
+                worldTileSize,
+                worldTileSize,
+                worldTileSize,
+                0,
+                0,
+                worldTileSize,
+                worldTileSize
             );
-        });
+
+        const landPattern = ctx.createPattern(landCanvas, 'repeat');
+        if (landPattern) {
+            ctx.fillStyle = landPattern;
+            ctx.fillRect(
+                tileWidth,
+                tileHeight,
+                canvasWidth - 2 * tileWidth,
+                canvasHeight - 2 * tileHeight
+            );
+        }
     }
 
     _drawEntities(ctx) {
