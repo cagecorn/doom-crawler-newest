@@ -119,8 +119,8 @@ export class WorldEngine {
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        const numTilesHorizontal = 20;
-        const numTilesVertical = 20;
+        const numTilesHorizontal = 40;
+        const numTilesVertical = 40;
         const tileWidth = worldWidth / numTilesHorizontal;
         const tileHeight = worldHeight / numTilesVertical;
 
