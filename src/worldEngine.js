@@ -3,8 +3,8 @@ export class WorldEngine {
         this.game = game;
         this.assets = assets;
         this.worldMapImage = this.assets['world-tile'];
-        this.tileSize = this.game.mapManager?.tileSize || 64;
-        // 전투 맵과 동일한 배율을 유지하기 위해 고정된 타일 크기를 사용
+        // 전투 맵과 동일한 타일 크기를 사용해 월드맵 크기를 계산
+        this.tileSize = this.game.mapManager?.tileSize || 192;
         this.worldWidth = this.tileSize * 40;
         this.worldHeight = this.tileSize * 40;
         this.camera = { x: 0, y: 0 };
@@ -155,23 +155,21 @@ export class WorldEngine {
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        // 전체 영역을 바다 타일 패턴으로 채움
+        // 전투 맵과 같은 크기의 타일을 반복하여 월드맵을 그린다
+        const renderTileSize = this.tileSize;
+
+        // 전체 영역을 바다 타일로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
         if (seaPattern) {
             ctx.fillStyle = seaPattern;
             ctx.fillRect(0, 0, worldWidth, worldHeight);
         }
 
-        // world-tile 이미지를 그대로 반복해 육지 패턴 생성
-        const landPattern = ctx.createPattern(worldTileImg, 'repeat');
-        if (landPattern) {
-            ctx.fillStyle = landPattern;
-            ctx.fillRect(
-                this.tileSize,
-                this.tileSize,
-                worldWidth - 2 * this.tileSize,
-                worldHeight - 2 * this.tileSize
-            );
+        // 육지를 작은 타일 이미지로 반복 렌더링
+        for (let y = this.tileSize; y < worldHeight - this.tileSize; y += renderTileSize) {
+            for (let x = this.tileSize; x < worldWidth - this.tileSize; x += renderTileSize) {
+                ctx.drawImage(worldTileImg, x, y, renderTileSize, renderTileSize);
+            }
         }
     }
 

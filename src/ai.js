@@ -1100,6 +1100,7 @@ export class FireGodAI extends AIArchetype {
         if (fireNova && nearEnemy) {
             return { type: 'skill', target: nearEnemy, skillId: SKILLS.fire_nova.id };
         }
-        return this.melee.decideAction(self, context);
+        // 역할 AI에서 추가 행동이 없으면 무기 AI나 기본 AI가 처리하도록 함
+        return { type: 'idle' };
     }
 }
