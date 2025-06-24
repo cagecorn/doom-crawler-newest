@@ -114,52 +114,65 @@ export class WorldEngine {
         const seaTileImg = this.assets['sea-tile'];
         if (!worldTileImg || !seaTileImg) return;
 
-        const canvasWidth = ctx.canvas.width;
-        const canvasHeight = ctx.canvas.height;
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
 
-        const numTilesHorizontal = 20;
-        const numTilesVertical = 20;
-        const tileWidth = worldWidth / numTilesHorizontal;
-        const tileHeight = worldHeight / numTilesVertical;
+        // -------------------------------
+        // 고정된 타일 크기 설정
+        // -------------------------------
+        const TILE_SIZE = 32;
 
-        const worldTileSize = worldTileImg.width / 3;
-
-        // 전체 영역을 바다 타일 패턴으로 채움
+        // 1. 바다 패턴으로 전체 배경을 채운다
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
         if (seaPattern) {
             ctx.fillStyle = seaPattern;
             ctx.fillRect(0, 0, worldWidth, worldHeight);
         }
 
-        // 중앙 육지 패턴 준비 (world-tile의 가운데 부분만 사용)
-        const landCanvas = document.createElement('canvas');
-        landCanvas.width = worldTileSize;
-        landCanvas.height = worldTileSize;
-        landCanvas
-            .getContext('2d')
-            .drawImage(
-                worldTileImg,
-                worldTileSize,
-                worldTileSize,
-                worldTileSize,
-                worldTileSize,
-                0,
-                0,
-                worldTileSize,
-                worldTileSize
-            );
+        // 타일 그리기 준비
+        const MAP_COLS = Math.floor(worldWidth / TILE_SIZE);
+        const MAP_ROWS = Math.floor(worldHeight / TILE_SIZE);
+        const margin = Math.max(1, Math.floor(MAP_COLS / 20));
+        const worldTileSize = worldTileImg.width / 3;
 
-        const landPattern = ctx.createPattern(landCanvas, 'repeat');
-        if (landPattern) {
-            ctx.fillStyle = landPattern;
-            ctx.fillRect(
-                tileWidth,
-                tileHeight,
-                worldWidth - 2 * tileWidth,
-                worldHeight - 2 * tileHeight
-            );
+        // 간단한 맵 데이터 생성 (가장자리는 바다, 중앙은 육지)
+        const mapData = [];
+        for (let row = 0; row < MAP_ROWS; row++) {
+            const rowData = [];
+            for (let col = 0; col < MAP_COLS; col++) {
+                if (
+                    row < margin ||
+                    row >= MAP_ROWS - margin ||
+                    col < margin ||
+                    col >= MAP_COLS - margin
+                ) {
+                    rowData.push(0); // 바다
+                } else {
+                    rowData.push(1); // 육지
+                }
+            }
+            mapData.push(rowData);
+        }
+
+        // 2. 육지 타일을 개별적으로 그린다
+        for (let row = 0; row < MAP_ROWS; row++) {
+            for (let col = 0; col < MAP_COLS; col++) {
+                if (mapData[row][col] === 1) {
+                    const x = col * TILE_SIZE;
+                    const y = row * TILE_SIZE;
+                    ctx.drawImage(
+                        worldTileImg,
+                        worldTileSize,
+                        worldTileSize,
+                        worldTileSize,
+                        worldTileSize,
+                        x,
+                        y,
+                        TILE_SIZE,
+                        TILE_SIZE
+                    );
+                }
+            }
         }
     }
 
