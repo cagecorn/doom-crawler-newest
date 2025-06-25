@@ -11,7 +11,7 @@ export class LaneRenderManager {
 
         ctx.save();
         ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4;
         const lines = [laneY.TOP, laneY.MID, laneY.BOTTOM];
         for (const y of lines) {
             ctx.beginPath();
