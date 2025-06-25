@@ -550,3 +550,36 @@ body, html {
     font-size: 14px;
     color: #ccc;
 }
+/* style.css 파일 */
+
+/* 기존에 있던 다른 CSS 코드들... */
+body {
+    font-family: sans-serif;
+}
+
+/* ======================================= */
+/* 아래에 새로운 UI 스타일 코드를 전부 추가하세요! */
+/* ======================================= */
+
+#ui-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 20px;
+}
+
+#squad-management, #formation-grid {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.droppable {
+    padding: 10px;
+    border: 2px dashed #ccc;
+    min-height: 50px;
+    margin-top: 5px;
+}
+
+/* ... (나머지 CSS 코드 전체) ... */
