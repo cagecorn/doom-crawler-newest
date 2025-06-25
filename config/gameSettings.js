@@ -23,6 +23,9 @@ export const SETTINGS = {
     ENABLE_REPUTATION_SYSTEM: false,
     // 유령 빙의 AI 시스템 사용 여부입니다.
     ENABLE_POSSESSION_SYSTEM: false,
+    // Aquarium map uses a 3-lane layout with jungle maze by default.
+    // Set this to false to revert to a standard dungeon layout.
+    ENABLE_AQUARIUM_LANES: false,
     // guideline markdown files will be loaded from this GitHub API path
     // example: 'user/repo/contents/guidelines?ref=main'
     // Remote markdown guidelines are fetched via the GitHub API.

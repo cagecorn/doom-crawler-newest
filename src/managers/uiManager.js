@@ -50,6 +50,7 @@ export class UIManager {
         this.inventoryGrid = document.querySelector('#inventory-panel .inventory-grid');
         this.squadManagementPanel = document.getElementById('squad-management-ui');
         this._squadUIInitialized = false;
+        this.formationManager = null;
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetTemplate = document.getElementById('character-sheet-template');
         this.uiContainer = document.getElementById('ui-container');
@@ -963,6 +964,24 @@ export class UIManager {
             const parent = panelMap[squadId] || container;
             parent.appendChild(el);
         });
+
+        const grid = document.getElementById('formation-grid');
+        if (grid && this.formationManager) {
+            grid.innerHTML = '';
+            this.formationManager.slots.forEach((id, idx) => {
+                const cell = document.createElement('div');
+                cell.className = 'formation-cell';
+                cell.dataset.index = idx;
+                cell.textContent = id ? id : idx + 1;
+                cell.addEventListener('dragover', e => e.preventDefault());
+                cell.addEventListener('drop', e => {
+                    e.preventDefault();
+                    const entityId = e.dataTransfer.getData('text/plain');
+                    this.eventManager?.publish('formation_assign_request', { entityId, slotIndex: idx });
+                });
+                grid.appendChild(cell);
+            });
+        }
 
         if (!this._squadUIInitialized) {
             this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
