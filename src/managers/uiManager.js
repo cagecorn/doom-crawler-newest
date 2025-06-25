@@ -95,6 +95,18 @@ export class UIManager {
             charmResist: '매혹 저항',
             movementResist: '이동 방해 저항',
         };
+
+        if (this.eventManager) {
+            this.eventManager.subscribe('squad_data_changed', ({ squads }) => {
+                if (window.game && typeof window.game.getFriendlyEntities === 'function') {
+                    this.renderSquadUI(squads, window.game.getFriendlyEntities());
+                }
+            });
+            this.eventManager.subscribe('formation_data_changed', ({ slots }) => {
+                this.renderFormationUI(slots);
+            });
+            this.eventManager.subscribe('game_state_changed', this.handleGameStateChange.bind(this));
+        }
     }
 
     init(callbacks) {
@@ -1019,6 +1031,57 @@ export class UIManager {
                 this.renderCharacterSheet(entity, panel);
             }
         }
+    }
+
+    renderSquadUI(squads, allEntities) {
+        const containers = document.querySelectorAll('.squad-panel, #unassigned-container');
+        containers.forEach(c => {
+            const h3 = c.querySelector('h3');
+            c.innerHTML = '';
+            if (h3) c.appendChild(h3);
+        });
+
+        allEntities.forEach(entity => {
+            const entityEl = this.createDraggableEntity ? this.createDraggableEntity(entity) : null;
+            if (!entityEl) return;
+            let parentId = 'unassigned-container';
+            for (const squad of squads) {
+                if (squad.members.has(entity.id)) {
+                    parentId = `${squad.id}-container`;
+                    break;
+                }
+            }
+            const parent = document.getElementById(parentId);
+            if (parent) parent.appendChild(entityEl);
+        });
+    }
+
+    renderFormationUI(slots) {
+        const grid = document.getElementById('formation-grid');
+        if (!grid) return;
+        grid.querySelectorAll('.formation-cell').forEach(cell => {
+            const idx = parseInt(cell.dataset.index);
+            cell.textContent = slots[idx] ? slots[idx] : idx + 1;
+        });
+    }
+
+    handleGameStateChange(newState) {
+        if (newState === 'FORMATION_SETUP') {
+            this.showPanel('squad-management-ui');
+        } else if (newState === 'COMBAT') {
+            this.hidePanel('squad-management-ui');
+        }
+    }
+
+    createDraggableEntity(entity) {
+        const el = document.createElement('div');
+        el.className = 'entity-token';
+        el.textContent = entity.id;
+        el.draggable = true;
+        el.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', entity.id);
+        });
+        return el;
     }
 
     getSlotLabel(slotName) {

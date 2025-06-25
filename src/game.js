@@ -61,6 +61,7 @@ export class Game {
     constructor() {
         this.loader = new AssetLoader();
         this.gameState = { currentState: 'LOADING' };
+        this.state = 'IDLE'; // IDLE, FORMATION_SETUP, COMBAT
     }
 
     start() {
@@ -734,6 +735,19 @@ export class Game {
             }
         });
 
+        // 초기 상태를 진형 배치 단계로 설정하고 임시 전투 시작 버튼을 추가한다.
+        this.setState('FORMATION_SETUP');
+        const startButton = document.createElement('button');
+        startButton.textContent = '전투 시작!';
+        startButton.onclick = () => {
+            this.setState('COMBAT');
+            const origin = { x: this.gameState.player.x, y: this.gameState.player.y };
+            const entityMap = { [this.gameState.player.id]: this.gameState.player };
+            this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
+            this.formationManager.apply(origin, entityMap, this.squadManager);
+        };
+        document.body.appendChild(startButton);
+
         this.setupEventListeners(assets, canvas);
 
         this.gameLoop = new GameLoop(this.update, this.render);
@@ -747,6 +761,7 @@ export class Game {
         // 월드맵과 전투 상태 전환 이벤트 처리
         eventManager.subscribe('start_combat', (data) => {
             console.log(`전투 준비! 상대 부대 규모: ${data.monsterParty.troopSize}`);
+            this.setState('FORMATION_SETUP');
             gameState.currentState = 'FORMATION_SETUP';
             this.pendingMonsterParty = data.monsterParty;
             this.uiManager.showPanel('squad-management-ui');
@@ -758,11 +773,13 @@ export class Game {
             const entityMap = { [gameState.player.id]: gameState.player };
             this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
             this.formationManager.apply(origin, entityMap);
+            this.setState('COMBAT');
             gameState.currentState = 'COMBAT';
         });
 
         eventManager.subscribe('end_combat', (result) => {
             console.log(`전투 종료! 결과: ${result.outcome}`);
+            this.setState('IDLE');
             gameState.currentState = 'WORLD';
             if (result.outcome === 'victory') {
                 this.worldEngine.monsters = this.worldEngine.monsters.filter(m => m.isActive === false);
@@ -1367,14 +1384,7 @@ export class Game {
     }
 
     update = (deltaTime) => {
-        if (this.gameState.currentState === 'WORLD') {
-            this.worldEngine.update();
-            return;
-        } else if (this.gameState.currentState === 'FORMATION_SETUP') {
-            return;
-        } else if (this.gameState.currentState !== 'COMBAT') {
-            return;
-        }
+        if (this.state !== 'COMBAT') return;
 
         this.handleCameraReset();
 
@@ -1699,6 +1709,19 @@ export class Game {
             this.gameState.player.stats.allocatePoint(stat);
             this.gameState.player.stats.recalculate();
         }
+    }
+
+    setState(newState) {
+        if (this.state === newState) return;
+        this.state = newState;
+        console.log(`Game state changed to: ${newState}`);
+        if (this.eventManager) {
+            this.eventManager.publish('game_state_changed', newState);
+        }
+    }
+
+    getFriendlyEntities() {
+        return [this.gameState.player, ...this.mercenaryManager.mercenaries];
     }
 
     startBGM() {
