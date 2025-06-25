@@ -1104,3 +1104,31 @@ export class FireGodAI extends AIArchetype {
         return { type: 'idle' };
     }
 }
+
+// --- Player Auto Battle AI ---
+export class AutoPlayerAI extends MeleeAI {
+    decideAction(self, context) {
+        const { enemies } = context;
+        const visible = this._filterVisibleEnemies(self, enemies);
+        const nearest = this._findNearestEnemy(self, visible);
+        if (nearest) {
+            const charge = SKILLS.charge_attack;
+            const dist = Math.hypot(nearest.x - self.x, nearest.y - self.y);
+            if (
+                charge &&
+                self.skills?.includes(charge.id) &&
+                dist > self.attackRange &&
+                dist <= charge.chargeRange &&
+                (self.skillCooldowns[charge.id] || 0) <= 0 &&
+                self.mp >= charge.manaCost
+            ) {
+                return { type: 'charge_attack', target: nearest, skill: charge };
+            }
+            if (this.isInAttackRange(self, nearest)) {
+                return { type: 'attack', target: nearest };
+            }
+            return { type: 'move', target: nearest };
+        }
+        return { type: 'idle' };
+    }
+}

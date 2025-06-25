@@ -21,13 +21,34 @@ export class FormationManager {
         this.slots[slotIndex] = entityId;
     }
 
+    _mapIndex(index) {
+        // Default row-major ordering
+        return {
+            row: Math.floor(index / this.cols),
+            col: index % this.cols,
+        };
+    }
+
     getSlotPosition(index) {
-        const row = Math.floor(index / this.cols);
-        const col = index % this.cols;
+        const { row, col } = this._mapIndex(index);
         let offsetX = (col - Math.floor(this.cols / 2)) * this.tileSize;
+        let offsetY = (row - Math.floor(this.rows / 2)) * this.tileSize;
         if (this.orientation === 'RIGHT') offsetX *= -1; // mirror for enemy side
-        const offsetY = (row - Math.floor(this.rows / 2)) * this.tileSize;
         return { x: offsetX, y: offsetY };
+    }
+
+    getSlotLabel(index) {
+        if (this.rows === 3 && this.cols === 3) {
+            const labelsLeft = [7, 4, 1, 8, 5, 2, 9, 6, 3];
+            const colFlip = this.orientation === 'RIGHT';
+            if (colFlip) {
+                const mapped = this._mapIndex(index);
+                const flippedIndex = mapped.row * this.cols + (this.cols - 1 - mapped.col);
+                return labelsLeft[flippedIndex];
+            }
+            return labelsLeft[index];
+        }
+        return index + 1;
     }
 
     apply(origin, entityMap) {

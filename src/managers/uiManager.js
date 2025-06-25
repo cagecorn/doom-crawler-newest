@@ -974,7 +974,10 @@ export class UIManager {
                 const cell = document.createElement('div');
                 cell.className = 'formation-cell';
                 cell.dataset.index = idx;
-                cell.textContent = id ? id : idx + 1;
+                const label = this.formationManager.getSlotLabel
+                    ? this.formationManager.getSlotLabel(idx)
+                    : idx + 1;
+                cell.textContent = id ? id : label;
                 cell.addEventListener('dragover', e => e.preventDefault());
                 cell.addEventListener('drop', e => {
                     e.preventDefault();

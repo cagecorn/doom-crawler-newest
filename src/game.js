@@ -39,7 +39,7 @@ import { MicroCombatManager } from './micro/MicroCombatManager.js';
 import { disarmWorkflow, armorBreakWorkflow } from './workflows.js';
 import { PossessionAIManager } from './managers/possessionAIManager.js';
 import { Ghost } from './entities.js';
-import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI } from './ai.js';
+import { TankerGhostAI, RangedGhostAI, SupporterGhostAI, CCGhostAI, AutoPlayerAI } from './ai.js';
 import { EMBLEMS } from './data/emblems.js';
 import { adjustMonsterStatsForAquarium } from './utils/aquariumUtils.js';
 import DataRecorder from './managers/dataRecorder.js';
@@ -59,6 +59,7 @@ export class Game {
     constructor() {
         this.loader = new AssetLoader();
         this.gameState = { currentState: 'LOADING' };
+        this.autoBattle = false;
     }
 
     start() {
@@ -763,6 +764,20 @@ export class Game {
                 console.log("--- GAME STATE SAVED (SNAPSHOT) ---");
                 console.log(saveData);
                 this.eventManager.publish('log', { message: '게임 상태 스냅샷이 콘솔에 저장되었습니다.' });
+            };
+        }
+
+        const autoBtn = document.getElementById('toggle-autobattle');
+        if (autoBtn) {
+            autoBtn.onclick = () => {
+                this.autoBattle = !this.autoBattle;
+                if (this.autoBattle) {
+                    this.gameState.player.ai = new AutoPlayerAI();
+                    autoBtn.textContent = '자동 전투 ON';
+                } else {
+                    this.gameState.player.ai = null;
+                    autoBtn.textContent = '자동 전투 OFF';
+                }
             };
         }
 

@@ -9,5 +9,13 @@ describe('FormationManager', () => {
         assert.equal(pos.x, 0);
         assert.equal(pos.y, 0);
     });
+
+    test('slot labels match keypad layout', () => {
+        const fm = new FormationManager(3,3,10);
+        assert.equal(fm.getSlotLabel(0), 7);
+        assert.equal(fm.getSlotLabel(1), 4);
+        assert.equal(fm.getSlotLabel(2), 1);
+        assert.equal(fm.getSlotLabel(8), 3);
+    });
 });
 
