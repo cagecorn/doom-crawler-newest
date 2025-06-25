@@ -1,55 +1,60 @@
-export class FormationManager {
-    constructor(rows = 5, cols = 5, tileSize = 192, orientation = 'LEFT') {
-        // sanitize parameters to avoid invalid array length errors
-        this.rows = Math.max(1, Math.floor(Number(rows) || 5));
-        this.cols = Math.max(1, Math.floor(Number(cols) || 5));
-        this.tileSize = tileSize;
-        this.orientation = orientation; // LEFT or RIGHT
-        this.slots = Array(this.rows * this.cols).fill(null); // entity ids
-    }
+import { eventManager } from './eventManager.js';
 
-    resize(rows, cols) {
-        this.rows = Math.max(1, Math.floor(Number(rows) || this.rows));
-        this.cols = Math.max(1, Math.floor(Number(cols) || this.cols));
-        this.slots = Array(this.rows * this.cols).fill(null);
+class FormationManager {
+    constructor(cols, rows, tileSize) {
+        this.cols = cols;
+        this.rows = rows;
+        this.tileSize = tileSize; // 타일 크기 (예: 64)
+        this.slots = new Array(cols * rows).fill(null); // 각 슬롯에는 분대(squad) 객체가 저장됨
+        
+        eventManager.subscribe('formation_assign_request', this.handleAssignSquad.bind(this));
     }
-
-    assign(slotIndex, entityId) {
-        if (slotIndex < 0 || slotIndex >= this.slots.length) return;
-        const currentIndex = this.slots.indexOf(entityId);
-        if (currentIndex !== -1) this.slots[currentIndex] = null;
-        this.slots[slotIndex] = entityId;
-    }
-
-    getSlotPosition(slotIndex) {
-        if (slotIndex < 0 || slotIndex >= this.slots.length) {
-            return { x: 0, y: 0 };
+    
+    handleAssignSquad({ squadId, slotIndex }) {
+        // 기존에 이 분대가 다른 슬롯에 있었다면 제거
+        const existingIndex = this.slots.findIndex(s => s && s.id === squadId);
+        if (existingIndex > -1) {
+            this.slots[existingIndex] = null;
         }
-        const row = Math.floor(slotIndex / this.cols);
-        const col = slotIndex % this.cols;
 
-        const centerRow = Math.floor(this.rows / 2);
-        const centerCol = Math.floor(this.cols / 2);
-        const orientationMultiplier = this.orientation === 'RIGHT' ? -1 : 1;
+        // 새 슬롯에 분대 할당
+        // 참고: squadManager에서 실제 squad 객체를 가져와야 합니다. 여기서는 임시로 ID만 저장합니다.
+        // 실제 구현에서는 game.js 등에서 squadManager.getSquad(squadId)를 통해 객체를 전달받아야 합니다.
+        this.slots[slotIndex] = { id: squadId }; // 임시 객체, 실제로는 squad 객체여야 함
 
-        const relativeX = (col - centerCol) * this.tileSize * orientationMultiplier;
-        const relativeY = (row - centerRow) * this.tileSize;
-
-        return { x: relativeX, y: relativeY };
+        console.log(`${squadId} 분대를 슬롯 ${slotIndex}에 배치 요청`);
+        eventManager.publish('formation_data_changed', { slots: this.slots });
     }
 
-    apply(origin, entityMap) {
-        this.slots.forEach((id, idx) => {
-            if (!id) return;
-            const ent = entityMap[id];
-            if (ent) {
-                const off = this.getSlotPosition(idx);
-                const randomOffsetX = (Math.random() - 0.5) * this.tileSize * 0.5;
-                const randomOffsetY = (Math.random() - 0.5) * this.tileSize * 0.5;
-                ent.x = origin.x + off.x + randomOffsetX;
-                ent.y = origin.y + off.y + randomOffsetY;
-            }
+    getSlotPosition(index) {
+        const x = (index % this.cols) * this.tileSize;
+        const y = Math.floor(index / this.cols) * this.tileSize;
+        return { x, y };
+    }
+
+    // 분대를 진형에 배치하고, 멤버들의 위치를 설정
+    apply(origin, entityMap, squadManager) {
+        this.slots.forEach((squadData, idx) => {
+            if (!squadData) return;
+
+            const squad = squadManager.getSquad(squadData.id);
+            if (!squad || !squad.members) return;
+
+            const basePos = this.getSlotPosition(idx);
+
+            squad.members.forEach(entityId => {
+                const ent = entityMap[entityId];
+                if (ent) {
+                    // 타일 크기 내에서 무작위 오프셋 추가하여 뭉쳐있는 효과
+                    const randomOffsetX = (Math.random() - 0.5) * this.tileSize * 0.8;
+                    const randomOffsetY = (Math.random() - 0.5) * this.tileSize * 0.8;
+                    
+                    ent.x = origin.x + basePos.x + randomOffsetX;
+                    ent.y = origin.y + basePos.y + randomOffsetY;
+                }
+            });
         });
     }
 }
 
+export { FormationManager };
