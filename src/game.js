@@ -466,71 +466,7 @@ export class Game {
         }
 
         // === 3. 몬스터 생성 ===
-        const monsters = [];
-        const baseMonsterCount = this.mapManager.name === 'aquarium' ? 10 : 40;
-        for (let i = 0; i < baseMonsterCount; i++) {
-            const pos = this.mapManager.getRandomFloorPosition();
-            if (pos) {
-                let stats = {};
-                if (this.mapManager.name === 'aquarium') {
-                    stats = adjustMonsterStatsForAquarium(stats);
-                }
-                const monster = this.factory.create('monster', {
-                    x: pos.x,
-                    y: pos.y,
-                    tileSize: this.mapManager.tileSize,
-                    groupId: this.monsterGroup.id,
-                    image: assets.monster,
-                    baseStats: stats
-                });
-                monster.equipmentRenderManager = this.equipmentRenderManager;
-                // 몬스터 초기 장비 및 소지품 설정
-                monster.consumables = [];
-                monster.consumableCapacity = 4;
-                const itemCount = Math.floor(Math.random() * 3) + 2; // 장비 다양화를 위해 최소 2개
-                for (let j = 0; j < itemCount; j++) {
-                    const id = rollOnTable(getMonsterLootTable());
-                    const item = this.itemFactory.create(
-                        id,
-                        monster.x,
-                        monster.y,
-                        this.mapManager.tileSize
-                    );
-                    if (!item) continue;
-                    if (
-                        item.tags.includes('weapon') ||
-                        item.type === 'weapon' ||
-                        item.tags.includes('armor') ||
-                        item.type === 'armor'
-                    ) {
-                        this.equipmentManager.equip(monster, item, null);
-                    } else {
-                        monster.addConsumable(item);
-                    }
-                }
-                if (Math.random() < 0.15) {
-                    const pid = Math.random() < 0.5 ? 'parasite_leech' : 'parasite_worm';
-                    const pItem = this.itemFactory.create(
-                        pid,
-                        monster.x,
-                        monster.y,
-                        this.mapManager.tileSize
-                    );
-                    if (pItem) this.parasiteManager.equip(monster, pItem);
-                }
-                if (Math.random() < 0.3) {
-                    const bow = this.itemFactory.create(
-                        'long_bow',
-                        monster.x,
-                        monster.y,
-                        this.mapManager.tileSize
-                    );
-                    if (bow) this.equipmentManager.equip(monster, bow, null);
-                }
-                this.monsterManager.addMonster(monster);
-                monsters.push(monster);
-            }
-        }
+        // 기존 무작위 스폰 로직을 제거하고 formationManager를 통해 일괄 배치합니다.
 
         if (SETTINGS.ENABLE_AQUARIUM_LANES) {
             // --- 3-Lane 모드 설정 로직 ---
@@ -810,9 +746,19 @@ export class Game {
 
         // 월드맵과 전투 상태 전환 이벤트 처리
         eventManager.subscribe('start_combat', (data) => {
-            console.log(`전투 시작! 상대 부대 규모: ${data.monsterParty.troopSize}`);
-            gameState.currentState = 'COMBAT';
+            console.log(`전투 준비! 상대 부대 규모: ${data.monsterParty.troopSize}`);
+            gameState.currentState = 'FORMATION_SETUP';
+            this.pendingMonsterParty = data.monsterParty;
+            this.uiManager.showPanel('squad-management-ui');
             this.worldEngine.monsters.forEach(m => m.isActive = false);
+        });
+
+        eventManager.subscribe('formation_confirmed', () => {
+            const origin = { x: gameState.player.x, y: gameState.player.y };
+            const entityMap = { [gameState.player.id]: gameState.player };
+            this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
+            this.formationManager.apply(origin, entityMap);
+            gameState.currentState = 'COMBAT';
         });
 
         eventManager.subscribe('end_combat', (result) => {
@@ -1424,6 +1370,8 @@ export class Game {
         if (this.gameState.currentState === 'WORLD') {
             this.worldEngine.update();
             return;
+        } else if (this.gameState.currentState === 'FORMATION_SETUP') {
+            return;
         } else if (this.gameState.currentState !== 'COMBAT') {
             return;
         }
@@ -1565,6 +1513,9 @@ export class Game {
 
         if (gameState.currentState === 'WORLD') {
             this.worldEngine.render(layerManager.contexts.entity);
+            if (this.uiManager) this.uiManager.updateUI(gameState);
+            return;
+        } else if (gameState.currentState === 'FORMATION_SETUP') {
             if (this.uiManager) this.uiManager.updateUI(gameState);
             return;
         } else if (gameState.currentState !== 'COMBAT') {

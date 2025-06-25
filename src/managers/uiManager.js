@@ -997,6 +997,14 @@ export class UIManager {
             }
         }
 
+        const confirmBtn = container.querySelector('#confirm-formation-btn');
+        if (confirmBtn) {
+            confirmBtn.onclick = () => {
+                this.eventManager?.publish('formation_confirmed');
+                this.hidePanel('squad-management-ui');
+            };
+        }
+
         if (!this._squadUIInitialized) {
             this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
             this._squadUIInitialized = true;
