@@ -167,6 +167,11 @@ export class MetaAIManager {
                 if (action.skillId === 'parry_stance' && context.effectManager) {
                     context.effectManager.addEffect(entity, 'parry_ready');
                 }
+                if (action.skillId === "full_strike" && action.target) {
+                    eventManager.publish("entity_attack", { attacker: entity, defender: action.target, skill: skillData });
+                    context.statusEffectsManager?.applyTwisted(action.target, skillData.twistedDuration || 2000);
+                    entity.attackCooldown = Math.max(1, Math.round(60 / (entity.attackSpeed || 1)));
+                }
 
                 if (context.speechBubbleManager) {
                     context.speechBubbleManager.addBubble(entity, skillData.name);

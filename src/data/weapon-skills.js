@@ -67,6 +67,15 @@ export const WEAPON_SKILLS = {
         cooldown: 0,
         tags: ['weapon_skill', 'offensive', 'violin_bow'],
     },
+    // 메이스 레벨 1
+    full_strike: {
+        id: 'full_strike',
+        name: '풀 스트라이크',
+        description: '강력한 일격으로 적을 잠시 뒤틀리게 합니다.',
+        type: 'active',
+        cooldown: 20,
+        tags: ['weapon_skill', 'offensive', 'mace'],
+        twistedDuration: 2000,
+    },
     // 에스톡 레벨 1 (창의 돌진 스킬을 공유)
 };
-

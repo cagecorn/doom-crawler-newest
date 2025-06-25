@@ -21,6 +21,7 @@ import { EquipmentRenderManager } from './equipmentRenderManager.js';
 import { ParticleDecoratorManager } from './particleDecoratorManager.js';
 import { TraitManager } from './traitManager.js';
 import { ParasiteManager } from './parasiteManager.js';
+import { StatusEffectsManager } from './statusEffectsManager.js';
 import { MicroItemAIManager } from './microItemAIManager.js';
 import { EffectIconManager } from './effectIconManager.js';
 import { PetManager } from './petManager.js';
@@ -86,5 +87,6 @@ export {
     EntityManager,
     CombatDecisionEngine,
     GuidelineLoader,
+    StatusEffectsManager,
     DataRecorder,
 };

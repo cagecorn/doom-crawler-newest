@@ -88,6 +88,7 @@ export class MetaAIManager extends BaseMetaAI {
 
                 const isCCd = member.effects && member.effects.some(e => e.tags && e.tags.includes('cc'));
                 if (isCCd) continue;
+                if (member.statusEffects && member.statusEffects.isTwisted) continue;
 
                 if (!member.update) {
                     if (member.attackCooldown > 0) member.attackCooldown--;

@@ -176,7 +176,29 @@ export class SaberAI extends EstocAI {}
 
 // --- 신규 무기 AI 클래스 ---
 export class AxeAI extends SwordAI {}
-export class MaceAI extends SwordAI {}
+export class MaceAI extends SwordAI {
+    decideAction(wielder, weapon, context) {
+        const { enemies } = context;
+        if (!enemies || enemies.length === 0) return { type: "idle" };
+        let nearest = null;
+        let minDist = Infinity;
+        for (const e of enemies) {
+            const d = Math.hypot(e.x - wielder.x, e.y - wielder.y);
+            if (d < minDist) { minDist = d; nearest = e; }
+        }
+        if (!nearest) return { type: "idle" };
+        const skillId = "full_strike";
+        if (
+            weapon?.weaponStats?.canUseSkill(skillId) &&
+            (wielder.skillCooldowns[skillId] || 0) <= 0 &&
+            minDist <= wielder.attackRange &&
+            wielder.attackCooldown === 0
+        ) {
+            return { type: "weapon_skill", skillId, target: nearest };
+        }
+        return super.decideAction(wielder, weapon, context);
+    }
+}
 
 export class StaffAI extends BowAI {
     // 지능 수치가 높을수록 기본 공격 피해가 증가합니다.
