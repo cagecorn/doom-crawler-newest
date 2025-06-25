@@ -54,4 +54,12 @@ export class AssetLoader {
         ];
         emblems.forEach(([key, src]) => this.loadImage(key, src));
     }
+
+    // 전투 시각 효과 이미지를 한 번에 로드하는 헬퍼 메서드
+    loadVfxImages() {
+        const effects = [
+            ['fire-nova-effect', 'assets/images/fire-nova-effect.png'],
+        ];
+        effects.forEach(([key, src]) => this.loadImage(key, src));
+    }
 }

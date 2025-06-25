@@ -189,6 +189,29 @@ export class VFXManager {
         this.particleEngine.createWhipTrail(fromX, fromY, toX, toY);
     }
 
+    createNovaEffect(caster, options) {
+        const {
+            duration = 50,
+            radius = 100,
+            color = 'rgba(255, 255, 0, 0.7)',
+            image = null
+        } = options || {};
+
+        const effectImage = image ? (this.game?.assets?.[image] || null) : null;
+
+        const effect = {
+            type: 'nova',
+            x: caster.x + caster.width / 2,
+            y: caster.y + caster.height / 2,
+            maxRadius: radius,
+            duration,
+            life: duration,
+            color,
+            image: effectImage,
+        };
+        this.effects.push(effect);
+    }
+
     /**
      * 아이템이 시체 위치에서 포물선을 그리며 튀어나오는 애니메이션을 추가합니다.
      * 애니메이션이 종료되면 ItemManager에 아이템을 정식으로 추가합니다.
@@ -559,6 +582,14 @@ export class VFXManager {
                 continue;
             }
 
+            if (effect.type === 'nova') {
+                effect.life--;
+                if (effect.life <= 0) {
+                    this.effects.splice(i, 1);
+                }
+                continue;
+            }
+
             if (effect.type === 'death_animation') {
                 effect.life--;
                 if (effect.life <= 0) {
@@ -727,6 +758,22 @@ export class VFXManager {
                 ctx.lineWidth = effect.lineWidth * (effect.life / effect.duration);
                 ctx.globalAlpha = effect.life / effect.duration;
                 ctx.stroke();
+                ctx.restore();
+            } else if (effect.type === 'nova') {
+                const progress = 1 - effect.life / effect.duration;
+                const currentRadius = effect.maxRadius * progress;
+                const alpha = effect.life / effect.duration;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                if (effect.image) {
+                    const d = currentRadius * 2;
+                    ctx.drawImage(effect.image, effect.x - currentRadius, effect.y - currentRadius, d, d);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, currentRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = effect.color;
+                    ctx.fill();
+                }
                 ctx.restore();
             } else if (effect.type === 'item_pop') {
                 const { item, startPos, endPos, life, duration, popHeight } = effect;
