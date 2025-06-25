@@ -70,4 +70,13 @@ export class SquadManager {
         }
         return null;
     }
+
+    /**
+     * 특정 ID를 가진 분대 객체를 반환합니다.
+     * @param {string} squadId - 조회할 분대의 ID
+     * @returns {object|null} 분대 객체 또는 null
+     */
+    getSquad(squadId) {
+        return this.squads[squadId] || null;
+    }
 }
