@@ -140,7 +140,8 @@ export class Game {
         const laneCenters = this.mapManager.getLaneCenters ? this.mapManager.getLaneCenters() : null;
         this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight, laneCenters);
         this.laneRenderManager = new LaneRenderManager(this.laneManager, SETTINGS.ENABLE_AQUARIUM_LANES);
-        this.formationManager = new FormationManager(3, 3, this.mapManager.tileSize);
+        const formationSpacing = this.mapManager.tileSize * 2.5;
+        this.formationManager = new FormationManager(5, 5, formationSpacing);
         this.eventManager.subscribe('formation_assign_request', d => {
             this.formationManager.assign(d.slotIndex, d.entityId);
             this.uiManager?.createSquadManagementUI();
@@ -335,43 +336,43 @@ export class Game {
             }
         }
 
-        // Spawn monsters in small groups spread across different rooms
-        const groupCount = 3;
-        for (let g = 0; g < groupCount; g++) {
-            this.aquariumManager.spawnMonsterGroup(3, {
-                image: assets.monster,
-                baseStats: {},
-                ensureShield: g === 0
-            });
-        }
-        // Add a single epic monster to highlight new boss-level enemies
-        this.aquariumManager.addTestingFeature({
-            type: 'monster',
-            image: assets.epic_monster,
-            baseStats: {
-                sizeInTiles_w: 2,
-                sizeInTiles_h: 2,
-                strength: 5,
-                agility: 4,
-                endurance: 20,
-                movement: 6,
-                expValue: 100
-            },
-            skills: [SKILLS.poison_sting.id]
-        });
-        this.aquariumInspector.run();
-
+        // === 그룹 생성 ===
         this.playerGroup = this.metaAIManager.createGroup('player_party', STRATEGY.AGGRESSIVE);
         // 플레이어는 직접 조종하므로 AI를 비활성화하지만 용병은 계속 행동하게 둡니다.
         this.monsterGroup = this.metaAIManager.createGroup('dungeon_monsters', STRATEGY.AGGRESSIVE);
 
+        // === 몬스터 부대 생성 ===
+        const enemyFormationManager = new FormationManager(5, 5, formationSpacing, 'RIGHT');
+        const enemyFormationOrigin = {
+            x: (this.mapManager.width - 8) * this.mapManager.tileSize,
+            y: (this.mapManager.height / 2) * this.mapManager.tileSize,
+        };
+        const monsterSquad = [];
+        const monsterCount = 15;
+        for (let i = 0; i < monsterCount; i++) {
+            const monster = this.factory.create('monster', {
+                x: 0,
+                y: 0,
+                tileSize: this.mapManager.tileSize,
+                groupId: this.monsterGroup.id,
+                image: assets.monster,
+            });
+            monsterSquad.push(monster);
+        }
+        this.monsterManager.monsters.push(...monsterSquad);
+        this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
+        const monsterEntityMap = {};
+        monsterSquad.forEach(m => { monsterEntityMap[m.id] = m; });
+        monsterSquad.forEach((monster, idx) => {
+            if (idx < 25) {
+                enemyFormationManager.assign(idx, monster.id);
+            }
+        });
+        enemyFormationManager.apply(enemyFormationOrigin, monsterEntityMap);
+
         // === 2. 플레이어 생성 ===
         let startPos;
-        if (typeof this.mapManager.getPlayerStartingPosition === 'function') {
-            startPos = this.mapManager.getPlayerStartingPosition();
-        } else {
-            startPos = this.mapManager.getRandomFloorPosition() || { x: this.mapManager.tileSize, y: this.mapManager.tileSize };
-        }
+        startPos = { x: this.mapManager.tileSize * 8, y: (this.mapManager.height * this.mapManager.tileSize) / 2 };
         const player = this.factory.create('player', {
             x: startPos.x,
             y: startPos.y,
@@ -574,9 +575,10 @@ export class Game {
         const origin = { x: this.gameState.player.x, y: this.gameState.player.y };
         const entityMap = { [player.id]: this.gameState.player };
         this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
-        this.formationManager.assign(4, player.id);
+        this.formationManager.assign(12, player.id);
         this.mercenaryManager.mercenaries.forEach((m, idx) => {
-            this.formationManager.assign(idx < 4 ? idx : idx + 1, m.id);
+            const slotIndex = [6, 7, 8, 11, 13][idx] || idx;
+            this.formationManager.assign(slotIndex, m.id);
         });
         this.formationManager.apply(origin, entityMap);
         this.equipmentManager.entityManager = this.entityManager;
