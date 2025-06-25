@@ -344,6 +344,14 @@ export const ITEMS = {
         effectId: 'strength_buff'
     },
 
+    shock_grenade: {
+        name: '쇼크 그레네이드',
+        type: 'consumable',
+        tags: ['consumable', 'attack_item'],
+        imageKey: 'potion',
+        effectId: 'shock'
+    },
+
     // --- 룬 아이템 ---
     fire_rune: {
         name: '화염의 룬',

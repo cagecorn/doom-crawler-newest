@@ -16,6 +16,7 @@ export const MONSTER_SPAWN_TABLE = [
 export const LOOT_DROP_TABLE = [
     { id: 'gold', weight: 60 },
     { id: 'potion', weight: 20 },
+    { id: 'shock_grenade', weight: 5 },
     { id: 'sword', weight: 5 },
     { id: 'spear', weight: 5 },
     { id: 'dagger', weight: 5 },

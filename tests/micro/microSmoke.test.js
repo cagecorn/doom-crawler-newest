@@ -51,6 +51,9 @@ test('간단한 게임 흐름', () => {
 
     const flail = itemFactory.create('flail', 0, 0, 1);
     assert.ok(flail && flail.baseId === 'flail', '플레일 아이템 생성');
+
+    const grenade = itemFactory.create('shock_grenade', 0, 0, 1);
+    assert.ok(grenade && grenade.baseId === 'shock_grenade', '쇼크 그레네이드 생성');
 });
 
 });
