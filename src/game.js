@@ -242,6 +242,7 @@ export class Game {
         this.effectIconManager = new Managers.EffectIconManager(this.eventManager, assets);
         // UIManager가 mercenaryManager에 접근할 수 있도록 설정
         this.uiManager.mercenaryManager = this.mercenaryManager;
+        this.mercenaryManager.setUIManager(this.uiManager);
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.uiManager.eventManager = this.eventManager;
@@ -1339,10 +1340,9 @@ export class Game {
             );
 
             if (clickedMerc) {
-                if (this.uiManager.showMercenaryDetail) {
-                    this.uiManager.showMercenaryDetail(clickedMerc);
-                    if (this.uiManager.mercDetailPanel)
-                        this.gameState.isPaused = true;
+                if (this.mercenaryManager.showMercenaryDetail) {
+                    this.mercenaryManager.showMercenaryDetail(clickedMerc);
+                    this.gameState.isPaused = true;
                 }
                 return; // 용병을 클릭했으면 더 이상 진행 안 함
             }

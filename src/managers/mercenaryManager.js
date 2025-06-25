@@ -8,6 +8,7 @@ export class MercenaryManager {
         this.mercenaries = [];
         this.equipmentRenderManager = null;
         this.traitManager = null;
+        this.uiManager = null;
         console.log("[MercenaryManager] Initialized");
 
         if (this.eventManager) {
@@ -54,5 +55,21 @@ export class MercenaryManager {
 
     getMercenaries() {
         return this.mercenaries;
+    }
+
+    setUIManager(uiManager) {
+        this.uiManager = uiManager;
+    }
+
+    showMercenaryDetail(mercenary) {
+        if (this.uiManager && this.uiManager.showCharacterSheet) {
+            this.uiManager.showCharacterSheet(mercenary);
+        }
+    }
+
+    hideMercenaryDetail(mercId) {
+        if (this.uiManager && this.uiManager.hideCharacterSheet) {
+            this.uiManager.hideCharacterSheet(mercId);
+        }
     }
 }

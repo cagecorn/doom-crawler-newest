@@ -4,11 +4,14 @@ export class SquadManager {
     constructor(eventManager, mercenaryManager) {
         this.eventManager = eventManager;
         this.mercenaryManager = mercenaryManager;
-        this.squads = {
-            squad_1: { name: '1\uBD84\uB300', members: new Set(), strategy: STRATEGY.AGGRESSIVE },
-            squad_2: { name: '2\uBD84\uB300', members: new Set(), strategy: STRATEGY.DEFENSIVE },
-            squad_3: { name: '3\uBD84\uB300', members: new Set(), strategy: STRATEGY.DEFENSIVE }
-        };
+        this.squads = {};
+        for (let i = 1; i <= 9; i++) {
+            this.squads[`squad_${i}`] = {
+                name: `${i}\uBD84\uB300`,
+                members: new Set(),
+                strategy: i === 1 ? STRATEGY.AGGRESSIVE : STRATEGY.DEFENSIVE
+            };
+        }
         this.unassignedMercs = new Set(
             this.mercenaryManager.getMercenaries().map(m => m.id)
         );
