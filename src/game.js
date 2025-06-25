@@ -18,7 +18,8 @@ import { AssetLoader } from './assetLoader.js';
 import { MetaAIManager, STRATEGY } from './managers/ai-managers.js';
 import { SaveLoadManager } from './managers/saveLoadManager.js';
 import { LayerManager } from './managers/layerManager.js';
-import { createGridInventory } from './inventory.js';
+// 기존 인벤토리 함수는 InventoryManager에서 대체합니다.
+import { InventoryManager } from './managers/inventoryManager.js';
 import { PathfindingManager } from './managers/pathfindingManager.js';
 import { MovementManager } from './managers/movementManager.js';
 import { FogManager } from './managers/fogManager.js';
@@ -130,6 +131,7 @@ export class Game {
         this.narrativeManager = new NarrativeManager();
         this.supportEngine = new SupportEngine();
         this.factory = new CharacterFactory(assets, this);
+        this.inventoryManager = new InventoryManager(this.eventManager);
         // 월드맵 로직을 담당하는 엔진
         this.worldEngine = new WorldEngine(this, assets);
 
@@ -156,7 +158,11 @@ export class Game {
                 name !== 'DataRecorder'
         );
         for (const managerName of otherManagerNames) {
-            this.managers[managerName] = new Managers[managerName](this.eventManager, assets, this.factory);
+            if (managerName === 'UIManager') {
+                this.managers[managerName] = new Managers.UIManager(this.eventManager, (id) => this.entityManager?.getEntityById(id));
+            } else {
+                this.managers[managerName] = new Managers[managerName](this.eventManager, assets, this.factory);
+            }
         }
 
         this.managers.EffectManager = new Managers.EffectManager(
@@ -351,7 +357,7 @@ export class Game {
         this.gameState = {
             currentState: 'WORLD',
             player,
-            inventory: createGridInventory(4, 4),
+            inventory: this.inventoryManager.getSharedInventory(),
             gold: 1000,
             statPoints: 5,
             camera: { x: 0, y: 0 },
@@ -1198,13 +1204,6 @@ export class Game {
                     gameState.player.consumables.splice(itemIndex, 1);
                 }
                 this.uiManager.updateUI(gameState);
-            },
-            onEquipItem: (entity, item) => {
-                const targetInventory = entity.isPlayer ? gameState.inventory : (entity.consumables || entity.inventory || gameState.inventory);
-                this.equipmentManager.equip(entity, item, targetInventory);
-                const idx = gameState.inventory.indexOf(item);
-                if (idx !== -1) gameState.inventory.splice(idx, 1);
-                this.uiManager.renderInventory(gameState);
             }
         });
 
