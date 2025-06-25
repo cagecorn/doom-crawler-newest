@@ -265,6 +265,7 @@ export class Game {
             eventManager: this.eventManager
         });
         this.metaAIManager = new MetaAIManager(this.eventManager, this.squadManager);
+        this.monsterManager.setMetaAIManager(this.metaAIManager);
         if (SETTINGS.ENABLE_REPUTATION_SYSTEM) {
             this.reputationManager = new ReputationManager(this.eventManager);
             this.reputationManager.mercenaryManager = this.mercenaryManager;
@@ -358,10 +359,9 @@ export class Game {
                 groupId: this.monsterGroup.id,
                 image: assets.monster,
             });
+            this.monsterManager.addMonster(monster);
             monsterSquad.push(monster);
         }
-        this.monsterManager.monsters.push(...monsterSquad);
-        this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
         const monsterEntityMap = {};
         monsterSquad.forEach(m => { monsterEntityMap[m.id] = m; });
         monsterSquad.forEach((monster, idx) => {
@@ -527,11 +527,10 @@ export class Game {
                     );
                     if (bow) this.equipmentManager.equip(monster, bow, null);
                 }
+                this.monsterManager.addMonster(monster);
                 monsters.push(monster);
             }
         }
-        this.monsterManager.monsters.push(...monsters);
-        this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
 
         if (SETTINGS.ENABLE_AQUARIUM_LANES) {
             // --- 3-Lane 모드 설정 로직 ---

@@ -91,7 +91,7 @@ export class AquariumManager {
                 this.traitManager.applyTraits(monster, TRAITS);
             }
 
-            this.monsterManager.monsters.push(monster);
+            this.monsterManager.addMonster(monster);
 
             if (Math.random() < 0.8) {
                 const randomWeaponId = this.allWeaponIds[Math.floor(Math.random() * this.allWeaponIds.length)];
@@ -141,7 +141,7 @@ export class AquariumManager {
                 if (this.traitManager) {
                     this.traitManager.applyTraits(monster, TRAITS);
                 }
-                this.monsterManager.monsters.push(monster);
+                this.monsterManager.addMonster(monster);
 
                 // --- 몬스터에게 무작위 무기 장착 ---
                 if (Math.random() < 0.8) {
