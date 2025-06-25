@@ -550,3 +550,59 @@ body, html {
     font-size: 14px;
     color: #ccc;
 }
+
+#ui-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 20px;
+}
+
+#squad-management, #formation-grid {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.droppable {
+    padding: 10px;
+    border: 2px dashed #ccc;
+    min-height: 50px;
+    margin-top: 5px;
+}
+
+.draggable-entity, .draggable-squad {
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #999;
+    background-color: #f0f0f0;
+    cursor: grab;
+}
+
+.dragging {
+    opacity: 0.5;
+}
+
+.dragover {
+    background-color: #e0e0e0;
+    border-color: #333;
+}
+
+#formation-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    width: 350px; /* 64px * 5 + padding */
+    height: 350px;
+    gap: 5px;
+}
+
+.formation-cell {
+    width: 64px;
+    height: 64px;
+    border: 1px solid #aaa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
