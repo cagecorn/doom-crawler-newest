@@ -296,12 +296,24 @@ export const SKILLS = {
     },
     fire_nova: {
         id: 'fire_nova',
-        name: '화염 폭발',
-        description: '주변에 화염을 폭발시켜 광역 피해를 입힙니다.',
+        name: '파이어 노바',
+        type: 'active',
+        range: 0,
         manaCost: 18,
         cooldown: 150,
-        damageDice: '1d8+2',
+        castTime: 10,
+        effect: {
+            type: 'area',
+            radius: 384,
+            damage: 25,
+            applies: { type: 'burn', duration: 300, damage: 5 }
+        },
+        vfx: {
+            type: 'nova',
+            image: 'fire-nova-effect',
+            duration: 50
+        },
+        sfx: 'fire-nova-sound',
         tags: ['skill', 'attack', 'magic', 'fire', 'aoe'],
-        effects: { target: ['burn'] },
     },
 };

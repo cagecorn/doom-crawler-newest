@@ -46,6 +46,7 @@ import { AspirationManager } from './managers/aspirationManager.js';
 import { MicroWorldWorker } from './micro/MicroWorldWorker.js';
 import { CinematicManager } from './managers/cinematicManager.js';
 import { ItemTracker } from './managers/itemTracker.js';
+import { findEntitiesInRadius } from './utils/entityUtils.js';
 
 export class Game {
     constructor() {
@@ -103,6 +104,8 @@ export class Game {
         this.loader.loadImage('talisman2', 'assets/images/talisman-2.png');
         // 휘장 아이템 이미지 로드
         this.loader.loadEmblemImages();
+        // 시각 효과 이미지 로드
+        this.loader.loadVfxImages();
 
         this.loader.onReady(assets => this.init(assets));
     }
@@ -1042,8 +1045,30 @@ export class Game {
                     lifespan: 70
                 });
             }
+            // 4. 파이어 노바
+            else if (skill.id === SKILLS.fire_nova.id) {
+                const centerX = caster.x + caster.width / 2;
+                const centerY = caster.y + caster.height / 2;
+                const radius = skill.effect?.radius || 192;
 
-            // 4. 그 외 공격 스킬 (기존 로직 유지)
+                this.vfxManager.createNovaEffect(caster, {
+                    radius,
+                    duration: skill.vfx?.duration || 50,
+                    image: skill.vfx?.image || 'fire-nova-effect'
+                });
+
+                const enemies = caster.isFriendly ? monsterManager.monsters : [gameState.player, ...mercenaryManager.mercenaries];
+                const aoeTargets = findEntitiesInRadius(centerX, centerY, radius, enemies, caster);
+
+                aoeTargets.forEach(enemy => {
+                    eventManager.publish('entity_attack', { attacker: caster, defender: enemy, skill });
+                    if (skill.effect?.applies?.type === 'burn') {
+                        this.effectManager.addEffect(enemy, 'burn');
+                    }
+                });
+            }
+
+            // 5. 그 외 공격 스킬 (기존 로직 유지)
             else if (skill.tags.includes('attack')) {
                 const range = skill.range || Infinity;
                 const nearestEnemy = this.findNearestEnemy(caster, monsterManager.monsters, range);
