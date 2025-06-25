@@ -1,85 +1,75 @@
-import { STRATEGY } from './ai-managers.js';
+import { eventManager } from './eventManager.js';
 
-export class SquadManager {
-    constructor(eventManager, mercenaryManager) {
-        this.eventManager = eventManager;
-        this.mercenaryManager = mercenaryManager;
-        this.squads = {};
-        for (let i = 1; i <= 9; i++) {
-            this.squads[`squad_${i}`] = {
-                name: `${i}\uBD84\uB300`,
-                members: new Set(),
-                strategy: i === 1 ? STRATEGY.AGGRESSIVE : STRATEGY.DEFENSIVE
-            };
-        }
-        this.unassignedMercs = new Set(
-            this.mercenaryManager.getMercenaries().map(m => m.id)
-        );
-        if (this.eventManager) {
-            this.eventManager.subscribe('squad_assign_request', d => this.handleSquadAssignment(d));
-            this.eventManager.subscribe('squad_strategy_change_request', d => this.setSquadStrategy(d));
-            this.eventManager.subscribe('mercenary_hired', ({ mercenary }) => this.registerMercenary(mercenary));
-        }
+class SquadManager {
+    constructor(maxSquads = 10) {
+        this.squads = new Map();
+        this.maxSquads = maxSquads;
+        this.nextSquadId = 0;
+
+        // 이벤트 리스너 등록
+        eventManager.subscribe('squad_assign_request', this.handleAssignMember.bind(this));
     }
 
-    registerMercenary(merc) {
-        if (!merc) return;
-        this.unassignedMercs.add(merc.id);
-        merc.squadId = null;
+    // 새 분대 생성
+    createSquad(squadName) {
+        if (this.squads.size >= this.maxSquads) {
+            console.warn("최대 분대 수를 초과했습니다.");
+            return null;
+        }
+        const squadId = `squad_${this.nextSquadId++}`;
+        const newSquad = {
+            id: squadId,
+            name: squadName || `분대 ${this.nextSquadId}`,
+            members: new Set()
+        };
+        this.squads.set(squadId, newSquad);
+        console.log(`${squadId} (${newSquad.name}) 분대가 생성되었습니다.`);
+        eventManager.publish('squad_data_changed', { squads: this.getSquads() });
+        return newSquad;
     }
 
-    handleSquadAssignment({ mercId, toSquadId }) {
-        for (const squad of Object.values(this.squads)) {
-            squad.members.delete(mercId);
+    // 분대 해체
+    disbandSquad(squadId) {
+        if (this.squads.has(squadId)) {
+            this.squads.delete(squadId);
+            console.log(`${squadId} 분대가 해체되었습니다.`);
+            eventManager.publish('squad_data_changed', { squads: this.getSquads() });
+            return true;
         }
-        this.unassignedMercs.delete(mercId);
-        if (toSquadId && this.squads[toSquadId]) {
-            this.squads[toSquadId].members.add(mercId);
-            const merc = this.mercenaryManager.getMercenaries().find(m => m.id === mercId);
-            if (merc) merc.squadId = toSquadId;
-            console.log(`용병 ${mercId}를 ${this.squads[toSquadId].name}에 편성했습니다.`);
-        } else {
-            this.unassignedMercs.add(mercId);
-            const merc = this.mercenaryManager.getMercenaries().find(m => m.id === mercId);
-            if (merc) merc.squadId = null;
-            console.log(`용병 ${mercId}를 미편성 상태로 변경했습니다.`);
-        }
-        this.eventManager?.publish('squad_data_changed', { squads: this.squads });
+        return false;
     }
-
-    setSquadStrategy(squadIdOrObj, maybeStrategy) {
-        let squadId = squadIdOrObj;
-        let strategy = maybeStrategy;
-        if (typeof squadIdOrObj === 'object') {
-            squadId = squadIdOrObj.squadId;
-            strategy = squadIdOrObj.newStrategy;
-        }
-        if (this.squads[squadId] && (strategy === STRATEGY.AGGRESSIVE || strategy === STRATEGY.DEFENSIVE)) {
-            this.squads[squadId].strategy = strategy;
-            console.log(`${this.squads[squadId].name}\uC758 \uC804\uB825\uC744 ${strategy}(\uC73C)\uB85C \uBCC0\uACBD\uD588\uC2B5\uB2C8\uB2E4.`);
-            this.eventManager?.publish('squad_data_changed', { squads: this.squads });
-        }
-    }
-
-    getSquads() {
-        return this.squads;
-    }
-
-    getSquadForMerc(mercId) {
-        for (const squad of Object.values(this.squads)) {
-            if (squad.members.has(mercId)) {
-                return squad;
+    
+    // 이벤트 핸들러: 분대원 할당 요청 처리
+    handleAssignMember({ entityId, squadId }) {
+        // 먼저 모든 분대에서 해당 용병을 제거
+        this.squads.forEach(squad => {
+            if (squad.members.has(entityId)) {
+                squad.members.delete(entityId);
             }
+        });
+
+        // 새로운 분대에 할당 (squadId가 null이 아닐 경우)
+        if (squadId && this.squads.has(squadId)) {
+            const squad = this.squads.get(squadId);
+            squad.members.add(entityId);
+            console.log(`${entityId}을(를) ${squadId}에 할당했습니다.`);
+        } else {
+            console.log(`${entityId}을(를) 모든 분대에서 제외했습니다.`);
         }
-        return null;
+
+        // 데이터 변경 이벤트 발행
+        eventManager.publish('squad_data_changed', { squads: this.getSquads() });
     }
 
-    /**
-     * 특정 ID를 가진 분대 객체를 반환합니다.
-     * @param {string} squadId - 조회할 분대의 ID
-     * @returns {object|null} 분대 객체 또는 null
-     */
+    // 특정 분대 정보 가져오기
     getSquad(squadId) {
-        return this.squads[squadId] || null;
+        return this.squads.get(squadId);
+    }
+
+    // 모든 분대 정보 가져오기
+    getSquads() {
+        return Array.from(this.squads.values());
     }
 }
+
+export const squadManager = new SquadManager();
