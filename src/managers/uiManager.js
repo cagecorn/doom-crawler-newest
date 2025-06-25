@@ -970,19 +970,31 @@ export class UIManager {
         const grid = document.getElementById('formation-grid');
         if (grid && this.formationManager) {
             grid.innerHTML = '';
-            this.formationManager.slots.forEach((id, idx) => {
-                const cell = document.createElement('div');
-                cell.className = 'formation-cell';
-                cell.dataset.index = idx;
-                cell.textContent = id ? id : idx + 1;
-                cell.addEventListener('dragover', e => e.preventDefault());
-                cell.addEventListener('drop', e => {
-                    e.preventDefault();
-                    const entityId = e.dataTransfer.getData('text/plain');
-                    this.eventManager?.publish('formation_assign_request', { entityId, slotIndex: idx });
-                });
-                grid.appendChild(cell);
-            });
+
+            const rows = this.formationManager.rows;
+            const cols = this.formationManager.cols;
+            const orientLeft = this.formationManager.orientation === 'LEFT';
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const idx = orientLeft
+                        ? (cols - 1 - c) * rows + r
+                        : c * rows + r;
+                    const id = this.formationManager.slots[idx];
+
+                    const cell = document.createElement('div');
+                    cell.className = 'formation-cell';
+                    cell.dataset.index = idx;
+                    cell.textContent = id ? id : idx + 1;
+                    cell.addEventListener('dragover', e => e.preventDefault());
+                    cell.addEventListener('drop', e => {
+                        e.preventDefault();
+                        const entityId = e.dataTransfer.getData('text/plain');
+                        this.eventManager?.publish('formation_assign_request', { entityId, slotIndex: idx });
+                    });
+                    grid.appendChild(cell);
+                }
+            }
         }
 
         if (!this._squadUIInitialized) {

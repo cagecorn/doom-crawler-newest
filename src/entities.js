@@ -1,6 +1,6 @@
 // src/entities.js
 
-import { MeleeAI, RangedAI } from './ai.js';
+import { MeleeAI, RangedAI, PlayerCombatAI } from './ai.js';
 import { StatManager } from './stats.js';
 
 class Entity {
@@ -221,6 +221,7 @@ export class Player extends Entity {
         this.fullness = this.maxFullness;
         this.consumables = [];
         this.consumableCapacity = 4;
+        this.autoBattle = false;
     }
 
     render(ctx) {
@@ -233,6 +234,17 @@ export class Player extends Entity {
         item.quantity = 1;
         this.consumables.push(item);
         return true;
+    }
+
+    updateAI() {
+        if (!this.autoBattle) {
+            this.ai = null;
+            return;
+        }
+        if (!(this.ai instanceof PlayerCombatAI)) {
+            this.ai = new PlayerCombatAI();
+        }
+        this.ai.updateBaseAI(this);
     }
 
 }
