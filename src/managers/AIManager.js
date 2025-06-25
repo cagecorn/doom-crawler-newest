@@ -4,7 +4,7 @@ export class AIManager {
     constructor(eventManager, squadManager) {
         this.eventManager = eventManager;
         this.squadManager = squadManager;
-        this.decisionEngine = new DecisionEngine();
+        this.decisionEngine = new DecisionEngine(eventManager);
         this.aiEntities = new Set();
     }
 

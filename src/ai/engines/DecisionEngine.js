@@ -2,8 +2,8 @@ import { MistakeEngine } from './MistakeEngine.js';
 import { MbtiEngine } from './MbtiEngine.js';
 
 export class DecisionEngine {
-    constructor() {
-        this.mbtiEngine = new MbtiEngine();
+    constructor(eventManager = null) {
+        this.mbtiEngine = new MbtiEngine(eventManager);
         this.mistakeEngine = new MistakeEngine();
     }
 
