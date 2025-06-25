@@ -118,6 +118,24 @@ body, html {
     margin-bottom: 5px;
 }
 
+.strategy-controls {
+    display: inline-flex;
+    margin-left: 10px;
+}
+
+.strategy-controls button {
+    padding: 2px 8px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background-color: #555;
+    color: white;
+}
+
+.strategy-controls button.active {
+    background-color: #e67e22;
+    border-color: #d35400;
+}
+
 .hp-bar-container {
     width: 100%;
     height: 15px;

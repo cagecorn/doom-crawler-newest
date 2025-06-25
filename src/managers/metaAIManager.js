@@ -94,9 +94,33 @@ export class MetaAIManager extends BaseMetaAI {
                 }
 
                 if (member.ai) {
-                    const action = member.ai.decideAction(member, currentContext);
-                    const finalAction = MistakeEngine.getFinalAction(member, action, currentContext, this.mbtiEngine);
-                    this.executeAction(member, finalAction, currentContext);
+                    let action = { type: 'idle' };
+                    let ctx = currentContext;
+                    if (this.squadManager) {
+                        const squad = this.squadManager.getSquadForMerc(member.id);
+                        const strategy = squad ? squad.strategy : 'aggressive';
+                        if (strategy === 'defensive') {
+                            const player = currentContext.player;
+                            const map = currentContext.mapManager;
+                            const defensiveRadius = (map?.tileSize || 16) * 3;
+                            const dist = Math.hypot(member.x - player.x, member.y - player.y);
+                            if (dist > defensiveRadius) {
+                                action = { type: 'move', target: { x: player.x, y: player.y } };
+                            } else {
+                                ctx = {
+                                    ...currentContext,
+                                    enemies: currentContext.enemies.filter(e => Math.hypot(e.x - player.x, e.y - player.y) <= defensiveRadius)
+                                };
+                            }
+                        }
+                    }
+
+                    if (action.type === 'idle') {
+                        action = member.ai.decideAction(member, ctx);
+                    }
+
+                    const finalAction = MistakeEngine.getFinalAction(member, action, ctx, this.mbtiEngine);
+                    this.executeAction(member, finalAction, ctx);
                 }
             }
         }

@@ -899,9 +899,11 @@ export class UIManager {
 
         const squads = [
             { id: 'unassigned', name: '미편성' },
-            { id: 'squad_1', name: '1분대' },
-            { id: 'squad_2', name: '2분대' },
-            { id: 'squad_3', name: '3분대' }
+            ...Object.entries(this.squadManager?.getSquads() || {}).map(([id, sq]) => ({
+                id,
+                name: sq.name,
+                strategy: sq.strategy
+            }))
         ];
 
         const panelMap = {};
@@ -910,6 +912,35 @@ export class UIManager {
             panel.className = 'squad-panel';
             panel.dataset.squadId = sq.id === 'unassigned' ? '' : sq.id;
             panel.textContent = sq.name;
+
+            if (sq.id !== 'unassigned') {
+                const strategyContainer = document.createElement('div');
+                strategyContainer.className = 'strategy-controls';
+
+                const aggressiveBtn = document.createElement('button');
+                aggressiveBtn.textContent = '공격적';
+                if (sq.strategy === 'aggressive') aggressiveBtn.classList.add('active');
+                aggressiveBtn.onclick = () => {
+                    this.eventManager?.publish('squad_strategy_change_request', {
+                        squadId: sq.id,
+                        newStrategy: 'aggressive'
+                    });
+                };
+
+                const defensiveBtn = document.createElement('button');
+                defensiveBtn.textContent = '방어적';
+                if (sq.strategy === 'defensive') defensiveBtn.classList.add('active');
+                defensiveBtn.onclick = () => {
+                    this.eventManager?.publish('squad_strategy_change_request', {
+                        squadId: sq.id,
+                        newStrategy: 'defensive'
+                    });
+                };
+
+                strategyContainer.appendChild(aggressiveBtn);
+                strategyContainer.appendChild(defensiveBtn);
+                panel.appendChild(strategyContainer);
+            }
             panel.addEventListener('dragover', e => e.preventDefault());
             panel.addEventListener('drop', e => {
                 e.preventDefault();

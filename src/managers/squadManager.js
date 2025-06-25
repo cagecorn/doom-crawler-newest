@@ -42,12 +42,22 @@ export class SquadManager {
         this.eventManager?.publish('squad_data_changed', { squads: this.squads });
     }
 
-    setSquadStrategy({ squadId, newStrategy }) {
-        if (this.squads[squadId]) {
-            this.squads[squadId].strategy = newStrategy;
-            console.log(`${this.squads[squadId].name}\uC758 \uC804\uB825\uC744 ${newStrategy}(\uC73C)\uB85C \uBCC0\uACBD\uD588\uC2B5\uB2C8\uB2E4.`);
+    setSquadStrategy(squadIdOrObj, maybeStrategy) {
+        let squadId = squadIdOrObj;
+        let strategy = maybeStrategy;
+        if (typeof squadIdOrObj === 'object') {
+            squadId = squadIdOrObj.squadId;
+            strategy = squadIdOrObj.newStrategy;
+        }
+        if (this.squads[squadId] && (strategy === 'aggressive' || strategy === 'defensive')) {
+            this.squads[squadId].strategy = strategy;
+            console.log(`${this.squads[squadId].name}\uC758 \uC804\uB825\uC744 ${strategy}(\uC73C)\uB85C \uBCC0\uACBD\uD588\uC2B5\uB2C8\uB2E4.`);
             this.eventManager?.publish('squad_data_changed', { squads: this.squads });
         }
+    }
+
+    getSquads() {
+        return this.squads;
     }
 
     getSquadForMerc(mercId) {
