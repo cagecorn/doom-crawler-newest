@@ -48,6 +48,9 @@ test('간단한 게임 흐름', () => {
     merc.stats.updateEquipmentStats();
     merc.updateAI();
     assert.ok(merc.stats.get('attackPower') > beforeAtk, '장비 장착 후 스탯 증가');
+
+    const flail = itemFactory.create('flail', 0, 0, 1);
+    assert.ok(flail && flail.baseId === 'flail', '플레일 아이템 생성');
 });
 
 });

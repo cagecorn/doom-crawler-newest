@@ -21,6 +21,7 @@ export const LOOT_DROP_TABLE = [
     { id: 'dagger', weight: 5 },
     { id: 'axe', weight: 5 },
     { id: 'mace', weight: 5 },
+    { id: 'flail', weight: 5 },
     { id: 'staff', weight: 5 },
     { id: 'whip', weight: 5 },
     { id: 'scythe', weight: 5 },
