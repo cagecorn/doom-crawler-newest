@@ -163,9 +163,7 @@ export class InventoryManager {
     canPlaceItem(item, locationInfo) {
         if (!item) return true;
         if (locationInfo.slot === 'inventory') return true;
-        const itemType = item.type;
-        const itemSlot = item.slot;
-        return itemType === locationInfo.slot || itemSlot === locationInfo.slot;
+        return this.engine.canEquip(item, locationInfo.slot);
     }
 
     getLocation(info) {

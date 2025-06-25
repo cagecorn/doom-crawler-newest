@@ -168,6 +168,25 @@ export const ITEMS = {
         toughness: 5,
     },
 
+    eager_sword: {
+        name: '열망의 검',
+        type: 'weapon',
+        damageDice: '1d6',
+        tags: ['melee', 'sword'],
+        aspiration: {
+            personality: 'standard',
+            current: 90,
+            max: 100,
+            state: 'inspired',
+        },
+        imageKey: 'sword',
+        stats: { attackPower: 2 },
+        tier: 'rare',
+        durability: 90,
+        weight: 9,
+        toughness: 5,
+    },
+
     estoc: {
         name: '에스톡',
         type: 'weapon',

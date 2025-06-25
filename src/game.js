@@ -218,6 +218,10 @@ export class Game {
         this.equipmentManager.setTagManager(this.tagManager);
 
         this.itemFactory = new ItemFactory(assets);
+        const eagerSword = this.itemFactory.create('eager_sword', 0, 0, this.mapManager.tileSize);
+        if (eagerSword) {
+            this.inventoryManager.getSharedInventory().push(eagerSword);
+        }
         this.pathfindingManager = new PathfindingManager(this.mapManager);
         this.motionManager = new Managers.MotionManager(this.mapManager, this.pathfindingManager);
         this.knockbackEngine = new KnockbackEngine(this.motionManager, this.vfxManager);

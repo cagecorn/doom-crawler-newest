@@ -894,7 +894,9 @@ export class UIManager {
     createSquadManagementUI() {
         const container = this.squadManagementPanel;
         if (!container || !this.mercenaryManager) return;
-        container.innerHTML = '';
+        const content = container.querySelector('.squad-content');
+        if (!content) return;
+        content.innerHTML = '';
 
         const squads = [
             { id: 'unassigned', name: '미편성' },
@@ -947,7 +949,7 @@ export class UIManager {
                 const toSquadId = panel.dataset.squadId || null;
                 this.eventManager?.publish('squad_assign_request', { mercId, toSquadId });
             });
-            container.appendChild(panel);
+            content.appendChild(panel);
             panelMap[sq.id] = panel;
         });
 
@@ -961,7 +963,7 @@ export class UIManager {
                 e.dataTransfer.setData('text/plain', merc.id);
             });
             const squadId = merc.squadId || 'unassigned';
-            const parent = panelMap[squadId] || container;
+            const parent = panelMap[squadId] || content;
             parent.appendChild(el);
         });
 
