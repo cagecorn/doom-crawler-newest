@@ -756,183 +756,70 @@ export class UIManager {
         return maxZ + 1;
     }
 
+    /**
+     * 엔티티의 데이터를 기반으로 캐릭터 정보창의 모든 UI 요소를 동적으로 생성합니다.
+     */
     renderCharacterSheet(entity, panel) {
         if (!panel) return;
-        const nameEl = panel.querySelector('#sheet-character-name');
-        if (nameEl) nameEl.textContent = `${entity.constructor.name} (Lv.${entity.stats.get('level')})`;
 
-        const equipSlots = panel.querySelectorAll('.equip-slot');
-        equipSlots.forEach(slotEl => {
-            const slotName = slotEl.dataset.slot;
+        // 창 제목
+        panel.querySelector('.window-header').textContent = entity.name || '캐릭터 정보';
+
+        // ------ 스탯 리스트 ------
+        const statsContainer = panel.querySelector('.stats-list');
+        if (!statsContainer) return;
+        statsContainer.innerHTML = '';
+
+        const statsToDisplay = [
+            'level', 'strength', 'agility', 'endurance', 'focus', 'intelligence', 'attackPower'
+        ];
+
+        for (const statName of statsToDisplay) {
+            const statValue = entity.stats[statName] ?? entity[statName] ?? 0;
+            const statLabel = this.getStatLabel(statName);
+
+            const statLine = document.createElement('div');
+            statLine.className = 'stat-line';
+            statLine.innerHTML = `<span>${statLabel}:</span><span>${statValue}</span>`;
+
+            if (
+                entity.statPoints > 0 &&
+                ['strength', 'agility', 'endurance', 'focus', 'intelligence'].includes(statName)
+            ) {
+                const button = document.createElement('button');
+                button.className = 'stat-plus';
+                button.textContent = '+';
+                button.onclick = () =>
+                    this.eventManager.publish('stat_increase_request', {
+                        entityId: entity.id,
+                        stat: statName
+                    });
+                statLine.appendChild(button);
+            }
+
+            statsContainer.appendChild(statLine);
+        }
+
+        // ------ 장비 슬롯 ------
+        const equipmentContainer = panel.querySelector('.equipment-slots');
+        equipmentContainer.innerHTML = '';
+
+        for (const slotName in entity.equipment) {
+            const slotEl = document.createElement('div');
+            slotEl.className = 'equip-slot';
+            slotEl.dataset.slot = slotName;
+
+            const slotLabel = document.createElement('span');
+            slotLabel.textContent = this.getSlotLabel(slotName);
+            slotEl.appendChild(slotLabel);
+
             const item = entity.equipment[slotName];
-            slotEl.innerHTML = '';
-            slotEl.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: slotName });
-
             if (item) {
-                const sourceInfo = { entityId: entity.id, slot: slotName };
-                slotEl.dataset.sourceInfo = JSON.stringify(sourceInfo);
                 this.renderItemInSlot(slotEl, item);
             }
 
             this.setupDropTarget(slotEl);
-        });
-
-        const invBox = panel.querySelector('.sheet-inventory');
-        if (invBox) {
-            invBox.innerHTML = '';
-            (entity.consumables || entity.inventory || []).forEach((item, idx) => {
-                const el = document.createElement('div');
-                el.className = 'inventory-slot';
-                el.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: 'inventory', index: idx });
-                if (item) {
-                    el.dataset.sourceInfo = JSON.stringify({ entityId: entity.id, slot: 'inventory', index: idx });
-                    this.renderItemInSlot(el, item);
-                }
-                this.setupDropTarget(el);
-                invBox.appendChild(el);
-            });
-        }
-
-        const skillBox = panel.querySelector('.sheet-skills');
-        if (skillBox) {
-            skillBox.innerHTML = '';
-            (entity.skills || []).forEach(skillId => {
-                const skill = SKILLS[skillId];
-                if (!skill) return;
-                const div = document.createElement('div');
-                div.className = 'skill-slot';
-                div.style.backgroundImage = `url(${skill.icon})`;
-                div.style.backgroundSize = 'cover';
-                this._attachTooltip(div, `<strong>${skill.name}</strong><br>${skill.description}`);
-                skillBox.appendChild(div);
-            });
-        }
-
-        const page1 = panel.querySelector('#stat-page-1');
-        if (page1) {
-            page1.innerHTML = '';
-            const statsToShow = ['strength','agility','endurance','focus','intelligence','movement','maxHp','maxMp','attackPower','movementSpeed','visionRange','hpRegen','mpRegen'];
-            statsToShow.forEach(stat => {
-                const line = document.createElement('div');
-                line.className = 'stat-line';
-                const displayName = this.statDisplayNames[stat] || stat;
-                if (stat === 'attackPower') {
-                    const base = entity.stats.get(stat);
-                    const bonus = entity.damageBonus || 0;
-                    const bonusText = bonus > 0 ? ` <span style="color:red">+${bonus}</span>` : '';
-                    line.innerHTML = `<span>${displayName}:</span> <span>${base}${bonusText}</span>`;
-                } else {
-                    line.innerHTML = `<span>${displayName}:</span> <span>${entity.stats.get(stat)}</span>`;
-                }
-                page1.appendChild(line);
-            });
-
-            if (entity.effects && entity.effects.length > 0) {
-                const effLine = document.createElement('div');
-                effLine.className = 'stat-line';
-                const list = entity.effects.map(e => `${e.name}(${Math.ceil(e.remaining / 100)}턴)`);
-                effLine.textContent = `effects: ${list.join(', ')}`;
-                page1.appendChild(effLine);
-            }
-
-            if (entity.fullness !== undefined) {
-                const fLine = document.createElement('div');
-                fLine.className = 'stat-line';
-                fLine.innerHTML = `<span>fullness:</span> <span>${entity.fullness.toFixed(1)} / ${entity.maxFullness}</span>`;
-                page1.appendChild(fLine);
-            }
-            if (entity.affinity !== undefined) {
-                const aLine = document.createElement('div');
-                aLine.className = 'stat-line';
-                aLine.innerHTML = `<span>affinity:</span> <span>${entity.affinity.toFixed(1)} / ${entity.maxAffinity}</span>`;
-                page1.appendChild(aLine);
-            }
-
-            if (entity.properties && entity.properties.mbti) {
-                const mLine = document.createElement('div');
-                mLine.className = 'stat-line';
-                const span = document.createElement('span');
-                span.textContent = entity.properties.mbti;
-                this._attachTooltip(span, this._getMBTITooltip(entity.properties.mbti));
-                mLine.innerHTML = 'MBTI: ';
-                mLine.appendChild(span);
-                page1.appendChild(mLine);
-            }
-
-            if (entity.properties && entity.properties.faith) {
-                const fLine2 = document.createElement('div');
-                fLine2.className = 'stat-line';
-                const span2 = document.createElement('span');
-                const fId2 = entity.properties.faith;
-                span2.textContent = FAITHS[fId2].name;
-                this._attachTooltip(span2, this._getFaithTooltip(fId2));
-                fLine2.innerHTML = 'faith: ';
-                fLine2.appendChild(span2);
-                page1.appendChild(fLine2);
-            }
-
-            if (entity.properties && Array.isArray(entity.properties.traits)) {
-                const tLine = document.createElement('div');
-                tLine.className = 'stat-line';
-                tLine.innerHTML = 'traits: ';
-                entity.properties.traits.forEach(id => {
-                    const span = document.createElement('span');
-                    span.textContent = TRAITS[id]?.name || id;
-                    this._attachTooltip(span, this._getTraitTooltip(id));
-                    tLine.appendChild(span);
-                    tLine.appendChild(document.createTextNode(' '));
-                });
-                page1.appendChild(tLine);
-            }
-        }
-
-        const page2 = panel.querySelector('#stat-page-2');
-        if (page2) {
-            page2.innerHTML = '<h3>무기 숙련도</h3>';
-            const proficiencyList = document.createElement('div');
-            proficiencyList.className = 'proficiency-list';
-
-            for (const weaponType in entity.proficiency) {
-                const prof = entity.proficiency[weaponType];
-                const line = document.createElement('div');
-                line.className = 'proficiency-line';
-                const expRatio = (prof.exp / prof.expNeeded) * 100;
-                line.innerHTML = `
-                    <span class="prof-name">${weaponType}</span>
-                    <span class="prof-level">Lv.${prof.level}</span>
-                    <div class="prof-exp-bar-container">
-                        <div class="prof-exp-bar-fill" style="width: ${expRatio}%"></div>
-                        <span class="prof-exp-text">${prof.exp}/${prof.expNeeded}</span>
-                    </div>
-                `;
-                proficiencyList.appendChild(line);
-            }
-            page2.appendChild(proficiencyList);
-
-            const resistHeader = document.createElement('h3');
-            resistHeader.style.marginTop = '15px';
-            resistHeader.textContent = '상태이상 저항';
-            page2.appendChild(resistHeader);
-
-            const resistList = document.createElement('div');
-            resistList.className = 'proficiency-list';
-
-            const resistStats = [
-                'poisonResist', 'freezeResist', 'sleepResist', 'paralysisResist',
-                'burnResist', 'bleedResist', 'petrifyResist', 'silenceResist',
-                'blindResist', 'fearResist', 'confusionResist', 'charmResist', 'movementResist'
-            ];
-
-            resistStats.forEach(stat => {
-                const value = entity.stats.get(stat) * 100;
-                if (value === 0) return;
-                const line = document.createElement('div');
-                line.className = 'stat-line';
-                const name = this.statDisplayNames[stat] || stat.replace('Resist', '');
-                line.innerHTML = `<span>${name}:</span> <span>${value.toFixed(0)}%</span>`;
-                resistList.appendChild(line);
-            });
-            page2.appendChild(resistList);
+            equipmentContainer.appendChild(slotEl);
         }
     }
 
@@ -1047,5 +934,34 @@ export class UIManager {
             this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
             this._squadUIInitialized = true;
         }
+    }
+
+    // 스탯 이름을 한국어로 변환합니다.
+    getStatLabel(statName) {
+        const labels = {
+            level: '✨ 레벨',
+            strength: '💪 힘',
+            agility: '🏃 민첩',
+            endurance: '🛡 체력',
+            focus: '🔮 집중',
+            intelligence: '📖 지능',
+            attackPower: '⚔️ 공격력'
+        };
+        return labels[statName] || statName;
+    }
+
+    // 장비 슬롯 이름을 한국어로 변환합니다.
+    getSlotLabel(slotName) {
+        const labels = {
+            main_hand: '주무기',
+            off_hand: '보조장비',
+            armor: '갑옷',
+            helmet: '투구',
+            gloves: '장갑',
+            boots: '신발',
+            accessory1: '장신구1',
+            accessory2: '장신구2'
+        };
+        return labels[slotName] || slotName;
     }
 }
