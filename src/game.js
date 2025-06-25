@@ -134,7 +134,8 @@ export class Game {
         this.mapManager = new AquariumMapManager();
         const mapPixelWidth = this.mapManager.width * this.mapManager.tileSize;
         const mapPixelHeight = this.mapManager.height * this.mapManager.tileSize;
-        this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight);
+        const laneCenters = this.mapManager.getLaneCenters ? this.mapManager.getLaneCenters() : null;
+        this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight, laneCenters);
         this.laneRenderManager = new LaneRenderManager(this.laneManager);
         this.saveLoadManager = new SaveLoadManager();
         this.turnManager = new TurnManager();
@@ -351,7 +352,12 @@ export class Game {
         this.monsterGroup = this.metaAIManager.createGroup('dungeon_monsters', STRATEGY.AGGRESSIVE);
 
         // === 2. 플레이어 생성 ===
-        const startPos = this.mapManager.getRandomFloorPosition() || { x: this.mapManager.tileSize, y: this.mapManager.tileSize };
+        let startPos;
+        if (typeof this.mapManager.getPlayerStartingPosition === 'function') {
+            startPos = this.mapManager.getPlayerStartingPosition();
+        } else {
+            startPos = this.mapManager.getRandomFloorPosition() || { x: this.mapManager.tileSize, y: this.mapManager.tileSize };
+        }
         const player = this.factory.create('player', {
             x: startPos.x,
             y: startPos.y,
@@ -395,51 +401,53 @@ export class Game {
         this.worldEngine.setPlayer(player);
 
         // 초기 아이템 배치
-        const potion = this.itemFactory.create(
-                                'potion',
-                                player.x + this.mapManager.tileSize,
-                                player.y,
-                                this.mapManager.tileSize);
-        const dagger = this.itemFactory.create('short_sword',
-                                player.x - this.mapManager.tileSize,
-                                player.y,
-                                this.mapManager.tileSize);
-        const bow = this.itemFactory.create('long_bow',
-                                player.x,
-                                player.y + this.mapManager.tileSize,
-                                this.mapManager.tileSize);
-        const violinBow = this.itemFactory.create('violin_bow',
-                                player.x + this.mapManager.tileSize,
-                                player.y - this.mapManager.tileSize,
-                                this.mapManager.tileSize);
-        const plateArmor = this.itemFactory.create('plate_armor',
-                                player.x + this.mapManager.tileSize * 2,
-                                player.y - this.mapManager.tileSize,
-                                this.mapManager.tileSize);
-        const foxEgg = this.itemFactory.create('pet_fox',
-                                player.x - this.mapManager.tileSize * 2,
-                                player.y,
-                                this.mapManager.tileSize);
-        const foxCharm = this.itemFactory.create('fox_charm',
-                                player.x,
-                                player.y - this.mapManager.tileSize * 2,
-                                this.mapManager.tileSize);
-        // --- 테스트용 휘장 아이템 4종 배치 ---
-        const emblemGuardian = this.itemFactory.create('emblem_guardian', player.x + 64, player.y + 64, this.mapManager.tileSize);
-        const emblemDestroyer = this.itemFactory.create('emblem_destroyer', player.x - 64, player.y + 64, this.mapManager.tileSize);
-        const emblemDevotion = this.itemFactory.create('emblem_devotion', player.x + 64, player.y - 64, this.mapManager.tileSize);
-        const emblemConductor = this.itemFactory.create('emblem_conductor', player.x - 64, player.y - 64, this.mapManager.tileSize);
-        this.itemManager.addItem(potion);
-        if (dagger) this.itemManager.addItem(dagger);
-        if (bow) this.itemManager.addItem(bow);
-        if (violinBow) this.itemManager.addItem(violinBow);
-        if (plateArmor) this.itemManager.addItem(plateArmor);
-        if (foxEgg) this.itemManager.addItem(foxEgg);
-        if (foxCharm) this.itemManager.addItem(foxCharm);
-        if(emblemGuardian) this.itemManager.addItem(emblemGuardian);
-        if(emblemDestroyer) this.itemManager.addItem(emblemDestroyer);
-        if(emblemDevotion) this.itemManager.addItem(emblemDevotion);
-        if(emblemConductor) this.itemManager.addItem(emblemConductor);
+        if (this.mapManager.name !== 'aquarium') {
+            const potion = this.itemFactory.create(
+                                    'potion',
+                                    player.x + this.mapManager.tileSize,
+                                    player.y,
+                                    this.mapManager.tileSize);
+            const dagger = this.itemFactory.create('short_sword',
+                                    player.x - this.mapManager.tileSize,
+                                    player.y,
+                                    this.mapManager.tileSize);
+            const bow = this.itemFactory.create('long_bow',
+                                    player.x,
+                                    player.y + this.mapManager.tileSize,
+                                    this.mapManager.tileSize);
+            const violinBow = this.itemFactory.create('violin_bow',
+                                    player.x + this.mapManager.tileSize,
+                                    player.y - this.mapManager.tileSize,
+                                    this.mapManager.tileSize);
+            const plateArmor = this.itemFactory.create('plate_armor',
+                                    player.x + this.mapManager.tileSize * 2,
+                                    player.y - this.mapManager.tileSize,
+                                    this.mapManager.tileSize);
+            const foxEgg = this.itemFactory.create('pet_fox',
+                                    player.x - this.mapManager.tileSize * 2,
+                                    player.y,
+                                    this.mapManager.tileSize);
+            const foxCharm = this.itemFactory.create('fox_charm',
+                                    player.x,
+                                    player.y - this.mapManager.tileSize * 2,
+                                    this.mapManager.tileSize);
+            // --- 테스트용 휘장 아이템 4종 배치 ---
+            const emblemGuardian = this.itemFactory.create('emblem_guardian', player.x + 64, player.y + 64, this.mapManager.tileSize);
+            const emblemDestroyer = this.itemFactory.create('emblem_destroyer', player.x - 64, player.y + 64, this.mapManager.tileSize);
+            const emblemDevotion = this.itemFactory.create('emblem_devotion', player.x + 64, player.y - 64, this.mapManager.tileSize);
+            const emblemConductor = this.itemFactory.create('emblem_conductor', player.x - 64, player.y - 64, this.mapManager.tileSize);
+            this.itemManager.addItem(potion);
+            if (dagger) this.itemManager.addItem(dagger);
+            if (bow) this.itemManager.addItem(bow);
+            if (violinBow) this.itemManager.addItem(violinBow);
+            if (plateArmor) this.itemManager.addItem(plateArmor);
+            if (foxEgg) this.itemManager.addItem(foxEgg);
+            if (foxCharm) this.itemManager.addItem(foxCharm);
+            if(emblemGuardian) this.itemManager.addItem(emblemGuardian);
+            if(emblemDestroyer) this.itemManager.addItem(emblemDestroyer);
+            if(emblemDevotion) this.itemManager.addItem(emblemDevotion);
+            if(emblemConductor) this.itemManager.addItem(emblemConductor);
+        }
 
         // === 3. 몬스터 생성 ===
         const monsters = [];

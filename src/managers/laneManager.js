@@ -5,11 +5,15 @@
  * 이 데이터는 나중에 맵 파일에서 직접 불러오도록 확장할 수 있습니다.
  */
 export class LaneManager {
-    constructor(mapWidth, mapHeight) {
+    constructor(mapWidth, mapHeight, lanePositions = null) {
         // 맵 크기에 따라 동적으로 웨이포인트를 설정합니다.
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
-        const laneY = {
+        const laneY = lanePositions ? {
+            TOP: lanePositions[0],
+            MID: lanePositions[1],
+            BOTTOM: lanePositions[2],
+        } : {
             TOP: mapHeight * 0.2,
             MID: mapHeight * 0.5,
             BOTTOM: mapHeight * 0.8,
