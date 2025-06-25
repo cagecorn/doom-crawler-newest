@@ -1,13 +1,11 @@
-import { eventManager } from './eventManager.js';
-
 class FormationManager {
-    constructor(cols, rows, tileSize) {
+    constructor(cols, rows, tileSize, eventManager = null) {
         this.cols = cols;
         this.rows = rows;
         this.tileSize = tileSize; // 타일 크기 (예: 64)
         this.slots = new Array(cols * rows).fill(null); // 각 슬롯에는 분대(squad) 객체가 저장됨
-        
-        eventManager.subscribe('formation_assign_request', this.handleAssignSquad.bind(this));
+        this.eventManager = eventManager;
+        this.eventManager?.subscribe('formation_assign_request', this.handleAssignSquad.bind(this));
     }
     
     handleAssignSquad({ squadId, slotIndex }) {
@@ -23,7 +21,7 @@ class FormationManager {
         this.slots[slotIndex] = { id: squadId }; // 임시 객체, 실제로는 squad 객체여야 함
 
         console.log(`${squadId} 분대를 슬롯 ${slotIndex}에 배치 요청`);
-        eventManager.publish('formation_data_changed', { slots: this.slots });
+        this.eventManager?.publish('formation_data_changed', { slots: this.slots });
     }
 
     getSlotPosition(index) {
