@@ -19,6 +19,19 @@ describe('Aquarium', () => {
         assert.ok(wallCount > 0 && wallCount < m.width * m.height, 'maze should contain walls and floors');
     });
 
+    test('Jungle corridors carved between lanes', () => {
+        const m = new AquariumMapManager(2);
+        const half = Math.floor(m.corridorWidth / 2);
+        const topRegion = { start: m.lanes[0] + half + 1, end: m.lanes[1] - half - 1 };
+        let floorTiles = 0;
+        for (let y = topRegion.start; y <= topRegion.end; y++) {
+            for (let x = m.openArea; x < m.width - m.openArea; x++) {
+                if (m.map[y][x] === m.tileTypes.FLOOR) floorTiles++;
+            }
+        }
+        assert.ok(floorTiles > 0, 'no jungle paths found between lanes');
+    });
+
     test('Manager adds feature and inspector passes', () => {
         const eventManager = new EventManager();
         const monsterManager = new MonsterManager(0, new AquariumMapManager(), assets, eventManager, new CharacterFactory(assets));
