@@ -57,6 +57,9 @@ export class AquariumMapManager extends MapManager {
             }
         }
 
+        // create entrances from each lane into the jungle areas
+        this._addJungleEntrances(map, lanes, half);
+
         return map;
     }
 
@@ -182,6 +185,38 @@ export class AquariumMapManager extends MapManager {
     _isValidMazePositionCustom(x, y, width, minY, maxY) {
         const margin = Math.ceil(width / 2);
         return x >= margin && x < this.width - margin && y >= minY && y < maxY;
+    }
+
+    _addJungleEntrances(map, lanes, half) {
+        const gateWidth = this.jungleWidth;
+        const gateHalf = Math.floor(gateWidth / 2);
+        const startX = this.openArea + gateHalf + 1;
+        const endX = this.width - this.openArea - gateHalf - 1;
+
+        for (let i = 0; i < lanes.length; i++) {
+            const laneY = lanes[i];
+            const sides = [];
+            if (i > 0) sides.push(-1);     // entrance to jungle above
+            if (i < lanes.length - 1) sides.push(1); // entrance to jungle below
+            if (sides.length === 0) continue;
+
+            const entranceCount = 3 + Math.floor(this._random() * 3); // 3-5
+            for (let e = 0; e < entranceCount; e++) {
+                const side = sides[e % sides.length];
+                const wallY = laneY + side * (half + 1);
+                const jungleY = wallY + side; // one tile into jungle
+                const x = Math.floor(this._random() * (endX - startX + 1)) + startX;
+
+                for (let dx = -gateHalf; dx <= gateHalf; dx++) {
+                    if (map[wallY] && map[wallY][x + dx] !== undefined) {
+                        map[wallY][x + dx] = this.tileTypes.FLOOR;
+                    }
+                    if (map[jungleY] && map[jungleY][x + dx] !== undefined) {
+                        map[jungleY][x + dx] = this.tileTypes.FLOOR;
+                    }
+                }
+            }
+        }
     }
 
     // disable room generation entirely

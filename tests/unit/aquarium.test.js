@@ -64,4 +64,29 @@ describe('Aquarium', () => {
         assert.strictEqual(stats.get('maxHp'), (10 + base.endurance * 5) * 2);
         assert.ok(Math.abs(stats.get('attackPower')) < 0.001);
     });
+
+    test('Lanes have multiple jungle entrances', () => {
+        const m = new AquariumMapManager(3);
+        const half = Math.floor(m.corridorWidth / 2);
+        for (let i = 0; i < m.lanes.length; i++) {
+            const laneY = m.lanes[i];
+            let entrances = 0;
+            const sides = [];
+            if (i > 0) sides.push(-1);
+            if (i < m.lanes.length - 1) sides.push(1);
+            for (const dir of sides) {
+                const y = laneY + dir * (half + 1);
+                const inside = y + dir;
+                let lastWasWall = true;
+                for (let x = m.openArea; x < m.width - m.openArea; x++) {
+                    const wall = m.map[y][x] === m.tileTypes.WALL;
+                    if (!wall && lastWasWall && m.map[inside][x] === m.tileTypes.FLOOR && m.map[y - dir][x] === m.tileTypes.FLOOR) {
+                        entrances++;
+                    }
+                    lastWasWall = wall;
+                }
+            }
+            assert.ok(entrances >= 3, `lane ${i} has too few entrances`);
+        }
+    });
 });
