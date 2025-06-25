@@ -119,12 +119,13 @@ class InventoryEngine {
  * InventoryManager는 모든 인벤토리 관련 UI 상호작용과 로직을 총괄합니다.
  */
 export class InventoryManager {
-    constructor(eventManager) {
+    constructor(eventManager, getEntityById) {
         this.eventManager = eventManager;
+        this.getEntityById = getEntityById;
         this.engine = new InventoryEngine(eventManager);
-        this.sharedInventory = createGridInventory(8, 10); // 8x10 크기의 공용 인벤토리
-        
-        this.eventManager.subscribe('ui_equip_request', (data) => this.handleEquipRequest(data));
+        this.sharedInventory = createGridInventory(10, 8); // 10x8 크기
+
+        this.eventManager.subscribe('ui_item_move_request', (data) => this.handleItemMove(data));
         this.eventManager.subscribe('inventory_updated', (data) => this.handleInventoryUpdated(data));
         console.log("[InventoryManager] Initialized with Shared Inventory");
     }
@@ -133,9 +134,14 @@ export class InventoryManager {
      * UI로부터 아이템 이동/장착 요청을 받았을 때 처리하는 핸들러입니다.
      * @param {object} data - { from: { entity, slot, index }, to: { entity, slot, index } }
      */
-    handleEquipRequest(data) {
-        const { from, to } = data;
-        this.engine.moveItem(from, to);
+    handleItemMove({ from, to }) {
+        const fromEntity = from.entityId === 'shared' ? this.sharedInventory : this.getEntityById(from.entityId);
+        const toEntity = to.entityId === 'shared' ? this.sharedInventory : this.getEntityById(to.entityId);
+
+        if (!fromEntity || !toEntity) return;
+
+        this.engine.moveItem({ entity: fromEntity, slot: from.slot, index: from.index },
+                             { entity: toEntity, slot: to.slot, index: to.index });
     }
 
     /**
