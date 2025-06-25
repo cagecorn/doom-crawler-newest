@@ -16,6 +16,7 @@ import { ItemAIManager } from './item-ai-manager.js';
 import { MotionManager } from './motionManager.js';
 import { MovementManager } from './movementManager.js';
 import { LaneManager } from './laneManager.js';
+import { LaneRenderManager } from './laneRenderManager.js';
 import { EquipmentRenderManager } from './equipmentRenderManager.js';
 import { ParticleDecoratorManager } from './particleDecoratorManager.js';
 import { TraitManager } from './traitManager.js';
@@ -60,6 +61,7 @@ export {
     MotionManager,
     MovementManager,
     LaneManager,
+    LaneRenderManager,
     EquipmentRenderManager,
     ParticleDecoratorManager,
     TraitManager,

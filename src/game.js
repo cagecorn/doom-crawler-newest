@@ -50,6 +50,7 @@ import { CinematicManager } from './managers/cinematicManager.js';
 import { ItemTracker } from './managers/itemTracker.js';
 import { findEntitiesInRadius } from './utils/entityUtils.js';
 import { LaneManager } from './managers/laneManager.js';
+import { LaneRenderManager } from './managers/laneRenderManager.js';
 import { LanePusherAI } from './ai/archetypes.js';
 
 export class Game {
@@ -133,6 +134,7 @@ export class Game {
         const mapPixelWidth = this.mapManager.width * this.mapManager.tileSize;
         const mapPixelHeight = this.mapManager.height * this.mapManager.tileSize;
         this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight);
+        this.laneRenderManager = new LaneRenderManager(this.laneManager);
         this.saveLoadManager = new SaveLoadManager();
         this.turnManager = new TurnManager();
         this.narrativeManager = new NarrativeManager();
@@ -1552,6 +1554,7 @@ export class Game {
         const contexts = layerManager.contexts;
 
         mapManager.render(contexts.mapBase, contexts.mapDecor, assets);
+        this.laneRenderManager.render(contexts.mapDecor);
         itemManager.render(contexts.mapDecor);
 
         // buffManager.renderGroundAuras(contexts.groundFx, ...); // (미래 구멍)
