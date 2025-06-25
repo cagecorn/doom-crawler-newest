@@ -286,6 +286,12 @@ body, html {
     gap: 20px;
 }
 
+.inventory-grid {
+    display: grid;
+    gap: 5px;
+    padding: 5px;
+}
+
 .inventory-left {
     flex-basis: 250px;
     flex-shrink: 0;

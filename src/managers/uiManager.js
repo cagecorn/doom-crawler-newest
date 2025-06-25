@@ -50,12 +50,9 @@ export class UIManager {
         this.equipTargetList = document.getElementById('equipment-target-list');
         // 인벤토리 패널 요소
         this.inventoryPanel = document.getElementById('inventory-panel');
-        this.equippedItemsContainer = document.getElementById('equipped-items');
-        this.inventoryListContainer = document.getElementById('inventory-list');
-        this.inventoryFilters = document.querySelectorAll('#inventory-filters .inv-filter-btn');
+        this.inventoryGrid = document.querySelector('#inventory-panel .inventory-grid');
         this.squadManagementPanel = document.getElementById('squad-management-ui');
         this._squadUIInitialized = false;
-        this.currentInventoryFilter = 'all';
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetTemplate = document.getElementById('character-sheet-template');
         this.uiContainer = document.getElementById('ui-container');
@@ -70,6 +67,7 @@ export class UIManager {
         this._isInitialized = false;
         this.particleDecoratorManager = null;
         this.vfxManager = null;
+        this.getSharedInventory = null;
         this._pendingUnequip = null;
 
         this.draggables = [];
@@ -151,12 +149,9 @@ export class UIManager {
                             { entity: owner, slot },
                             { entity: g.gameState.player, slot: 'inventory' }
                         );
-                        if (owner === g.gameState.player) {
-                            this.renderInventory(g.gameState);
-                        } else {
+                        if (owner !== g.gameState.player) {
                             const panel = this.openCharacterSheets.get(owner.id);
                             if (panel) this.renderCharacterSheet(owner, panel);
-                            this.renderInventory(g.gameState);
                         }
                     }
                 }
@@ -164,16 +159,7 @@ export class UIManager {
             };
         }
 
-        if (this.inventoryFilters) {
-            this.inventoryFilters.forEach(btn => {
-                btn.onclick = () => {
-                    this.inventoryFilters.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    this.currentInventoryFilter = btn.dataset.filter || 'all';
-                    if (this.gameState) this.renderInventory(this.gameState);
-                };
-            });
-        }
+
 
         // 기존 단일 캐릭터 시트 탭 로직은 동적 패널 생성 시에 처리됩니다.
         this._isInitialized = true;
@@ -197,9 +183,9 @@ export class UIManager {
 
 
     showPanel(panelId) {
-        if (panelId === 'inventory' && this.inventoryPanel) {
+        if ((panelId === 'inventory' || panelId === 'inventory-panel') && this.inventoryPanel) {
             this.inventoryPanel.classList.remove('hidden');
-            if (this.gameState) this.renderInventory(this.gameState);
+            this.renderSharedInventory();
         } else if (panelId === 'mercenary-panel' && this.mercenaryPanel) {
             this.mercenaryPanel.classList.remove('hidden');
             if (this.mercenaryManager) this.renderMercenaryList();
@@ -210,7 +196,7 @@ export class UIManager {
     }
 
     hidePanel(panelId) {
-        if (panelId === 'inventory' && this.inventoryPanel) {
+        if ((panelId === 'inventory' || panelId === 'inventory-panel') && this.inventoryPanel) {
             this.inventoryPanel.classList.add('hidden');
         } else if (panelId === 'mercenary-panel' && this.mercenaryPanel) {
             this.mercenaryPanel.classList.add('hidden');
@@ -222,24 +208,48 @@ export class UIManager {
 
     renderInventory(gameState) {
         const player = gameState.player;
-        this.equippedItemsContainer.innerHTML = '';
-        for (const slot in player.equipment) {
-            const item = player.equipment[slot];
-            const slotDiv = this.createSlotElement(player, slot, item);
-            this.equippedItemsContainer.appendChild(slotDiv);
+        if (this.equippedItemsContainer) {
+            this.equippedItemsContainer.innerHTML = '';
+            for (const slot in player.equipment) {
+                const item = player.equipment[slot];
+                const slotDiv = this.createSlotElement(player, slot, item);
+                this.equippedItemsContainer.appendChild(slotDiv);
+            }
         }
 
-        this.inventoryListContainer.innerHTML = '';
-        const inv = gameState.inventory;
-        for (let i = 0; i < inv.length; i++) {
-            const item = inv[i];
-            let showItem = item;
-            if (item && this.currentInventoryFilter !== 'all') {
-                const match = item.type === this.currentInventoryFilter || item.tags?.includes(this.currentInventoryFilter);
-                if (!match) showItem = null;
+        if (this.inventoryListContainer) {
+            this.inventoryListContainer.innerHTML = '';
+            const inv = gameState.inventory;
+            for (let i = 0; i < inv.length; i++) {
+                const item = inv[i];
+                const slotDiv = this.createSlotElement(player, 'inventory', item, i);
+                this.inventoryListContainer.appendChild(slotDiv);
             }
-            const slotDiv = this.createSlotElement(player, 'inventory', showItem, i);
-            this.inventoryListContainer.appendChild(slotDiv);
+        }
+    }
+
+    // 공유 인벤토리 패널을 격자 형태로 렌더링합니다.
+    renderSharedInventory() {
+        const inventoryData = this.getSharedInventory?.();
+        if (!inventoryData || !this.inventoryGrid) return;
+
+        const inventoryGrid = this.inventoryGrid;
+        inventoryGrid.innerHTML = '';
+        inventoryGrid.style.gridTemplateColumns = `repeat(${inventoryData.cols || 10}, 1fr)`;
+
+        for (let i = 0; i < inventoryData.slots.length; i++) {
+            const slotEl = document.createElement('div');
+            slotEl.classList.add('inventory-slot');
+            slotEl.dataset.targetInfo = JSON.stringify({ entityId: 'shared', slot: 'inventory', index: i });
+
+            const item = inventoryData.slots[i];
+            if (item) {
+                slotEl.dataset.sourceInfo = JSON.stringify({ entityId: 'shared', slot: 'inventory', index: i });
+                this.renderItemInSlot(slotEl, item);
+            }
+
+            this.setupDropTarget(slotEl);
+            inventoryGrid.appendChild(slotEl);
         }
     }
 
@@ -641,7 +651,7 @@ export class UIManager {
                     slot: slotType,
                     index: inventoryIndex
                 };
-                this.eventManager?.publish('ui_equip_request', { from, to });
+                this.eventManager?.publish('ui_item_move_request', { from, to });
             } catch (_) {}
         });
 
@@ -751,27 +761,34 @@ export class UIManager {
         const nameEl = panel.querySelector('#sheet-character-name');
         if (nameEl) nameEl.textContent = `${entity.constructor.name} (Lv.${entity.stats.get('level')})`;
 
-        const equipBox = panel.querySelector('.sheet-equipment');
-        if (equipBox) {
-            equipBox.innerHTML = '';
-            const slots = ['main_hand','off_hand','armor','helmet','gloves','boots','accessory1','accessory2'];
-            slots.forEach(slot => {
-                const item = entity.equipment ? entity.equipment[slot] : null;
-                const el = this.createSlotElement(entity, slot, item);
-                if (!entity.isPlayer && item) {
-                    el.style.cursor = 'pointer';
-                    el.title = '클릭하여 해제';
-                    el.onclick = () => this._showUnequipPanel(entity, slot);
-                }
-                equipBox.appendChild(el);
-            });
-        }
+        const equipSlots = panel.querySelectorAll('.equip-slot');
+        equipSlots.forEach(slotEl => {
+            const slotName = slotEl.dataset.slot;
+            const item = entity.equipment[slotName];
+            slotEl.innerHTML = '';
+            slotEl.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: slotName });
+
+            if (item) {
+                const sourceInfo = { entityId: entity.id, slot: slotName };
+                slotEl.dataset.sourceInfo = JSON.stringify(sourceInfo);
+                this.renderItemInSlot(slotEl, item);
+            }
+
+            this.setupDropTarget(slotEl);
+        });
 
         const invBox = panel.querySelector('.sheet-inventory');
         if (invBox) {
             invBox.innerHTML = '';
             (entity.consumables || entity.inventory || []).forEach((item, idx) => {
-                const el = this.createSlotElement(entity, 'inventory', item, idx);
+                const el = document.createElement('div');
+                el.className = 'inventory-slot';
+                el.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: 'inventory', index: idx });
+                if (item) {
+                    el.dataset.sourceInfo = JSON.stringify({ entityId: entity.id, slot: 'inventory', index: idx });
+                    this.renderItemInSlot(el, item);
+                }
+                this.setupDropTarget(el);
                 invBox.appendChild(el);
             });
         }
@@ -919,36 +936,36 @@ export class UIManager {
         }
     }
 
-    renderDraggableItem(slotEl, item, sourceInfo) {
-        const img = document.createElement('img');
-        img.src = item.iconPath || item.image?.src || '';
-        slotEl.appendChild(img);
+    // 슬롯에 아이템을 표시하고 드래그 기능을 부여합니다.
+    renderItemInSlot(slotEl, item) {
+        slotEl.innerHTML = `<img src="${item.iconPath || item.image?.src || ''}" alt="${item.name}" title="${item.name}">`;
+        slotEl.classList.add('has-item');
         slotEl.draggable = true;
         slotEl.ondragstart = (e) => {
-            e.dataTransfer.setData('application/json', JSON.stringify({ item, source: { entity: sourceInfo.entity, slot: sourceInfo.slot, index: sourceInfo.index } }));
+            e.dataTransfer.setData('application/json', slotEl.dataset.sourceInfo);
             e.dataTransfer.effectAllowed = 'move';
         };
+        slotEl.ondragend = () => {};
     }
 
-    setupDropTarget(slotEl, entity) {
+    setupDropTarget(slotEl) {
         slotEl.ondragover = (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
             slotEl.classList.add('drag-over');
         };
         slotEl.ondragleave = () => slotEl.classList.remove('drag-over');
         slotEl.ondrop = (e) => {
             e.preventDefault();
             slotEl.classList.remove('drag-over');
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            const from = data.source;
-            const to = {
-                entity: entity,
-                slot: slotEl.dataset.slot,
-                index: parseInt(slotEl.dataset.index, 10)
-            };
-            from.entity = this.getEntityById(from.entity.id);
-            this.eventManager.publish('ui_equip_request', { from, to });
+            const fromInfo = JSON.parse(e.dataTransfer.getData('application/json'));
+            const toInfo = JSON.parse(e.currentTarget.dataset.targetInfo);
+
+            if (!fromInfo || !toInfo) {
+                console.error("드래그 앤 드롭 정보가 부족합니다.");
+                return;
+            }
+
+            this.eventManager.publish('ui_item_move_request', { from: fromInfo, to: toInfo });
         };
     }
 

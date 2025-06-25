@@ -13,7 +13,7 @@
 </head>
 <body>
     <div id="top-menu-bar" class="ui-frame">
-        <button class="menu-btn" data-panel-id="inventory">공동 인벤토리</button>
+        <button class="menu-btn" data-panel-id="inventory-panel">공동 인벤토리</button>
         <button class="menu-btn" data-panel-id="mercenary-panel">용병 부대</button>
         <button class="menu-btn" data-panel-id="squad-management-ui">부대 편성</button>
         <button class="menu-btn" data-panel-id="character-sheet-panel">플레이어 정보</button>
@@ -131,32 +131,9 @@
     </div>
 
     <div id="inventory-panel" class="modal-panel wide ui-frame window draggable-window hidden">
-        <button class="close-btn" data-panel-id="inventory">X</button>
-        <h2 class="window-header">🎒 공동 인벤토리</h2>
+        <button class="close-btn" data-panel-id="inventory-panel">X</button> <h2 class="window-header">🎒 공동 인벤토리</h2>
         <div class="inventory-container">
-            <div class="inventory-left">
-                <h3>✨ 장착 중</h3>
-                <div id="equipped-items">
-                    <div class="equip-slot" data-slot="main_hand">주무기: <span></span></div>
-                    <div class="equip-slot" data-slot="off_hand">보조장비: <span></span></div>
-                    <div class="equip-slot" data-slot="armor">갑옷: <span></span></div>
-                    <div class="equip-slot" data-slot="helmet">투구: <span></span></div>
-                    <div class="equip-slot" data-slot="gloves">장갑: <span></span></div>
-                    <div class="equip-slot" data-slot="boots">신발: <span></span></div>
-                    <div class="equip-slot" data-slot="accessory1">장신구1: <span></span></div>
-                    <div class="equip-slot" data-slot="accessory2">장신구2: <span></span></div>
-                </div>
-            </div>
-            <div class="inventory-right">
-                <h3>📦 소지품</h3>
-                <div id="inventory-filters">
-                    <button class="inv-filter-btn active" data-filter="all">모두</button>
-                    <button class="inv-filter-btn" data-filter="weapon">무기</button>
-                    <button class="inv-filter-btn" data-filter="armor">방어구</button>
-                    <button class="inv-filter-btn" data-filter="consumable">소모품</button>
-                </div>
-                <div id="inventory-list">
-                </div>
+            <div class="inventory-grid">
             </div>
         </div>
     </div>

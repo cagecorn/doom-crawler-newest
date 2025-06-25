@@ -131,7 +131,7 @@ export class Game {
         this.narrativeManager = new NarrativeManager();
         this.supportEngine = new SupportEngine();
         this.factory = new CharacterFactory(assets, this);
-        this.inventoryManager = new InventoryManager(this.eventManager);
+        this.inventoryManager = new InventoryManager(this.eventManager, (id) => this.entityManager?.getEntityById(id));
         // 월드맵 로직을 담당하는 엔진
         this.worldEngine = new WorldEngine(this, assets);
 
@@ -225,6 +225,7 @@ export class Game {
         this.uiManager.particleDecoratorManager = this.particleDecoratorManager;
         this.uiManager.vfxManager = this.vfxManager;
         this.uiManager.eventManager = this.eventManager;
+        this.uiManager.getSharedInventory = () => this.inventoryManager.getSharedInventory();
         this.squadManager = new Managers.SquadManager(this.eventManager, this.mercenaryManager);
         this.uiManager.squadManager = this.squadManager;
         this.uiManager.createSquadManagementUI?.();
