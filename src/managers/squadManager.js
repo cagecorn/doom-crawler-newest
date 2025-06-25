@@ -1,13 +1,13 @@
-import { eventManager } from './eventManager.js';
-
 class SquadManager {
-    constructor(maxSquads = 10) {
+    constructor(eventManager = null, mercenaryManager = null, maxSquads = 10) {
+        this.eventManager = eventManager;
+        this.mercenaryManager = mercenaryManager;
         this.squads = new Map();
         this.maxSquads = maxSquads;
         this.nextSquadId = 0;
 
         // 이벤트 리스너 등록
-        eventManager.subscribe('squad_assign_request', this.handleAssignMember.bind(this));
+        this.eventManager?.subscribe('squad_assign_request', this.handleAssignMember.bind(this));
     }
 
     // 새 분대 생성
@@ -24,7 +24,7 @@ class SquadManager {
         };
         this.squads.set(squadId, newSquad);
         console.log(`${squadId} (${newSquad.name}) 분대가 생성되었습니다.`);
-        eventManager.publish('squad_data_changed', { squads: this.getSquads() });
+        this.eventManager?.publish('squad_data_changed', { squads: this.getSquads() });
         return newSquad;
     }
 
@@ -33,7 +33,7 @@ class SquadManager {
         if (this.squads.has(squadId)) {
             this.squads.delete(squadId);
             console.log(`${squadId} 분대가 해체되었습니다.`);
-            eventManager.publish('squad_data_changed', { squads: this.getSquads() });
+            this.eventManager?.publish('squad_data_changed', { squads: this.getSquads() });
             return true;
         }
         return false;
@@ -58,7 +58,7 @@ class SquadManager {
         }
 
         // 데이터 변경 이벤트 발행
-        eventManager.publish('squad_data_changed', { squads: this.getSquads() });
+        this.eventManager?.publish('squad_data_changed', { squads: this.getSquads() });
     }
 
     // 특정 분대 정보 가져오기
@@ -70,6 +70,19 @@ class SquadManager {
     getSquads() {
         return Array.from(this.squads.values());
     }
+
+    // 특정 용병이 속한 분대 찾기
+    getSquadForMerc(mercId) {
+        for (const squad of this.squads.values()) {
+            if (squad.members.has(mercId)) return squad;
+        }
+        return null;
+    }
+
+    // LaneAssignmentManager가 호출하는 편의 메서드
+    handleSquadAssignment({ mercId, toSquadId }) {
+        this.handleAssignMember({ entityId: mercId, squadId: toSquadId });
+    }
 }
 
-export const squadManager = new SquadManager();
+export { SquadManager };
