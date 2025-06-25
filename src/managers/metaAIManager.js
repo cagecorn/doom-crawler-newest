@@ -1,4 +1,4 @@
-import { MetaAIManager as BaseMetaAI } from './ai-managers.js';
+import { MetaAIManager as BaseMetaAI, STRATEGY } from './ai-managers.js';
 import { FearAI, ConfusionAI, BerserkAI, CharmAI } from '../ai.js';
 import { MistakeEngine } from './ai/MistakeEngine.js';
 import { SETTINGS } from '../../config/gameSettings.js';
@@ -94,9 +94,33 @@ export class MetaAIManager extends BaseMetaAI {
                 }
 
                 if (member.ai) {
-                    const action = member.ai.decideAction(member, currentContext);
-                    const finalAction = MistakeEngine.getFinalAction(member, action, currentContext, this.mbtiEngine);
-                    this.executeAction(member, finalAction, currentContext);
+                    let action = { type: 'idle' };
+                    let ctx = currentContext;
+                    if (this.squadManager) {
+                        const squad = this.squadManager.getSquadForMerc(member.id);
+                        const strategy = squad ? squad.strategy : STRATEGY.AGGRESSIVE;
+                        if (strategy === STRATEGY.DEFENSIVE) {
+                            const player = currentContext.player;
+                            const map = currentContext.mapManager;
+                            const defensiveRadius = (map?.tileSize || 16) * 3;
+                            const dist = Math.hypot(member.x - player.x, member.y - player.y);
+                            if (dist > defensiveRadius) {
+                                action = { type: 'move', target: { x: player.x, y: player.y } };
+                            } else {
+                                ctx = {
+                                    ...currentContext,
+                                    enemies: currentContext.enemies.filter(e => Math.hypot(e.x - player.x, e.y - player.y) <= defensiveRadius)
+                                };
+                            }
+                        }
+                    }
+
+                    if (action.type === 'idle') {
+                        action = member.ai.decideAction(member, ctx);
+                    }
+
+                    const finalAction = MistakeEngine.getFinalAction(member, action, ctx, this.mbtiEngine);
+                    this.executeAction(member, finalAction, ctx);
                 }
             }
         }
@@ -109,7 +133,7 @@ export class MetaAIManager extends BaseMetaAI {
         if (enemies.length === 0) return;
         for (const merc of mercs) {
             const squad = this.squadManager.getSquadForMerc(merc.id);
-            const strategy = squad ? squad.strategy : 'defensive';
+            const strategy = squad ? squad.strategy : STRATEGY.DEFENSIVE;
             merc.squadStrategy = strategy;
             this.assignGoalToUnit(merc, strategy, player, enemies);
         }
@@ -118,14 +142,14 @@ export class MetaAIManager extends BaseMetaAI {
     assignGoalToUnit(merc, strategy, player, enemies) {
         if (!merc.ai) return;
         switch (strategy) {
-            case 'aggressive': {
+            case STRATEGY.AGGRESSIVE: {
                 const target = this.findNearestTarget(merc, enemies);
                 if (target && merc.ai.setGoal) {
                     merc.ai.setGoal('ATTACK', { target });
                 }
                 break;
             }
-            case 'defensive':
+            case STRATEGY.DEFENSIVE:
             default: {
                 if (merc.ai.setGoal) {
                     merc.ai.setGoal('GUARD_AREA', { position: { x: player.x, y: player.y }, radius: 5 });

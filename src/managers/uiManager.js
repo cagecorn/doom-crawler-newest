@@ -7,6 +7,7 @@ import { ARTIFACTS } from '../data/artifacts.js';
 import { memoryDB } from '../persistence/MemoryDB.js';
 import { SETTINGS } from '../../config/gameSettings.js';
 import { Draggable } from '../utils/Draggable.js';
+import { STRATEGY } from './ai-managers.js';
 
 export class UIManager {
     constructor(eventManager = null) {
@@ -51,6 +52,7 @@ export class UIManager {
         this.inventoryListContainer = document.getElementById('inventory-list');
         this.inventoryFilters = document.querySelectorAll('#inventory-filters .inv-filter-btn');
         this.squadManagementPanel = document.getElementById('squad-management-ui');
+        this._squadUIInitialized = false;
         this.currentInventoryFilter = 'all';
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetPanel = document.getElementById('character-sheet-panel');
@@ -899,9 +901,11 @@ export class UIManager {
 
         const squads = [
             { id: 'unassigned', name: '미편성' },
-            { id: 'squad_1', name: '1분대' },
-            { id: 'squad_2', name: '2분대' },
-            { id: 'squad_3', name: '3분대' }
+            ...Object.entries(this.squadManager?.getSquads() || {}).map(([id, sq]) => ({
+                id,
+                name: sq.name,
+                strategy: sq.strategy
+            }))
         ];
 
         const panelMap = {};
@@ -910,6 +914,35 @@ export class UIManager {
             panel.className = 'squad-panel';
             panel.dataset.squadId = sq.id === 'unassigned' ? '' : sq.id;
             panel.textContent = sq.name;
+
+            if (sq.id !== 'unassigned') {
+                const strategyContainer = document.createElement('div');
+                strategyContainer.className = 'strategy-controls';
+
+                const aggressiveBtn = document.createElement('button');
+                aggressiveBtn.textContent = '공격적';
+                if (sq.strategy === STRATEGY.AGGRESSIVE) aggressiveBtn.classList.add('active');
+                aggressiveBtn.onclick = () => {
+                    this.eventManager?.publish('squad_strategy_change_request', {
+                        squadId: sq.id,
+                        newStrategy: STRATEGY.AGGRESSIVE
+                    });
+                };
+
+                const defensiveBtn = document.createElement('button');
+                defensiveBtn.textContent = '방어적';
+                if (sq.strategy === STRATEGY.DEFENSIVE) defensiveBtn.classList.add('active');
+                defensiveBtn.onclick = () => {
+                    this.eventManager?.publish('squad_strategy_change_request', {
+                        squadId: sq.id,
+                        newStrategy: STRATEGY.DEFENSIVE
+                    });
+                };
+
+                strategyContainer.appendChild(aggressiveBtn);
+                strategyContainer.appendChild(defensiveBtn);
+                panel.appendChild(strategyContainer);
+            }
             panel.addEventListener('dragover', e => e.preventDefault());
             panel.addEventListener('drop', e => {
                 e.preventDefault();
@@ -935,6 +968,9 @@ export class UIManager {
             parent.appendChild(el);
         });
 
-        this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
+        if (!this._squadUIInitialized) {
+            this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
+            this._squadUIInitialized = true;
+        }
     }
 }

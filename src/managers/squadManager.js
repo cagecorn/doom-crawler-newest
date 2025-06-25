@@ -1,11 +1,13 @@
+import { STRATEGY } from './ai-managers.js';
+
 export class SquadManager {
     constructor(eventManager, mercenaryManager) {
         this.eventManager = eventManager;
         this.mercenaryManager = mercenaryManager;
         this.squads = {
-            squad_1: { name: '1\uBD84\uB300', members: new Set(), strategy: 'aggressive' },
-            squad_2: { name: '2\uBD84\uB300', members: new Set(), strategy: 'defensive' },
-            squad_3: { name: '3\uBD84\uB300', members: new Set(), strategy: 'defensive' }
+            squad_1: { name: '1\uBD84\uB300', members: new Set(), strategy: STRATEGY.AGGRESSIVE },
+            squad_2: { name: '2\uBD84\uB300', members: new Set(), strategy: STRATEGY.DEFENSIVE },
+            squad_3: { name: '3\uBD84\uB300', members: new Set(), strategy: STRATEGY.DEFENSIVE }
         };
         this.unassignedMercs = new Set(
             this.mercenaryManager.getMercenaries().map(m => m.id)
@@ -42,12 +44,22 @@ export class SquadManager {
         this.eventManager?.publish('squad_data_changed', { squads: this.squads });
     }
 
-    setSquadStrategy({ squadId, newStrategy }) {
-        if (this.squads[squadId]) {
-            this.squads[squadId].strategy = newStrategy;
-            console.log(`${this.squads[squadId].name}\uC758 \uC804\uB825\uC744 ${newStrategy}(\uC73C)\uB85C \uBCC0\uACBD\uD588\uC2B5\uB2C8\uB2E4.`);
+    setSquadStrategy(squadIdOrObj, maybeStrategy) {
+        let squadId = squadIdOrObj;
+        let strategy = maybeStrategy;
+        if (typeof squadIdOrObj === 'object') {
+            squadId = squadIdOrObj.squadId;
+            strategy = squadIdOrObj.newStrategy;
+        }
+        if (this.squads[squadId] && (strategy === STRATEGY.AGGRESSIVE || strategy === STRATEGY.DEFENSIVE)) {
+            this.squads[squadId].strategy = strategy;
+            console.log(`${this.squads[squadId].name}\uC758 \uC804\uB825\uC744 ${strategy}(\uC73C)\uB85C \uBCC0\uACBD\uD588\uC2B5\uB2C8\uB2E4.`);
             this.eventManager?.publish('squad_data_changed', { squads: this.squads });
         }
+    }
+
+    getSquads() {
+        return this.squads;
     }
 
     getSquadForMerc(mercId) {
