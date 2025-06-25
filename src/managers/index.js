@@ -30,6 +30,7 @@ import { AuraManager } from './AuraManager.js';
 import { PossessionAIManager } from './possessionAIManager.js';
 import { CombatDecisionEngine } from './ai/CombatDecisionEngine.js';
 import { ReputationManager } from './ReputationManager.js';
+import { EntityManager } from './entityManager.js';
 import GuidelineLoader from './guidelineLoader.js';
 // DataRecorder is only needed in a Node.js environment so we lazy-load it
 let DataRecorder = null;
@@ -70,6 +71,7 @@ export {
     SpeechBubbleManager,
     SquadManager,
     ReputationManager,
+    EntityManager,
     CombatDecisionEngine,
     GuidelineLoader,
     DataRecorder,

@@ -45,9 +45,6 @@ export class UIManager {
         if (this.reputationHistoryPanel && !this.settings.ENABLE_REPUTATION_SYSTEM) {
             this.reputationHistoryPanel.style.display = 'none';
         }
-        // 장착 대상 선택 패널 요소
-        this.equipTargetPanel = document.getElementById('equipment-target-panel');
-        this.equipTargetList = document.getElementById('equipment-target-list');
         // 인벤토리 패널 요소
         this.inventoryPanel = document.getElementById('inventory-panel');
         this.inventoryGrid = document.querySelector('#inventory-panel .inventory-grid');
@@ -56,10 +53,6 @@ export class UIManager {
         this.tooltip = document.getElementById('tooltip');
         this.characterSheetTemplate = document.getElementById('character-sheet-template');
         this.uiContainer = document.getElementById('ui-container');
-        this.unequipPanel = document.getElementById('unequip-panel');
-        this.unequipItemName = document.getElementById('unequip-item-name');
-        this.unequipConfirmBtn = document.getElementById('unequip-confirm-btn');
-        this.closeUnequipPanelBtn = document.getElementById('close-unequip-panel');
         this.callbacks = {};
         this._lastInventory = [];
         this._lastConsumables = [];
@@ -68,7 +61,6 @@ export class UIManager {
         this.particleDecoratorManager = null;
         this.vfxManager = null;
         this.getSharedInventory = null;
-        this._pendingUnequip = null;
 
         this.draggables = [];
         this._initDraggables();
@@ -132,32 +124,6 @@ export class UIManager {
         document.querySelectorAll('.close-btn[data-panel-id]').forEach(btn => {
             btn.onclick = () => this.hidePanel(btn.dataset.panelId);
         });
-
-        const closeEquipBtn = document.getElementById('close-equip-target-btn');
-        if (closeEquipBtn) closeEquipBtn.onclick = () => this.hideEquipTargetPanel();
-
-        if (this.closeUnequipPanelBtn) {
-            this.closeUnequipPanelBtn.onclick = () => this.hideUnequipPanel();
-        }
-        if (this.unequipConfirmBtn) {
-            this.unequipConfirmBtn.onclick = () => {
-                if (this._pendingUnequip) {
-                    const { owner, slot } = this._pendingUnequip;
-                    const g = this.game || (typeof game !== 'undefined' ? game : null);
-                    if (g) {
-                        g.inventoryManager.engine.moveItem(
-                            { entity: owner, slot },
-                            { entity: g.gameState.player, slot: 'inventory' }
-                        );
-                        if (owner !== g.gameState.player) {
-                            const panel = this.openCharacterSheets.get(owner.id);
-                            if (panel) this.renderCharacterSheet(owner, panel);
-                        }
-                    }
-                }
-                this.hideUnequipPanel();
-            };
-        }
 
 
 
@@ -387,55 +353,7 @@ export class UIManager {
                 gameState.inventory.splice(itemIndex, 1);
             }
             this.updateUI(gameState);
-        } else {
-            // 무기를 제외한 나머지 아이템도 장착 대상 선택 UI를 표시합니다.
-            this._showEquipTargetPanel(item, gameState);
         }
-    }
-
-    _showEquipTargetPanel(item, gameState) {
-        if (!this.equipTargetPanel) return;
-
-        this.equipTargetList.innerHTML = '';
-        const targets = [gameState.player, ...(this.mercenaryManager ? this.mercenaryManager.mercenaries : [])];
-
-        targets.forEach((target, idx) => {
-            const button = document.createElement('button');
-            if (target.isPlayer) {
-                button.textContent = '플레이어';
-            } else {
-                button.textContent = `용병 ${idx}`;
-            }
-            button.onclick = () => {
-                if (this.onEquipItem) this.onEquipItem(target, item);
-                this.hideEquipTargetPanel();
-            };
-            this.equipTargetList.appendChild(button);
-        });
-
-        this.equipTargetPanel.classList.remove('hidden');
-    }
-
-    hideEquipTargetPanel() {
-        if (this.equipTargetPanel) {
-            this.equipTargetPanel.classList.add('hidden');
-        }
-    }
-
-    _showUnequipPanel(owner, slot) {
-        if (!this.unequipPanel) return;
-        const item = owner.equipment ? owner.equipment[slot] : null;
-        if (!item) return;
-        this._pendingUnequip = { owner, slot };
-        if (this.unequipItemName) this.unequipItemName.textContent = item.name;
-        this.unequipPanel.classList.remove('hidden');
-    }
-
-    hideUnequipPanel() {
-        if (this.unequipPanel) {
-            this.unequipPanel.classList.add('hidden');
-        }
-        this._pendingUnequip = null;
     }
 
     renderMercenaryList() {
@@ -674,11 +592,7 @@ export class UIManager {
             }
             this._attachTooltip(slot, this._getItemTooltip(item));
 
-            // 클릭하면 해제 패널 표시
-            if (slotType !== 'inventory') {
-                slot.style.cursor = 'pointer';
-                slot.onclick = () => this._showUnequipPanel(owner, slotType);
-            }
+            // 드래그 앤 드롭을 사용하므로 클릭 이벤트는 필요 없습니다.
         }
 
         return slot;
@@ -687,11 +601,9 @@ export class UIManager {
     _initDraggables() {
         const pairs = [
             [this.mercDetailPanel, this.mercDetailPanel?.querySelector('.window-header')],
-            [this.equipTargetPanel, this.equipTargetPanel?.querySelector('.window-header')],
             [this.inventoryPanel, this.inventoryPanel?.querySelector('.window-header')],
             [this.mercenaryPanel, this.mercenaryPanel?.querySelector('.window-header')],
             [this.squadManagementPanel, this.squadManagementPanel?.querySelector('.window-header')],
-            [this.unequipPanel, this.unequipPanel?.querySelector('.window-header')],
         ];
         pairs.forEach(([panel, header]) => {
             if (panel) {

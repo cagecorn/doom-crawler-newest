@@ -25,6 +25,7 @@ import { MovementManager } from './managers/movementManager.js';
 import { FogManager } from './managers/fogManager.js';
 import { NarrativeManager } from './managers/narrativeManager.js';
 import { TurnManager } from './managers/turnManager.js';
+import { EntityManager } from './managers/entityManager.js';
 import { KnockbackEngine } from './systems/KnockbackEngine.js';
 import { SupportEngine } from './systems/SupportEngine.js';
 import { SKILLS } from './data/skills.js';
@@ -119,6 +120,7 @@ export class Game {
 
         // === 1. 모든 매니저 및 시스템 생성 ===
         this.eventManager = new EventManager();
+        this.entityManager = new EntityManager(this.eventManager);
         this.inputHandler = new InputHandler(this.eventManager, this);
         this.combatLogManager = new CombatLogManager(this.eventManager);
         this.systemLogManager = new SystemLogManager(this.eventManager);
@@ -491,16 +493,7 @@ export class Game {
         this.monsterManager.monsters.push(...monsters);
         this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
 
-        this.entityManager = {
-            findEntityByWeaponId: (weaponId) => {
-                const list = [this.gameState.player, ...this.mercenaryManager.mercenaries, ...this.monsterManager.monsters, ...(this.petManager?.pets || [])];
-                return list.find(e => e.equipment?.weapon && e.equipment.weapon.id === weaponId) || null;
-            },
-            getEntityById: (id) => {
-                const list = [this.gameState.player, ...this.mercenaryManager.mercenaries, ...this.monsterManager.monsters, ...(this.petManager?.pets || [])];
-                return list.find(e => e.id === id) || null;
-            }
-        };
+        this.entityManager.init(this.gameState.player, this.mercenaryManager.mercenaries, this.monsterManager.monsters);
         this.equipmentManager.entityManager = this.entityManager;
         this.aspirationManager = new AspirationManager(this.eventManager, this.microWorld, this.effectManager, this.vfxManager, this.entityManager);
 
@@ -1182,8 +1175,13 @@ export class Game {
                 } else if (item.tags.includes('pet') || item.type === 'pet') {
                     this.petManager.equip(gameState.player, item, 'fox');
                 } else {
-                    // 무기를 포함한 모든 장비는 장착 대상 선택 UI를 사용합니다.
-                    this.uiManager._showEquipTargetPanel(item, gameState);
+                    const slot = this.inventoryManager.engine.getPreferredSlot(item);
+                    if (slot) {
+                        this.inventoryManager.engine.moveItem(
+                            { entity: gameState.player, slot: 'inventory', index: itemIndex },
+                            { entity: gameState.player, slot, index: 0 }
+                        );
+                    }
                 }
                 this.uiManager.renderInventory(gameState);
             },
