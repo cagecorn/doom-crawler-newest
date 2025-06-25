@@ -373,6 +373,12 @@ body, html {
     z-index: 250;
 }
 
+#unequip-panel {
+    width: 200px;
+    text-align: center;
+    z-index: 250;
+}
+
 #sheet-equipment .equip-slot {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px; margin-bottom: 5px; background-color: rgba(0,0,0,0.1);

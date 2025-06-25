@@ -57,6 +57,10 @@ export class UIManager {
         this.sheetCharacterName = document.getElementById('sheet-character-name');
         this.sheetEquipment = document.getElementById('sheet-equipment');
         this.sheetInventory = document.getElementById('sheet-inventory');
+        this.unequipPanel = document.getElementById('unequip-panel');
+        this.unequipItemName = document.getElementById('unequip-item-name');
+        this.unequipConfirmBtn = document.getElementById('unequip-confirm-btn');
+        this.closeUnequipPanelBtn = document.getElementById('close-unequip-panel');
         this.callbacks = {};
         this._lastInventory = [];
         this._lastConsumables = [];
@@ -64,6 +68,7 @@ export class UIManager {
         this._isInitialized = false;
         this.particleDecoratorManager = null;
         this.vfxManager = null;
+        this._pendingUnequip = null;
 
         this.draggables = [];
         this._initDraggables();
@@ -130,6 +135,28 @@ export class UIManager {
 
         const closeEquipBtn = document.getElementById('close-equip-target-btn');
         if (closeEquipBtn) closeEquipBtn.onclick = () => this.hideEquipTargetPanel();
+
+        if (this.closeUnequipPanelBtn) {
+            this.closeUnequipPanelBtn.onclick = () => this.hideUnequipPanel();
+        }
+        if (this.unequipConfirmBtn) {
+            this.unequipConfirmBtn.onclick = () => {
+                if (this._pendingUnequip) {
+                    const { owner, slot } = this._pendingUnequip;
+                    const g = this.game || (typeof game !== 'undefined' ? game : null);
+                    if (g) {
+                        g.equipmentManager.unequip(owner, slot, g.gameState.inventory);
+                        if (owner === g.gameState.player) {
+                            this.renderInventory(g.gameState);
+                        } else {
+                            this.renderCharacterSheet(owner);
+                            this.renderInventory(g.gameState);
+                        }
+                    }
+                }
+                this.hideUnequipPanel();
+            };
+        }
 
         if (this.inventoryFilters) {
             this.inventoryFilters.forEach(btn => {
@@ -199,18 +226,11 @@ export class UIManager {
                 const item = entity.equipment ? entity.equipment[slot] : null;
                 const el = this.createSlotElement(entity, slot, item);
 
-                // 용병 장비 클릭 시 공용 인벤토리로 이동
+                // 용병 장비 클릭 시 해제 패널 표시
                 if (!entity.isPlayer && item) {
                     el.style.cursor = 'pointer';
-                    el.title = '클릭하여 공용 인벤토리로 이동';
-                    el.onclick = () => {
-                        const g = this.game || (typeof game !== 'undefined' ? game : null);
-                        if (g) {
-                            g.equipmentManager.unequip(entity, slot, g.gameState.inventory);
-                            this.renderCharacterSheet(entity);
-                            this.renderInventory(g.gameState);
-                        }
-                    };
+                    el.title = '클릭하여 해제';
+                    el.onclick = () => this._showUnequipPanel(entity, slot);
                 }
 
                 this.sheetEquipment.appendChild(el);
@@ -587,6 +607,22 @@ export class UIManager {
         }
     }
 
+    _showUnequipPanel(owner, slot) {
+        if (!this.unequipPanel) return;
+        const item = owner.equipment ? owner.equipment[slot] : null;
+        if (!item) return;
+        this._pendingUnequip = { owner, slot };
+        if (this.unequipItemName) this.unequipItemName.textContent = item.name;
+        this.unequipPanel.classList.remove('hidden');
+    }
+
+    hideUnequipPanel() {
+        if (this.unequipPanel) {
+            this.unequipPanel.classList.add('hidden');
+        }
+        this._pendingUnequip = null;
+    }
+
     renderMercenaryList() {
         if (!this.mercenaryList) return;
         this.mercenaryList.innerHTML = '';
@@ -811,21 +847,10 @@ export class UIManager {
             slot.appendChild(img);
             this._attachTooltip(slot, this._getItemTooltip(item));
 
-            // 클릭하여 장비 해제 후 공용 인벤토리로 이동
+            // 클릭하면 해제 패널 표시
             if (slotType !== 'inventory') {
                 slot.style.cursor = 'pointer';
-                slot.onclick = () => {
-                    const g = this.game || (typeof game !== 'undefined' ? game : null);
-                    if (g) {
-                        g.equipmentManager.unequip(owner, slotType, g.gameState.inventory);
-                        if (owner === g.gameState.player) {
-                            this.renderInventory(g.gameState);
-                        } else {
-                            this.renderCharacterSheet(owner);
-                            this.renderInventory(g.gameState);
-                        }
-                    }
-                };
+                slot.onclick = () => this._showUnequipPanel(owner, slotType);
             }
         }
 
@@ -840,6 +865,7 @@ export class UIManager {
             [this.mercenaryPanel, this.mercenaryPanel?.querySelector('.window-header')],
             [this.characterSheetPanel, this.characterSheetPanel?.querySelector('.window-header')],
             [this.squadManagementPanel, this.squadManagementPanel?.querySelector('.window-header')],
+            [this.unequipPanel, this.unequipPanel?.querySelector('.window-header')],
         ];
         pairs.forEach(([panel, header]) => {
             if (panel) {
