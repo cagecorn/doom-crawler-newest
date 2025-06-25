@@ -11,7 +11,7 @@ import { MeleeAI, RangedAI, HealerAI } from '../ai.js';
  */
 export class EnemyFormationManager extends FormationManager {
     constructor(rows = 3, cols = 3, tileSize = 192) {
-        super(rows, cols, tileSize, 'RIGHT');
+        super(rows, cols, tileSize, null, 'RIGHT');
         this.rules = [];
         this._registerDefaultRules();
     }
