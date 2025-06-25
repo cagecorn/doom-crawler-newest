@@ -119,15 +119,14 @@ class InventoryEngine {
  * InventoryManager는 모든 인벤토리 관련 UI 상호작용과 로직을 총괄합니다.
  */
 export class InventoryManager {
-    constructor(eventManager, getEntityById) {
+    constructor({ eventManager, entityManager }) {
         this.eventManager = eventManager;
-        this.getEntityById = getEntityById;
+        this.entityManager = entityManager;
         this.engine = new InventoryEngine(eventManager);
         this.sharedInventory = createGridInventory(10, 8); // 10x8 크기
 
         this.eventManager.subscribe('ui_item_move_request', (data) => this.handleItemMove(data));
-        this.eventManager.subscribe('inventory_updated', (data) => this.handleInventoryUpdated(data));
-        console.log("[InventoryManager] Initialized with Shared Inventory");
+        console.log("[InventoryManager] Initialized");
     }
     
     /**
@@ -135,25 +134,63 @@ export class InventoryManager {
      * @param {object} data - { from: { entity, slot, index }, to: { entity, slot, index } }
      */
     handleItemMove({ from, to }) {
-        const fromEntity = from.entityId === 'shared' ? this.sharedInventory : this.getEntityById(from.entityId);
-        const toEntity = to.entityId === 'shared' ? this.sharedInventory : this.getEntityById(to.entityId);
+        const fromLocation = this.getLocation(from);
+        const toLocation = this.getLocation(to);
 
-        if (!fromEntity || !toEntity) return;
+        if (!fromLocation || !toLocation) {
+            console.error('아이템 이동 실패: 유효하지 않은 위치입니다.', { from, to });
+            return;
+        }
 
-        this.engine.moveItem({ entity: fromEntity, slot: from.slot, index: from.index },
-                             { entity: toEntity, slot: to.slot, index: to.index });
-    }
+        const itemFrom = fromLocation.getItem();
+        const itemTo = toLocation.getItem();
 
-    /**
-     * 인벤토리 변경 후 관련 엔티티의 스탯을 재계산하도록 이벤트를 발행합니다.
-     */
-    handleInventoryUpdated(data) {
-        const updatedEntities = new Set(data.entities);
-        updatedEntities.forEach(entity => {
-            this.eventManager.publish('stats_changed', { entity });
+        if (!this.canPlaceItem(itemFrom, to) || !this.canPlaceItem(itemTo, from)) {
+            this.eventManager.publish('log', { message: '해당 슬롯에 아이템을 장착할 수 없습니다.', color: 'orange' });
+            return;
+        }
+
+        fromLocation.setItem(itemTo);
+        toLocation.setItem(itemFrom);
+
+        console.log('[InventoryManager] Item moved from', from, 'to', to);
+
+        this.eventManager.publish('inventory_updated', {
+            involvedEntityIds: [from.entityId, to.entityId].filter(id => id !== 'shared')
         });
     }
-    
+
+    canPlaceItem(item, locationInfo) {
+        if (!item) return true;
+        if (locationInfo.slot === 'inventory') return true;
+        const itemType = item.type;
+        const itemSlot = item.slot;
+        return itemType === locationInfo.slot || itemSlot === locationInfo.slot;
+    }
+
+    getLocation(info) {
+        const entity = info.entityId === 'shared'
+            ? this.sharedInventory
+            : this.entityManager.getEntityById(info.entityId);
+
+        if (!entity) return null;
+
+        return {
+            getItem: () => {
+                if (info.slot === 'inventory') return entity.slots ? entity.slots[info.index] : entity.inventory?.[info.index];
+                return entity.equipment[info.slot];
+            },
+            setItem: (item) => {
+                if (info.slot === 'inventory') {
+                    if (entity.slots) entity.slots[info.index] = item || null;
+                    else entity.inventory[info.index] = item || null;
+                } else {
+                    entity.equipment[info.slot] = item || null;
+                }
+            }
+        };
+    }
+
     getSharedInventory() {
         return this.sharedInventory;
     }

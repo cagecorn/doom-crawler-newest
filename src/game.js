@@ -133,7 +133,10 @@ export class Game {
         this.narrativeManager = new NarrativeManager();
         this.supportEngine = new SupportEngine();
         this.factory = new CharacterFactory(assets, this);
-        this.inventoryManager = new InventoryManager(this.eventManager, (id) => this.entityManager?.getEntityById(id));
+        this.inventoryManager = new InventoryManager({
+            eventManager: this.eventManager,
+            entityManager: this.entityManager,
+        });
         // 월드맵 로직을 담당하는 엔진
         this.worldEngine = new WorldEngine(this, assets);
 
@@ -1123,6 +1126,17 @@ export class Game {
         // 스탯 변경 이벤트 구독 (효과 적용/해제 시 스탯 재계산)
         eventManager.subscribe('stats_changed', (data) => {
             data.entity.stats.recalculate();
+        });
+
+        // 인벤토리 업데이트 시 UI를 새로 고칩니다.
+        eventManager.subscribe('inventory_updated', ({ involvedEntityIds }) => {
+            console.log('Refreshing UI due to inventory update');
+            this.uiManager.renderSharedInventory();
+            involvedEntityIds.forEach(id => {
+                this.uiManager.updateCharacterSheet(id);
+                const ent = this.entityManager.getEntityById(id);
+                if (ent) this.eventManager.publish('stats_changed', { entity: ent });
+            });
         });
 
         eventManager.subscribe('key_pressed', (data) => {

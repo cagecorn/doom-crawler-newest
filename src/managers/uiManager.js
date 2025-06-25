@@ -970,6 +970,16 @@ export class UIManager {
         }
     }
 
+    updateCharacterSheet(entityId) {
+        if (this.openCharacterSheets.has(entityId)) {
+            const panel = this.openCharacterSheets.get(entityId);
+            const entity = this.getEntityById(entityId);
+            if (entity && panel) {
+                this.renderCharacterSheet(entity, panel);
+            }
+        }
+    }
+
     getSlotLabel(slotName) {
         const labels = {
             main_hand: '주무기',
