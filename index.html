@@ -12,11 +12,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 </head>
 <body>
-    <h1>My Game</h1>
-    <canvas id="gameCanvas" width="1280" height="720"></canvas>
     <div id="top-menu-bar" class="ui-frame">
         <button class="menu-btn" data-panel-id="inventory-panel">공동 인벤토리</button>
         <button class="menu-btn" data-panel-id="mercenary-panel">용병 부대</button>
+        <button class="menu-btn" data-panel-id="squad-management-ui">부대 편성</button>
         <button class="menu-btn" data-panel-id="character-sheet-panel">플레이어 정보</button>
     </div>
     <div id="canvas-container">
@@ -101,6 +100,13 @@
         <div id="mercenary-list"></div>
     </div>
 
+    <div id="squad-management-ui" class="modal-panel ui-frame window draggable-window hidden">
+        <button class="close-btn" data-panel-id="squad-management-ui">X</button>
+        <h2 class="window-header">부대 편성</h2>
+        <div class="squad-content"></div>
+        <div id="formation-grid" class="formation-grid"></div>
+        <button id="confirm-formation-btn" class="confirm-btn">전투 시작</button>
+    </div>
 
     <!-- 캐릭터 스탯 패널 템플릿 -->
     <div id="character-sheet-template" class="modal-panel ui-frame window draggable-window hidden template">
@@ -170,10 +176,7 @@
             </div>
         </div>
     </div>
-    <div id="ui-container">
-        <div id="squad-management"></div>
-        <div id="formation-grid"></div>
-    </div>
+    <div id="ui-container"></div>
 
     <div id="skill-bar" class="ui-frame">
         <div class="skill-slot" data-slot-index="0"><span>1</span></div>
