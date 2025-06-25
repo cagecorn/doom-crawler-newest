@@ -77,6 +77,10 @@ export class MonsterManager {
         return null;
     }
 
+    getMonsters() {
+        return this.monsters;
+    }
+
     render(ctx) {
         for (const monster of this.monsters.filter(m => !m.isDying)) {
             if (monster.render) monster.render(ctx);
