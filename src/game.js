@@ -52,6 +52,7 @@ import { findEntitiesInRadius } from './utils/entityUtils.js';
 import { LaneManager } from './managers/laneManager.js';
 import { LaneRenderManager } from './managers/laneRenderManager.js';
 import { LanePusherAI } from './ai/archetypes.js';
+import { LaneAssignmentManager } from './managers/laneAssignmentManager.js';
 
 export class Game {
     constructor() {
@@ -241,6 +242,11 @@ export class Game {
         this.squadManager = new Managers.SquadManager(this.eventManager, this.mercenaryManager);
         this.uiManager.squadManager = this.squadManager;
         this.uiManager.createSquadManagementUI?.();
+        this.laneAssignmentManager = new LaneAssignmentManager({
+            laneManager: this.laneManager,
+            squadManager: this.squadManager,
+            eventManager: this.eventManager
+        });
         this.metaAIManager = new MetaAIManager(this.eventManager, this.squadManager);
         if (SETTINGS.ENABLE_REPUTATION_SYSTEM) {
             this.reputationManager = new ReputationManager(this.eventManager);
@@ -551,16 +557,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'warrior',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `전사 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -575,16 +582,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'archer',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `궁수 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -599,16 +607,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'healer',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `힐러 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -623,16 +632,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'wizard',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `마법사 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -647,16 +657,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'bard',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `음유시인 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -671,16 +682,17 @@ export class Game {
                     this.gameState.gold -= 50;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'summoner',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `소환사 용병을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
@@ -695,16 +707,17 @@ export class Game {
                     this.gameState.gold -= 100;
                     const newMerc = this.mercenaryManager.hireMercenary(
                         'fire_god',
-                        this.gameState.player.x + this.mapManager.tileSize,
+                        this.gameState.player.x,
                         this.gameState.player.y,
                         this.mapManager.tileSize,
                         'player_party'
                     );
 
                     if (newMerc) {
+                        this.laneAssignmentManager.assignMercenaryToLane(newMerc);
+                        this.entityManager.addEntity(newMerc);
                         this.playerGroup.addMember(newMerc);
                         this.eventManager.publish('mercenary_hired', { mercenary: newMerc });
-                        this.eventManager.publish('log', { message: `불의 신을 고용했습니다.` });
                     }
                 } else {
                     this.eventManager.publish('log', { message: `골드가 부족합니다.` });
