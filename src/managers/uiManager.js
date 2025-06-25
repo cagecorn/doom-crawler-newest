@@ -671,23 +671,32 @@ export class UIManager {
     renderCharacterSheet(entity, panel) {
         if (!panel) return;
         const nameEl = panel.querySelector('#sheet-character-name');
-        if (nameEl) nameEl.textContent = `${entity.constructor.name} (Lv.${entity.stats.get('level')})`;
+        if (nameEl) nameEl.textContent = `${entity.name || entity.constructor.name} (Lv.${entity.stats.get('level')})`;
 
-        const equipSlots = panel.querySelectorAll('.equip-slot');
-        equipSlots.forEach(slotEl => {
-            const slotName = slotEl.dataset.slot;
-            const item = entity.equipment[slotName];
-            slotEl.innerHTML = '';
-            slotEl.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: slotName });
+        const equipContainer = panel.querySelector('.sheet-equipment.equipment-slots');
+        if (equipContainer) {
+            equipContainer.innerHTML = '';
+            for (const slotName in entity.equipment) {
+                const slotEl = document.createElement('div');
+                slotEl.className = 'equip-slot';
+                slotEl.dataset.slot = slotName;
+                slotEl.dataset.targetInfo = JSON.stringify({ entityId: entity.id, slot: slotName });
 
-            if (item) {
-                const sourceInfo = { entityId: entity.id, slot: slotName };
-                slotEl.dataset.sourceInfo = JSON.stringify(sourceInfo);
-                this.renderItemInSlot(slotEl, item);
+                const label = document.createElement('span');
+                label.textContent = this.getSlotLabel(slotName);
+                slotEl.appendChild(label);
+
+                const item = entity.equipment[slotName];
+                if (item) {
+                    const sourceInfo = { entityId: entity.id, slot: slotName };
+                    slotEl.dataset.sourceInfo = JSON.stringify(sourceInfo);
+                    this.renderItemInSlot(slotEl, item);
+                }
+
+                this.setupDropTarget(slotEl);
+                equipContainer.appendChild(slotEl);
             }
-
-            this.setupDropTarget(slotEl);
-        });
+        }
 
         const invBox = panel.querySelector('.sheet-inventory');
         if (invBox) {
@@ -959,5 +968,19 @@ export class UIManager {
             this.eventManager?.subscribe('squad_data_changed', () => this.createSquadManagementUI());
             this._squadUIInitialized = true;
         }
+    }
+
+    getSlotLabel(slotName) {
+        const labels = {
+            main_hand: '주무기',
+            off_hand: '보조장비',
+            armor: '갑옷',
+            helmet: '투구',
+            gloves: '장갑',
+            boots: '신발',
+            accessory1: '장신구1',
+            accessory2: '장신구2'
+        };
+        return labels[slotName] || slotName;
     }
 }
