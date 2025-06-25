@@ -3,6 +3,7 @@ import { EventManager } from '../../src/managers/eventManager.js';
 import { HealerAI } from '../../src/ai.js';
 import { SKILLS } from '../../src/data/skills.js';
 import { monsterDeathWorkflow } from '../../src/workflows.js';
+import { createGridInventory } from '../../src/inventory.js';
 
 // 풀 사이클을 간략히 검증하는 통합 테스트
 
@@ -27,7 +28,7 @@ describe('Full Cycle Integration Test', () => {
       hp: 50,
       maxHp: 50,
       gold: 100,
-      inventory: [],
+      inventory: createGridInventory(4, 4),
       stats: {
         get: (stat) => (stat === 'attackPower' ? 10 : 50),
         addExp: () => {},

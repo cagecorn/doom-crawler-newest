@@ -18,6 +18,7 @@ import { AssetLoader } from './assetLoader.js';
 import { MetaAIManager, STRATEGY } from './managers/ai-managers.js';
 import { SaveLoadManager } from './managers/saveLoadManager.js';
 import { LayerManager } from './managers/layerManager.js';
+import { createGridInventory } from './inventory.js';
 import { PathfindingManager } from './managers/pathfindingManager.js';
 import { MovementManager } from './managers/movementManager.js';
 import { FogManager } from './managers/fogManager.js';
@@ -347,7 +348,7 @@ export class Game {
         this.gameState = {
             currentState: 'WORLD',
             player,
-            inventory: [],
+            inventory: createGridInventory(4, 4),
             gold: 1000,
             statPoints: 5,
             camera: { x: 0, y: 0 },
@@ -1176,7 +1177,8 @@ export class Game {
             onEquipItem: (entity, item) => {
                 const targetInventory = entity.isPlayer ? gameState.inventory : (entity.consumables || entity.inventory || gameState.inventory);
                 this.equipmentManager.equip(entity, item, targetInventory);
-                gameState.inventory = gameState.inventory.filter(i => i !== item);
+                const idx = gameState.inventory.indexOf(item);
+                if (idx !== -1) gameState.inventory.splice(idx, 1);
                 this.uiManager.renderInventory(gameState);
             }
         });
