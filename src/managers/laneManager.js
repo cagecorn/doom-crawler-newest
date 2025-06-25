@@ -7,11 +7,15 @@
 export class LaneManager {
     constructor(mapWidth, mapHeight) {
         // 맵 크기에 따라 동적으로 웨이포인트를 설정합니다.
+        this.mapWidth = mapWidth;
+        this.mapHeight = mapHeight;
         const laneY = {
             TOP: mapHeight * 0.2,
             MID: mapHeight * 0.5,
             BOTTOM: mapHeight * 0.8,
         };
+        // 외부에서 참조할 수 있도록 저장
+        this.laneY = laneY;
         const startX = {
             LEFT: mapWidth * 0.1,
             RIGHT: mapWidth * 0.9,

@@ -47,6 +47,7 @@
 | `monsterManager.js` | 몬스터 스폰과 제거, 업데이트 루프를 관리합니다. |
 | `motionManager.js` | 물리적 이동 애니메이션과 간단한 트위닝을 처리합니다. |
 | `movementManager.js` | 유닛의 좌표 이동과 충돌 판정을 계산합니다. |
+| `laneRenderManager.js` | 3-Lane 모드에서 라인 오버레이를 그려 줍니다. |
 | `narrativeManager.js` | 스토리 플래그와 몬스터 도감 등 서사 관련 데이터를 저장합니다. |
 | `parasiteManager.js` | 기생 아이템 획득과 효과 적용을 전담합니다. |
 | `petManager.js` | 펫 소환과 성장, 중복 합성을 관리합니다. |
