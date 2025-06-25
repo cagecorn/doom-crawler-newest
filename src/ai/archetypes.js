@@ -75,3 +75,35 @@ export class SupportAI extends AIArchetype {
         return null;
     }
 }
+
+/**
+ * 지정된 라인을 따라 웨이포인트를 향해 자동으로 전진하는 AI.
+ * 도중에 적을 만나면 교전합니다.
+ */
+export class LanePusherAI extends AIArchetype {
+    decideAction(self, context) {
+        const { enemies, laneManager } = context;
+
+        // 1. 시야 내의 가장 가까운 적을 찾습니다.
+        const visibleEnemies = this._filterVisibleEnemies(self, enemies);
+        const nearestEnemy = this._findNearestEnemy(self, visibleEnemies);
+
+        // 2. 적이 공격 범위 내에 있으면, 교전을 우선합니다.
+        if (nearestEnemy && this.isInAttackRange(self, nearestEnemy)) {
+            return { type: 'attack', target: nearestEnemy };
+        }
+
+        // 3. 적이 없으면, 다음 웨이포인트를 향해 전진합니다.
+        const nextWaypoint = laneManager.getNextWaypoint(self);
+        if (nextWaypoint) {
+            const distanceToWaypoint = Math.hypot(nextWaypoint.x - self.x, nextWaypoint.y - self.y);
+            if (distanceToWaypoint < self.tileSize) {
+                self.currentWaypointIndex = (self.currentWaypointIndex || 0) + 1;
+            }
+            return { type: 'move', target: nextWaypoint };
+        }
+
+        // 모든 웨이포인트에 도달했거나 경로가 없으면 대기합니다.
+        return { type: 'idle' };
+    }
+}

@@ -49,6 +49,8 @@ import { MicroWorldWorker } from './micro/MicroWorldWorker.js';
 import { CinematicManager } from './managers/cinematicManager.js';
 import { ItemTracker } from './managers/itemTracker.js';
 import { findEntitiesInRadius } from './utils/entityUtils.js';
+import { LaneManager } from './managers/laneManager.js';
+import { LanePusherAI } from './ai/archetypes.js';
 
 export class Game {
     constructor() {
@@ -128,6 +130,9 @@ export class Game {
         this.combatCalculator = new CombatCalculator(this.eventManager, this.tagManager);
         // Player begins in the Aquarium map for feature testing
         this.mapManager = new AquariumMapManager();
+        const mapPixelWidth = this.mapManager.width * this.mapManager.tileSize;
+        const mapPixelHeight = this.mapManager.height * this.mapManager.tileSize;
+        this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight);
         this.saveLoadManager = new SaveLoadManager();
         this.turnManager = new TurnManager();
         this.narrativeManager = new NarrativeManager();
@@ -495,6 +500,42 @@ export class Game {
         }
         this.monsterManager.monsters.push(...monsters);
         this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
+
+        // --- 3-Lane 모드 설정 로직 ---
+        const friendlySquads = this.squadManager.getSquads();
+        const lanes = ['TOP', 'MID', 'BOTTOM'];
+        Object.values(friendlySquads).forEach((squad, index) => {
+            const lane = lanes[index];
+            if (!lane) return;
+            squad.name = lane;
+            squad.members.forEach(mercId => {
+                const merc = this.entityManager.getEntityById(mercId);
+                if (merc) {
+                    merc.team = 'LEFT';
+                    merc.lane = lane;
+                    merc.ai = new LanePusherAI();
+                    merc.currentWaypointIndex = 0;
+                }
+            });
+        });
+
+        const allMonsters = this.monsterManager.getMonsters();
+        const monstersPerLane = Math.floor(allMonsters.length / 3);
+        allMonsters.forEach((monster, idx) => {
+            let lane = 'MID';
+            if (idx < monstersPerLane) lane = 'TOP';
+            else if (idx < monstersPerLane * 2) lane = 'BOTTOM';
+
+            monster.team = 'RIGHT';
+            monster.lane = lane;
+            monster.ai = new LanePusherAI();
+            monster.currentWaypointIndex = 0;
+            const startWaypoint = this.laneManager.getNextWaypoint(monster);
+            if (startWaypoint) {
+                monster.x = startWaypoint.x;
+                monster.y = startWaypoint.y;
+            }
+        });
 
         this.entityManager.init(this.gameState.player, this.mercenaryManager.mercenaries, this.monsterManager.monsters);
         this.equipmentManager.entityManager = this.entityManager;
@@ -1419,6 +1460,7 @@ export class Game {
             monsterManager,
             mercenaryManager,
             pathfindingManager,
+            laneManager: this.laneManager,
             motionManager: this.motionManager,
             movementManager: this.movementManager,
             projectileManager: this.projectileManager,
