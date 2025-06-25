@@ -1,6 +1,7 @@
 // src/aquariumMap.js
 // Fixed three-lane map for testing lane mechanics
 import { MapManager } from './map.js';
+import { SETTINGS } from '../config/gameSettings.js';
 
 export class AquariumMapManager extends MapManager {
     constructor(seed) {
@@ -9,12 +10,17 @@ export class AquariumMapManager extends MapManager {
         this.corridorWidth = 5; // widen lane width
         this.jungleWidth = 3;   // slightly thinner jungle corridors
         this.openArea = 6;
+        this.useLanes = SETTINGS.ENABLE_AQUARIUM_LANES;
         this.map = this._generateMaze();
     }
 
     // Generate a simple three-lane layout separated by walls. Left and right edges
     // are open so all lanes converge at the bases.
     _generateMaze() {
+        if (!this.useLanes) {
+            return super._generateMaze();
+        }
+
         const map = Array.from({ length: this.height }, () =>
             Array(this.width).fill(this.tileTypes.WALL)
         );
@@ -223,12 +229,15 @@ export class AquariumMapManager extends MapManager {
     _generateRooms(map) {}
 
     getLaneCenters() {
-        return this.laneCenters;
+        return this.useLanes ? this.laneCenters : null;
     }
 
     getPlayerStartingPosition() {
-        const x = (this.openArea / 2) * this.tileSize - this.tileSize / 2;
-        const y = this.laneCenters[1]; // middle lane
-        return { x, y };
+        if (this.useLanes) {
+            const x = (this.openArea / 2) * this.tileSize - this.tileSize / 2;
+            const y = this.laneCenters[1]; // middle lane
+            return { x, y };
+        }
+        return super.getRandomFloorPosition() || { x: this.tileSize, y: this.tileSize };
     }
 }

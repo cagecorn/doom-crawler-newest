@@ -1,6 +1,7 @@
 // src/managers/laneAssignmentManager.js
 
 import { LanePusherAI } from '../ai/archetypes.js';
+import { SETTINGS } from '../../config/gameSettings.js';
 
 export class LaneAssignmentManager {
     constructor({ laneManager, squadManager, eventManager }) {
@@ -17,7 +18,7 @@ export class LaneAssignmentManager {
      * @param {Mercenary} mercenary - 새로 고용된 용병 객체
      */
     assignMercenaryToLane(mercenary) {
-        if (!mercenary) return;
+        if (!mercenary || !SETTINGS.ENABLE_AQUARIUM_LANES) return;
 
         // 1. 다음 라인을 순서대로 선택
         const lane = this.lanes[this.nextLaneIndex];

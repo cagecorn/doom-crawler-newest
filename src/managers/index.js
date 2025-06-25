@@ -26,6 +26,7 @@ import { EffectIconManager } from './effectIconManager.js';
 import { PetManager } from './petManager.js';
 import { SquadManager } from './squadManager.js';
 import { LaneAssignmentManager } from './laneAssignmentManager.js';
+import { FormationManager } from './formationManager.js';
 import { MetaAIManager } from './metaAIManager.js';
 import { AIManager } from './AIManager.js';
 import { SynergyManager } from '../micro/SynergyManager.js';
@@ -70,6 +71,7 @@ export {
     MicroItemAIManager,
     PetManager,
     EffectIconManager,
+    FormationManager,
     MetaAIManager,
     AIManager,
     PossessionAIManager,

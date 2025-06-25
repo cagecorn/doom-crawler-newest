@@ -1,11 +1,13 @@
 // src/managers/laneRenderManager.js
 // 단순한 라인 오버레이를 그려 3-Lane 구조를 시각화합니다.
 export class LaneRenderManager {
-    constructor(laneManager) {
+    constructor(laneManager, enabled = true) {
         this.laneManager = laneManager;
+        this.enabled = enabled;
     }
 
     render(ctx) {
+        if (!this.enabled) return;
         const { laneY, mapWidth } = this.laneManager;
         if (!laneY) return;
 

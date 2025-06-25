@@ -53,6 +53,7 @@ import { LaneManager } from './managers/laneManager.js';
 import { LaneRenderManager } from './managers/laneRenderManager.js';
 import { LanePusherAI } from './ai/archetypes.js';
 import { LaneAssignmentManager } from './managers/laneAssignmentManager.js';
+import { FormationManager } from './managers/formationManager.js';
 
 export class Game {
     constructor() {
@@ -136,7 +137,12 @@ export class Game {
         const mapPixelHeight = this.mapManager.height * this.mapManager.tileSize;
         const laneCenters = this.mapManager.getLaneCenters ? this.mapManager.getLaneCenters() : null;
         this.laneManager = new LaneManager(mapPixelWidth, mapPixelHeight, laneCenters);
-        this.laneRenderManager = new LaneRenderManager(this.laneManager);
+        this.laneRenderManager = new LaneRenderManager(this.laneManager, SETTINGS.ENABLE_AQUARIUM_LANES);
+        this.formationManager = new FormationManager(3, 3, this.mapManager.tileSize);
+        this.eventManager.subscribe('formation_assign_request', d => {
+            this.formationManager.assign(d.slotIndex, d.entityId);
+            this.uiManager?.createSquadManagementUI();
+        });
         this.saveLoadManager = new SaveLoadManager();
         this.turnManager = new TurnManager();
         this.narrativeManager = new NarrativeManager();
@@ -240,6 +246,7 @@ export class Game {
         this.uiManager.vfxManager = this.vfxManager;
         this.uiManager.eventManager = this.eventManager;
         this.uiManager.getSharedInventory = () => this.inventoryManager.getSharedInventory();
+        this.uiManager.formationManager = this.formationManager;
         this.squadManager = new Managers.SquadManager(this.eventManager, this.mercenaryManager);
         this.uiManager.squadManager = this.squadManager;
         this.uiManager.createSquadManagementUI?.();
@@ -517,43 +524,54 @@ export class Game {
         this.monsterManager.monsters.push(...monsters);
         this.monsterManager.monsters.forEach(m => this.monsterGroup.addMember(m));
 
-        // --- 3-Lane 모드 설정 로직 ---
-        const friendlySquads = this.squadManager.getSquads();
-        const lanes = ['TOP', 'MID', 'BOTTOM'];
-        Object.values(friendlySquads).forEach((squad, index) => {
-            const lane = lanes[index];
-            if (!lane) return;
-            squad.name = lane;
-            squad.members.forEach(mercId => {
-                const merc = this.entityManager.getEntityById(mercId);
-                if (merc) {
-                    merc.team = 'LEFT';
-                    merc.lane = lane;
-                    merc.ai = new LanePusherAI();
-                    merc.currentWaypointIndex = 0;
+        if (SETTINGS.ENABLE_AQUARIUM_LANES) {
+            // --- 3-Lane 모드 설정 로직 ---
+            const friendlySquads = this.squadManager.getSquads();
+            const lanes = ['TOP', 'MID', 'BOTTOM'];
+            Object.values(friendlySquads).forEach((squad, index) => {
+                const lane = lanes[index];
+                if (!lane) return;
+                squad.name = lane;
+                squad.members.forEach(mercId => {
+                    const merc = this.entityManager.getEntityById(mercId);
+                    if (merc) {
+                        merc.team = 'LEFT';
+                        merc.lane = lane;
+                        merc.ai = new LanePusherAI();
+                        merc.currentWaypointIndex = 0;
+                    }
+                });
+            });
+
+            const allMonsters = this.monsterManager.getMonsters();
+            const monstersPerLane = Math.floor(allMonsters.length / 3);
+            allMonsters.forEach((monster, idx) => {
+                let lane = 'MID';
+                if (idx < monstersPerLane) lane = 'TOP';
+                else if (idx < monstersPerLane * 2) lane = 'BOTTOM';
+
+                monster.team = 'RIGHT';
+                monster.lane = lane;
+                monster.ai = new LanePusherAI();
+                monster.currentWaypointIndex = 0;
+                const startWaypoint = this.laneManager.getNextWaypoint(monster);
+                if (startWaypoint) {
+                    monster.x = startWaypoint.x;
+                    monster.y = startWaypoint.y;
                 }
             });
-        });
-
-        const allMonsters = this.monsterManager.getMonsters();
-        const monstersPerLane = Math.floor(allMonsters.length / 3);
-        allMonsters.forEach((monster, idx) => {
-            let lane = 'MID';
-            if (idx < monstersPerLane) lane = 'TOP';
-            else if (idx < monstersPerLane * 2) lane = 'BOTTOM';
-
-            monster.team = 'RIGHT';
-            monster.lane = lane;
-            monster.ai = new LanePusherAI();
-            monster.currentWaypointIndex = 0;
-            const startWaypoint = this.laneManager.getNextWaypoint(monster);
-            if (startWaypoint) {
-                monster.x = startWaypoint.x;
-                monster.y = startWaypoint.y;
-            }
-        });
+        }
 
         this.entityManager.init(this.gameState.player, this.mercenaryManager.mercenaries, this.monsterManager.monsters);
+        // Apply initial formation for player party
+        const origin = { x: this.gameState.player.x, y: this.gameState.player.y };
+        const entityMap = { [player.id]: this.gameState.player };
+        this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
+        this.formationManager.assign(4, player.id);
+        this.mercenaryManager.mercenaries.forEach((m, idx) => {
+            this.formationManager.assign(idx < 4 ? idx : idx + 1, m.id);
+        });
+        this.formationManager.apply(origin, entityMap);
         this.equipmentManager.entityManager = this.entityManager;
         this.aspirationManager = new AspirationManager(this.eventManager, this.microWorld, this.effectManager, this.vfxManager, this.entityManager);
 
