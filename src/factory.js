@@ -11,7 +11,7 @@ import { PREFIXES, SUFFIXES } from './data/affixes.js';
 import { JOBS } from './data/jobs.js';
 import { SKILLS } from './data/skills.js';
 import { MeleeAI, RangedAI, HealerAI, BardAI, SummonerAI, WizardAI, WarriorAI, ArcherAI, FireGodAI } from './ai.js';
-import { SupportAI } from './ai/SupportAI.js';
+import { SupportAI } from './ai/archetypes.js';
 import { SupportEngine } from './systems/SupportEngine.js';
 import { MBTI_TYPES } from './data/mbti.js';
 import { PETS } from './data/pets.js';
