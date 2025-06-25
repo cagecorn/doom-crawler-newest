@@ -34,6 +34,7 @@ import { Item } from './entities.js';
 import { rollOnTable } from './utils/random.js';
 import { getMonsterLootTable } from './data/tables.js';
 import { MicroEngine } from './micro/MicroEngine.js';
+import { MicroCombatManager } from './micro/MicroCombatManager.js';
 import { MicroItemAIManager } from './managers/microItemAIManager.js';
 
 import { StatusEffectsManager } from './managers/statusEffectsManager.js';
