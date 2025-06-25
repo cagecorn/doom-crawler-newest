@@ -22,11 +22,18 @@ export class FormationManager {
     }
 
     getSlotPosition(index) {
-        const row = Math.floor(index / this.cols);
-        const col = index % this.cols;
-        let offsetX = (col - Math.floor(this.cols / 2)) * this.tileSize;
-        if (this.orientation === 'RIGHT') offsetX *= -1; // mirror for enemy side
-        const offsetY = (row - Math.floor(this.rows / 2)) * this.tileSize;
+        // Board style mapping so indices map to a 3x3 grid like
+        // 7 4 1 / 8 5 2 / 9 6 3 when orientation is LEFT.
+        // Indices increase along columns rather than rows.
+
+        const r = index % this.rows;
+        const cBase = Math.floor(index / this.rows);
+        const col = this.orientation === 'LEFT'
+            ? this.cols - 1 - cBase
+            : cBase;
+
+        const offsetX = (col - Math.floor(this.cols / 2)) * this.tileSize;
+        const offsetY = (r - Math.floor(this.rows / 2)) * this.tileSize;
         return { x: offsetX, y: offsetY };
     }
 

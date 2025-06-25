@@ -1,4 +1,4 @@
-import { RangedAI, MeleeAI } from '../ai.js';
+import { RangedAI, MeleeAI, PlayerCombatAI } from '../ai.js';
 
 export class TagManager {
     constructor() {
@@ -24,6 +24,15 @@ export class TagManager {
     applyWeaponTags(entity) {
         const weapon = entity?.equipment?.weapon;
         if (!weapon) return;
+
+        if (entity.isPlayer) {
+            if (!entity.autoBattle) return;
+            if (!(entity.ai instanceof PlayerCombatAI)) {
+                entity.ai = new PlayerCombatAI();
+            }
+            entity.ai.updateBaseAI(entity);
+            return;
+        }
 
         if (this.hasTag(weapon, 'ranged')) {
             if (!(entity.ai instanceof RangedAI)) {

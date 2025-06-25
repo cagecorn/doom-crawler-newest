@@ -1104,3 +1104,26 @@ export class FireGodAI extends AIArchetype {
         return { type: 'idle' };
     }
 }
+
+// --- Player controlled auto-battle AI ---
+export class PlayerCombatAI extends AIArchetype {
+    constructor() {
+        super();
+        this.currentAI = null;
+    }
+
+    updateBaseAI(entity) {
+        const tags = Array.isArray(entity.equipment.weapon?.tags)
+            ? entity.equipment.weapon.tags
+            : [];
+        const desired = tags.includes('ranged') ? RangedAI : MeleeAI;
+        if (!(this.currentAI instanceof desired)) {
+            this.currentAI = new desired();
+        }
+    }
+
+    decideAction(self, context) {
+        if (!this.currentAI) this.updateBaseAI(self);
+        return this.currentAI.decideAction(self, context);
+    }
+}

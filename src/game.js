@@ -766,6 +766,16 @@ export class Game {
             };
         }
 
+        const autoBtn = document.getElementById('toggle-autobattle-btn');
+        if (autoBtn) {
+            autoBtn.onclick = () => {
+                const player = this.gameState.player;
+                player.autoBattle = !player.autoBattle;
+                if (typeof player.updateAI === 'function') player.updateAI();
+                autoBtn.textContent = `자동 전투: ${player.autoBattle ? 'ON' : 'OFF'}`;
+            };
+        }
+
         // === 메뉴 버튼 이벤트 리스너 수정 ===
         const playerInfoBtn = document.querySelector('.menu-btn[data-panel-id="character-sheet-panel"]');
         if (playerInfoBtn) {
