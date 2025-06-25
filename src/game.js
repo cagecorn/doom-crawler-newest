@@ -180,6 +180,8 @@ export class Game {
                 name !== 'SkillManager' &&
                 name !== 'ProjectileManager' &&
                 name !== 'SquadManager' &&
+                name !== 'FormationManager' &&
+                name !== 'EnemyFormationManager' &&
                 name !== 'DataRecorder'
         );
         for (const managerName of otherManagerNames) {
