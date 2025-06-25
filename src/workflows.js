@@ -66,8 +66,10 @@ export function disarmWorkflow(context) {
         color: 'orange'
     });
 
-    // Notify cinematic system of disarm event
-    eventManager.publish('weapon_disarmed', { attacker, defender: target });
+    // MicroCombatManager already fired the 'weapon_disarmed' event when the
+    // durability check failed. Re-emitting the same event here caused a second
+    // workflow execution with missing context. Simply perform the visuals and
+    // log without publishing the event again.
 }
 
 // === 방어구 파괴 워크플로우 ===
@@ -95,6 +97,7 @@ export function armorBreakWorkflow(context) {
         color: 'red'
     });
 
-    // Notify cinematic system of armor break event
-    eventManager.publish('armor_broken', { attacker, defender: target });
+    // MicroCombatManager already emitted 'armor_broken' when the armor's
+    // durability reached zero. Emitting it again here triggered a recursive
+    // workflow with incomplete data, so avoid re-publishing the event.
 }

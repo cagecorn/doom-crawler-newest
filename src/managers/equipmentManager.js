@@ -59,7 +59,9 @@ export class EquipmentManager {
      * @param {Array|null} inventory - Optional array to store the removed item.
      */
     unequip(entity, slot, inventory = null) {
-        if (!slot || !entity.equipment[slot]) return;
+        if (!entity || !entity.equipment || !slot || !entity.equipment[slot]) {
+            return;
+        }
 
         const oldItem = entity.equipment[slot];
         if (oldItem?.tags.includes('emblem')) {
