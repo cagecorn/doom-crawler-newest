@@ -10,8 +10,26 @@ export class AquariumMapManager extends MapManager {
         this.corridorWidth = 5; // widen lane width
         this.jungleWidth = 3;   // slightly thinner jungle corridors
         this.openArea = 6;
-        this.useLanes = SETTINGS.ENABLE_AQUARIUM_LANES;
-        this.map = this._generateMaze();
+        // 테스트 편의를 위해 기본 맵을 넓은 빈 공간으로 생성한다
+        this.useLanes = false;
+        this.map = this._generateEmptyMap();
+    }
+
+    // 벽으로 둘러싸인 빈 맵을 생성한다
+    _generateEmptyMap() {
+        const map = Array.from({ length: this.height }, () =>
+            Array(this.width).fill(this.tileTypes.FLOOR)
+        );
+
+        for (let x = 0; x < this.width; x++) {
+            map[0][x] = this.tileTypes.WALL;
+            map[this.height - 1][x] = this.tileTypes.WALL;
+        }
+        for (let y = 0; y < this.height; y++) {
+            map[y][0] = this.tileTypes.WALL;
+            map[y][this.width - 1] = this.tileTypes.WALL;
+        }
+        return map;
     }
 
     // Generate a simple three-lane layout separated by walls. Left and right edges
