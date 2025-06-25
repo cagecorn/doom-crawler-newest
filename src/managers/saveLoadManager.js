@@ -12,7 +12,7 @@ export class SaveLoadManager {
             player: gameState.player.getSaveState(),
             gold: gameState.gold,
             statPoints: gameState.statPoints,
-            inventory: gameState.inventory.map(item => item.name), // 아이템은 이름만 저장
+            inventory: gameState.inventory.filter(it => it).map(item => item.name), // 아이템은 이름만 저장
             monsters: monsterManager.monsters.map(m => m.getSaveState()),
             mercenaries: mercenaryManager.mercenaries.map(m => m.getSaveState()),
         };

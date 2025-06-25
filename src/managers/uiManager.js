@@ -429,11 +429,13 @@ export class UIManager {
 
         this.inventoryListContainer.innerHTML = '';
         const filtered = gameState.inventory.filter(it => {
+            if (!it) return false;
             if (this.currentInventoryFilter === 'all') return true;
             return it.type === this.currentInventoryFilter || it.tags?.includes(this.currentInventoryFilter);
         });
-        filtered.forEach((item, index) => {
-            const slotDiv = this.createSlotElement(player, 'inventory', item, index);
+        filtered.forEach(item => {
+            const idx = gameState.inventory.indexOf(item);
+            const slotDiv = this.createSlotElement(player, 'inventory', item, idx);
             this.inventoryListContainer.appendChild(slotDiv);
         });
     }
@@ -538,7 +540,7 @@ export class UIManager {
         if (current.length !== this._lastInventory.length) return true;
         for (let i = 0; i < current.length; i++) {
             if (current[i] !== this._lastInventory[i]) return true;
-            if (current[i].quantity !== this._lastInventory[i].quantity) return true;
+            if (current[i] && this._lastInventory[i] && current[i].quantity !== this._lastInventory[i].quantity) return true;
         }
         return false;
     }
