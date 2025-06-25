@@ -393,15 +393,6 @@ body, html {
     font-size: 12px;
 }
 
-#equipment-target-panel {
-    z-index: 250;
-}
-
-#unequip-panel {
-    width: 200px;
-    text-align: center;
-    z-index: 250;
-}
 
 #sheet-equipment .equip-slot {
     display: flex; justify-content: space-between; align-items: center;
