@@ -35,7 +35,8 @@ import { rollOnTable } from './utils/random.js';
 import { getMonsterLootTable } from './data/tables.js';
 import { MicroEngine } from './micro/MicroEngine.js';
 import { MicroItemAIManager } from './managers/microItemAIManager.js';
-import { MicroCombatManager } from './micro/MicroCombatManager.js';
+
+import { StatusEffectsManager } from './managers/statusEffectsManager.js';
 import { disarmWorkflow, armorBreakWorkflow } from './workflows.js';
 import { PossessionAIManager } from './managers/possessionAIManager.js';
 import { Ghost } from './entities.js';
@@ -128,7 +129,8 @@ export class Game {
         this.entityManager = new EntityManager(this.eventManager);
         this.inputHandler = new InputHandler(this.eventManager, this);
         this.combatLogManager = new CombatLogManager(this.eventManager);
-        this.systemLogManager = new SystemLogManager(this.eventManager);
+        
+        this.statusEffectsManager = new StatusEffectsManager(this.eventManager);
         this.tagManager = new TagManager();
         this.combatCalculator = new CombatCalculator(this.eventManager, this.tagManager);
         // Player begins in the Aquarium map for feature testing
@@ -1530,6 +1532,7 @@ export class Game {
             playerGroup: this.playerGroup,
             monsterGroup: this.monsterGroup,
             speechBubbleManager: this.speechBubbleManager,
+            statusEffectsManager: this.statusEffectsManager,
             enemies: metaAIManager.groups['dungeon_monsters']?.members || []
         };
         metaAIManager.update(context);

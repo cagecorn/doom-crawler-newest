@@ -65,6 +65,12 @@ class Entity {
         this.teleportSavedPos = null;
         this.teleportReturnPos = null;
 
+        this.statusEffects = {
+            isTwisted: false,
+            twistedStartTime: 0,
+            twistedDuration: 0,
+        };
+
         // --- 상태이상 및 버프 관련 수치 ---
         this.shield = 0;       // 보호막
         this.damageBonus = 0;  // 추가 공격력
@@ -145,7 +151,9 @@ class Entity {
         ctx.translate(0, yOffset);
         ctx.rotate(rotation);
         ctx.scale(this.direction || 1, 1);
-        if (this.image) {
+        if (this.statusEffects.isTwisted) {
+            this.drawTwistedAnimation(ctx);
+        } else if (this.image) {
             ctx.drawImage(this.image, -this.width / 2, -this.height, this.width, this.height);
         }
 
@@ -166,6 +174,19 @@ class Entity {
         ctx.restore();
     }
 
+    drawTwistedAnimation(ctx) {
+        const elapsed = performance.now() - this.statusEffects.twistedStartTime;
+        const phase = Math.floor(elapsed / 100) % 4;
+        ctx.save();
+        const flip = (phase === 1 || phase === 2) ? -1 : 1;
+        ctx.scale(flip, 1);
+        const scaleX = 0.5;
+        if (this.image) {
+            ctx.drawImage(this.image, (-this.width * scaleX) / 2, -this.height, this.width * scaleX, this.height);
+        }
+        ctx.restore();
+    }
+
     getSaveState() {
         return {
             id: this.id,
@@ -180,6 +201,7 @@ class Entity {
 
     update() {
         this.applyRegen();
+        if (this.statusEffects.isTwisted) return;
         if (this.attackCooldown > 0) this.attackCooldown--;
         for (const skillId in this.skillCooldowns) {
             if (this.skillCooldowns[skillId] > 0) {
