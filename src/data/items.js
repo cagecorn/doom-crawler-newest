@@ -288,6 +288,18 @@ export const ITEMS = {
         imageKey: 'mace', stats: { attackPower: 4 },
         tier: 'normal', durability: 120, weight: 7, toughness: 4
     },
+    flail: {
+        name: '플레일', type: 'weapon', damageDice: '1d8',
+        tags: ['melee', 'flail'],
+        aspiration: {
+            personality: 'standard',
+            current: 50,
+            max: 100,
+            state: 'stable',
+        },
+        imageKey: 'mace', stats: { attackPower: 5, attackRange: 192 },
+        tier: 'normal', durability: 100, weight: 8, toughness: 4
+    },
     // --- 여기까지 ---
 
     // Parasite samples
