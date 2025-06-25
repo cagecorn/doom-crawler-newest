@@ -44,8 +44,10 @@ export class FormationManager {
             const ent = entityMap[id];
             if (ent) {
                 const off = this.getSlotPosition(idx);
-                ent.x = origin.x + off.x;
-                ent.y = origin.y + off.y;
+                const randomOffsetX = (Math.random() - 0.5) * this.tileSize * 0.5;
+                const randomOffsetY = (Math.random() - 0.5) * this.tileSize * 0.5;
+                ent.x = origin.x + off.x + randomOffsetX;
+                ent.y = origin.y + off.y + randomOffsetY;
             }
         });
     }
