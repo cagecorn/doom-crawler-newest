@@ -3,9 +3,6 @@ export class EquipmentManager {
         this.eventManager = eventManager;
         this.entityManager = entityManager;
         this.tagManager = null;
-        if (this.eventManager) {
-            this.eventManager.subscribe('ui_equip_request', (d) => this.handleEquipRequest(d));
-        }
         console.log('[EquipmentManager] Initialized');
     }
 
