@@ -24,6 +24,7 @@ import { EffectIconManager } from './effectIconManager.js';
 import { PetManager } from './petManager.js';
 import { SquadManager } from './squadManager.js';
 import { MetaAIManager } from './metaAIManager.js';
+import { AIManager } from './AIManager.js';
 import { SynergyManager } from '../micro/SynergyManager.js';
 import { SpeechBubbleManager } from './speechBubbleManager.js';
 import { AuraManager } from './AuraManager.js';
@@ -65,6 +66,7 @@ export {
     PetManager,
     EffectIconManager,
     MetaAIManager,
+    AIManager,
     PossessionAIManager,
     AuraManager,
     SynergyManager,
