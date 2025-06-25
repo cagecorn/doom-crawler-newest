@@ -172,13 +172,13 @@
         <h2 class="window-header">부대 편성</h2>
     </div>
 
-    <!-- 캐릭터 스탯을 표시하는 패널 -->
-    <div id="character-sheet-panel" class="modal-panel ui-frame window draggable-window hidden">
-        <button class="close-btn" data-panel-id="character-sheet-panel">X</button>
+    <!-- 캐릭터 스탯 패널 템플릿 -->
+    <div id="character-sheet-template" class="modal-panel ui-frame window draggable-window hidden template">
+        <button class="close-btn">X</button>
         <h2 id="sheet-character-name" class="window-header">캐릭터</h2>
         <div class="stats-content-box sheet-container">
             <div class="sheet-left">
-                <div id="sheet-equipment" class="equipment-slots">
+                <div class="sheet-equipment equipment-slots">
                 <div class="equip-slot" data-slot="main_hand"><span>주무기</span></div>
                 <div class="equip-slot" data-slot="off_hand"><span>보조장비</span></div>
                 <div class="equip-slot" data-slot="armor"><span>갑옷</span></div>
@@ -188,8 +188,8 @@
                 <div class="equip-slot" data-slot="accessory1"><span>장신구1</span></div>
                 <div class="equip-slot" data-slot="accessory2"><span>장신구2</span></div>
                 </div>
-                <div id="sheet-inventory"></div>
-                <div id="sheet-skills" class="skill-list"></div>
+                <div class="sheet-inventory"></div>
+                <div class="sheet-skills skill-list"></div>
             </div>
             <div class="sheet-right">
                 <div id="player-stats-container">
@@ -249,8 +249,7 @@
             </div>
         </div>
     </div>
-
-
+    <div id="ui-container"></div>
 
     <div id="skill-bar" class="ui-frame">
         <div class="skill-slot" data-slot-index="0"><span>1</span></div>
