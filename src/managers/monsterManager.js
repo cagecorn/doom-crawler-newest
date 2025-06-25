@@ -18,6 +18,7 @@ export class MonsterManager {
             this._initialCount = e || 0;
         }
         this.monsters = [];
+        this.metaAIManager = null;
         this.traitManager = null;
         console.log("[MonsterManager] Initialized");
 
@@ -36,6 +37,20 @@ export class MonsterManager {
         this.traitManager = traitManager;
     }
 
+    setMetaAIManager(metaAIManager) {
+        this.metaAIManager = metaAIManager;
+    }
+
+    addMonster(monster) {
+        this.monsters.push(monster);
+        if (this.metaAIManager) {
+            const group =
+                this.metaAIManager.groups['dungeon_monsters'] ||
+                this.metaAIManager.createGroup('dungeon_monsters');
+            group.addMember(monster);
+        }
+    }
+
     _spawnMonsters(count) {
         for (let i = 0; i < count; i++) {
             const pos = this.mapManager.getRandomFloorPosition();
@@ -52,7 +67,7 @@ export class MonsterManager {
                     image: this.assets?.monster,
                     baseStats: stats
                 });
-                this.monsters.push(monster);
+                this.addMonster(monster);
             }
         }
     }

@@ -117,9 +117,8 @@ export class SkillManager {
         monster.isFriendly = caster.isFriendly;
         monster.properties.summonedBy = caster.id;
         if (this.monsterManager) {
-            this.monsterManager.monsters.push(monster);
-        }
-        if (this.metaAIManager) {
+            this.monsterManager.addMonster(monster);
+        } else if (this.metaAIManager) {
             const group = this.metaAIManager.groups[caster.groupId];
             if (group) group.addMember(monster);
         }
