@@ -33,6 +33,7 @@ import { EFFECTS } from './data/effects.js';
 import { Item } from './entities.js';
 import { rollOnTable } from './utils/random.js';
 import { getMonsterLootTable } from './data/tables.js';
+import { ITEMS } from './data/items.js';
 import { MicroEngine } from './micro/MicroEngine.js';
 import { MicroCombatManager } from './micro/MicroCombatManager.js';
 import { MicroItemAIManager } from './managers/microItemAIManager.js';
@@ -225,10 +226,7 @@ export class Game {
         this.equipmentManager.setTagManager(this.tagManager);
 
         this.itemFactory = new ItemFactory(assets);
-        const eagerSword = this.itemFactory.create('eager_sword', 0, 0, this.mapManager.tileSize);
-        if (eagerSword) {
-            this.inventoryManager.getSharedInventory().push(eagerSword);
-        }
+        this.addAllWeaponsToSharedInventory();
         this.pathfindingManager = new PathfindingManager(this.mapManager);
         this.motionManager = new Managers.MotionManager(this.mapManager, this.pathfindingManager);
         this.knockbackEngine = new KnockbackEngine(this.motionManager, this.vfxManager);
@@ -1703,6 +1701,17 @@ export class Game {
             }
         }
         return null;
+    }
+
+    addAllWeaponsToSharedInventory() {
+        const inventory = this.inventoryManager.getSharedInventory();
+        const tileSize = this.mapManager.tileSize;
+        for (const [id, data] of Object.entries(ITEMS)) {
+            if (data.type === 'weapon' || data.tags?.includes('weapon')) {
+                const item = this.itemFactory.create(id, 0, 0, tileSize);
+                if (item) inventory.push(item);
+            }
+        }
     }
 
     handleStatUp = (stat) => {
