@@ -1,31 +1,46 @@
-/**
- * 게임의 턴 흐름을 관리합니다.
- * '누구의 차례인가'와 '행동(애니메이션)이 진행 중인가'를 관리하는 핵심 지휘자입니다.
- */
+// src/managers/worldTurnManager.js
 export class WorldTurnManager {
-    /**
-     * @param {object} config.movementEngine - 현재 진행 중인 움직임이 있는지 확인하기 위함
-     * @param {Array<object>} config.entities - 턴에 참여하는 모든 엔티티 (플레이어, 몬스터 등)
-     */
-    constructor(config) {
-        this.movementEngine = config.movementEngine;
-        this.entities = config.entities;
-        // 턴 상태: 'PLAYER' (플레이어 턴), 'ENEMY' (적 턴)
-        this.currentTurn = 'PLAYER';
+    constructor() {
+        this.entities = [];
+        this.turnIndex = -1;
+        this.turnProcessed = false; // 현재 턴의 로직이 처리되었는지 여부
+    }
+    
+    setEntities(entities) {
+        this.entities = entities.filter(e => e);
+        this.turnIndex = -1;
+    }
+    
+    getEntities() {
+        return this.entities;
     }
 
-    /** 현재 플레이어 턴인지 확인합니다. */
-    isPlayerTurn() {
-        return this.currentTurn === 'PLAYER';
-    }
-
-    /** 현재 행동(애니메이션)이 진행 중인지 확인합니다. */
-    isActionInProgress() {
-        return this.entities.some(e => this.movementEngine.isMoving(e));
-    }
-
-    /** 다음 턴으로 전환합니다. */
     nextTurn() {
-        this.currentTurn = this.currentTurn === 'PLAYER' ? 'ENEMY' : 'PLAYER';
+        if (this.entities.length === 0) return;
+        this.turnIndex = (this.turnIndex + 1) % this.entities.length;
+        this.turnProcessed = false; // 새 턴이 시작되면 플래그 초기화
+    }
+
+    getCurrentTurnEntity() {
+        return this.entities[this.turnIndex];
+    }
+    
+    getCurrentTurnOwner() {
+        const entity = this.getCurrentTurnEntity();
+        if (!entity) return 'NONE';
+        // 플레이어 객체는 'entity' 속성을 통해 구분합니다.
+        return entity.entity ? 'PLAYER' : 'ENEMY';
+    }
+
+    isPlayerTurn() {
+        return this.getCurrentTurnOwner() === 'PLAYER';
+    }
+
+    isTurnProcessed() {
+        return this.turnProcessed;
+    }
+
+    markTurnAsProcessed() {
+        this.turnProcessed = true;
     }
 }
