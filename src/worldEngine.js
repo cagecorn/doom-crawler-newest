@@ -87,13 +87,23 @@ export class WorldEngine {
 
     startNewTurn() {
         this.turnManager.nextTurn();
+        const currentEntity = this.turnManager.getCurrentTurnEntity();
+        if (!currentEntity) return;
+
+        // AP 리셋은 모든 유닛에 대해 한 번만 수행
         this.apManager.resetActionPoints(this.turnManager.getEntities());
-        console.log(`--- ${this.turnManager.getCurrentTurnOwner()}의 턴 ---`);
+        console.log(`--- ${this.turnManager.isPlayerTurn() ? '플레이어' : '적'}의 턴 ---`);
+
+        // 새 턴이 적의 턴으로 시작될 경우, 바로 AI 로직을 실행합니다.
+        if (!this.turnManager.isPlayerTurn()) {
+            this.handleEnemyTurn();
+        }
     }
 
     update(deltaTime) {
-        if (!this.player) return;
+        if (!this.player || !this.turnManager.getCurrentTurnEntity()) return;
 
+        // 어떤 유닛이든 움직이는 중이면 다른 로직 없이 움직임만 처리합니다.
         if (
             this.movementEngine.isMoving(this.player) ||
             this.monsters.some(m => this.movementEngine.isMoving(m))
@@ -105,9 +115,9 @@ export class WorldEngine {
 
         if (this.turnManager.isPlayerTurn()) {
             this.handlePlayerTurn();
-        } else if (!this.turnManager.isTurnProcessed()) {
+        } else {
+            // 적 턴일 경우 AI에게 제어를 맡깁니다.
             this.handleEnemyTurn();
-            this.turnManager.markTurnAsProcessed();
         }
 
         this.updateCamera();
