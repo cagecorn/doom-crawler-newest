@@ -1,15 +1,31 @@
+// src/worldEngine.js
 import { GridRenderer } from './renderers/gridRenderer.js';
 import { MovementEngine } from './engines/movementEngine.js';
 import { WorldTurnManager } from './managers/worldTurnManager.js';
 import { WalkManager } from './managers/walkManager.js';
+import { APManager } from './managers/apManager.js';
+import { WorldCombatManager } from './managers/worldCombatManager.js';
+import { WorldAIManager } from './managers/worldAIManager.js';
 
 export class WorldEngine {
-    constructor(game, assets, movementEngine = new MovementEngine({ tileSize: game.mapManager?.tileSize || 192 })) {
+    constructor(game, assets) {
         this.game = game;
         this.assets = assets;
-        this.movementEngine = movementEngine;
-        this.worldMapImage = this.assets['world-tile'];
-        // 전투 맵과 동일한 타일 크기를 사용해 월드맵 크기를 계산
+
+        // --- 엔진 및 매니저 초기화 ---
+        this.movementEngine = new MovementEngine({ tileSize: game.mapManager?.tileSize || 192 });
+        this.walkManager = new WalkManager();
+        this.apManager = new APManager();
+        this.combatManager = new WorldCombatManager(game, this.apManager);
+        this.aiManager = new WorldAIManager({
+            walkManager: this.walkManager,
+            movementEngine: this.movementEngine,
+            combatManager: this.combatManager,
+            apManager: this.apManager,
+        });
+        this.turnManager = new WorldTurnManager();
+
+        // --- 월드 및 카메라 설정 ---
         this.tileSize = this.game.mapManager?.tileSize || 192;
         this.worldWidth = this.tileSize * 40;
         this.worldHeight = this.tileSize * 40;
@@ -18,125 +34,130 @@ export class WorldEngine {
         this.dragStart = { x: 0, y: 0 };
         this.isDragging = false;
         this.followPlayer = true;
-        // 월드맵용 GridRenderer 인스턴스 생성
+
         this.gridRenderer = new GridRenderer({
             mapWidth: this.worldWidth,
             mapHeight: this.worldHeight,
             tileSize: this.tileSize,
             lineColor: '#000',
-            lineWidth: 6
+            lineWidth: 6,
         });
-        // 플레이어 정보는 Game 초기화 이후 setPlayer()로 전달된다
+
         this.player = null;
-        this.monsters = [
-            {
-                tileX: 3,
-                tileY: 2,
-                x: this.tileSize * 3,
-                y: this.tileSize * 2,
-                width: this.tileSize,
-                height: this.tileSize,
-                image: this.assets['monster'],
-                troopSize: 10,
-            },
-        ];
-        this.walkManager = new WalkManager();
-        this.turnManager = new WorldTurnManager({
-            movementEngine: this.movementEngine,
-            entities: [...this.monsters]
-        });
+        this.monsters = [];
+        this.initializeMonsters();
     }
 
-    /**
-     * 게임에서 사용 중인 플레이어 엔티티를 월드맵 전용 데이터로 초기화한다.
-     * @param {object} entity - Game에서 생성한 플레이어 객체
-     */
+    initializeMonsters() {
+        const monsterData = {
+            tileX: 15,
+            tileY: 15,
+            image: this.assets['monster'],
+            troopSize: 10,
+        };
+        const monster = {
+            ...monsterData,
+            x: this.tileSize * monsterData.tileX,
+            y: this.tileSize * monsterData.tileY,
+            width: this.tileSize,
+            height: this.tileSize,
+            hp: 100,
+        };
+        this.apManager.initializeUnit(monster);
+        this.monsters.push(monster);
+    }
+
     setPlayer(entity) {
         this.player = {
-            x: this.tileSize * 2,
-            y: this.tileSize * 2,
             tileX: 2,
             tileY: 2,
+            x: this.tileSize * 2,
+            y: this.tileSize * 2,
             width: entity?.width || this.tileSize,
             height: entity?.height || this.tileSize,
-            speed: 5,
             image: entity?.image || this.assets['player'],
-            entity
+            entity,
         };
-        if (this.movementEngine) {
-            this.player.movementEngine = this.movementEngine;
-        }
-        if (this.turnManager) {
-            this.turnManager.entities = [this.player, ...this.monsters];
-        }
+        this.apManager.initializeUnit(this.player);
+        this.player.movementEngine = this.movementEngine;
+
+        this.turnManager.setEntities([this.player, ...this.monsters]);
+        this.startNewTurn();
+    }
+
+    startNewTurn() {
+        this.turnManager.nextTurn();
+        this.apManager.resetActionPoints(this.turnManager.getEntities());
+        console.log(`--- ${this.turnManager.getCurrentTurnOwner()}의 턴 ---`);
     }
 
     update(deltaTime) {
         if (!this.player) return;
-        this.handleResetFollow();
 
-        if (!this.turnManager) {
-            if (this.movementEngine) this.movementEngine.update(deltaTime);
-            this.updateCamera();
-            return;
-        }
-
-        if (this.turnManager.isActionInProgress()) {
-            if (this.movementEngine) this.movementEngine.update(deltaTime);
+        if (
+            this.movementEngine.isMoving(this.player) ||
+            this.monsters.some(m => this.movementEngine.isMoving(m))
+        ) {
+            this.movementEngine.update(deltaTime);
             this.updateCamera();
             return;
         }
 
         if (this.turnManager.isPlayerTurn()) {
             this.handlePlayerTurn();
-        } else {
+        } else if (!this.turnManager.isTurnProcessed()) {
             this.handleEnemyTurn();
+            this.turnManager.markTurnAsProcessed();
         }
 
-        if (this.movementEngine) this.movementEngine.update(deltaTime);
         this.updateCamera();
-        this.checkCollisions();
-    }
-
-    handleResetFollow() {
-        if (!this.followPlayer && Object.keys(this.game.inputHandler.keysPressed).length > 0) {
-            this.followPlayer = true;
-            this.isDragging = false;
-        }
     }
 
     handlePlayerTurn() {
+        if (!this.apManager.hasEnoughAP(this.player, 1)) {
+            this.startNewTurn();
+            return;
+        }
+
         const keys = this.game.inputHandler.keysPressed;
-        if (this.movementEngine && this.movementEngine.isMoving(this.player)) return;
-
         let moved = false;
-        const target = { x: this.player.tileX, y: this.player.tileY };
+        const targetTile = { x: this.player.tileX, y: this.player.tileY };
 
-        if (keys['ArrowUp']) { target.y -= 1; moved = true; }
-        else if (keys['ArrowDown']) { target.y += 1; moved = true; }
-        else if (keys['ArrowLeft']) { target.x -= 1; moved = true; }
-        else if (keys['ArrowRight']) { target.x += 1; moved = true; }
+        if (keys['ArrowUp']) { targetTile.y -= 1; moved = true; }
+        else if (keys['ArrowDown']) { targetTile.y += 1; moved = true; }
+        else if (keys['ArrowLeft']) { targetTile.x -= 1; moved = true; }
+        else if (keys['ArrowRight']) { targetTile.x += 1; moved = true; }
+        else if (keys['a'] || keys['A']) {
+            this.game.inputHandler.clearKey('a');
+            const monster = this.monsters[0];
+            if (this.combatManager.attemptAttack(this.player, monster)) {
+                this.startNewTurn();
+            }
+            return;
+        }
 
         if (moved) {
-            if (target.x >= 0 && target.x < this.worldWidth / this.tileSize &&
-                target.y >= 0 && target.y < this.worldHeight / this.tileSize) {
-                this.movementEngine.startMovement(this.player, target);
-                this.turnManager.nextTurn();
+            this.game.inputHandler.clearArrowKeys();
+            if (this.isValidTile(targetTile.x, targetTile.y) && this.apManager.spendAP(this.player, 1)) {
+                this.movementEngine.startMovement(this.player, targetTile);
             }
         }
     }
 
     handleEnemyTurn() {
         const monster = this.monsters[0];
-        if (!monster) return;
-        const nextStep = this.walkManager.getNextStep(monster, this.player);
-        if (nextStep.x >= 0 && nextStep.x < this.worldWidth / this.tileSize &&
-            nextStep.y >= 0 && nextStep.y < this.worldHeight / this.tileSize) {
-            this.movementEngine.startMovement(monster, nextStep);
-        }
-        this.turnManager.nextTurn();
+        this.aiManager.handleMonsterTurn(monster, this.player, () => {
+            this.startNewTurn();
+        });
     }
 
+    isValidTile(x, y) {
+        const mapWidthInTiles = this.worldWidth / this.tileSize;
+        const mapHeightInTiles = this.worldHeight / this.tileSize;
+        return x >= 0 && x < mapWidthInTiles && y >= 0 && y < mapHeightInTiles;
+    }
+
+    // --- 카메라 및 렌더링 로직 (기존 코드 유지) ---
     startDrag(screenX, screenY) {
         this.isDragging = true;
         this.followPlayer = false;
@@ -164,7 +185,7 @@ export class WorldEngine {
         const canvasWidth = this.game.layerManager.layers.entity.width;
         const canvasHeight = this.game.layerManager.layers.entity.height;
         const zoom = this.game.gameState.zoomLevel || 1;
-        if (this.followPlayer) {
+        if (this.followPlayer && this.player) {
             const targetX = this.player.x - canvasWidth / (2 * zoom);
             const targetY = this.player.y - canvasHeight / (2 * zoom);
             this.camera.x = targetX;
@@ -179,21 +200,6 @@ export class WorldEngine {
         const zoom = this.game.gameState.zoomLevel || 1;
         this.camera.x = Math.max(0, Math.min(this.camera.x, this.worldWidth - canvasWidth / zoom));
         this.camera.y = Math.max(0, Math.min(this.camera.y, this.worldHeight - canvasHeight / zoom));
-    }
-
-    checkCollisions() {
-        for (const monster of this.monsters) {
-            if (monster.isActive === false) continue;
-            if (
-                this.player.x < monster.x + monster.width &&
-                this.player.x + this.player.width > monster.x &&
-                this.player.y < monster.y + monster.height &&
-                this.player.y + this.player.height > monster.y
-            ) {
-                this.game.eventManager.publish('start_combat', { monsterParty: monster });
-                break;
-            }
-        }
     }
 
     render(baseCtx, decorCtx, entityCtx) {
@@ -226,24 +232,20 @@ export class WorldEngine {
     }
 
     _drawWorldMap(ctx) {
-        const worldTileImg = this.worldMapImage;
+        const worldTileImg = this.assets['world-tile'];
         const seaTileImg = this.assets['sea-tile'];
         if (!worldTileImg || !seaTileImg) return;
 
         const worldWidth = this.worldWidth;
         const worldHeight = this.worldHeight;
-
-        // 전투 맵과 같은 크기의 타일을 반복하여 월드맵을 그린다
         const renderTileSize = this.tileSize;
 
-        // 전체 영역을 바다 타일로 채움
         const seaPattern = ctx.createPattern(seaTileImg, 'repeat');
         if (seaPattern) {
             ctx.fillStyle = seaPattern;
             ctx.fillRect(0, 0, worldWidth, worldHeight);
         }
 
-        // 육지를 작은 타일 이미지로 반복 렌더링
         for (let y = this.tileSize; y < worldHeight - this.tileSize; y += renderTileSize) {
             for (let x = this.tileSize; x < worldWidth - this.tileSize; x += renderTileSize) {
                 ctx.drawImage(worldTileImg, x, y, renderTileSize, renderTileSize);
