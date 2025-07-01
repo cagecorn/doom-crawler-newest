@@ -39,10 +39,16 @@ export class CombatEngine {
         this.currentTurn = 'PLAYER';
     }
 
-    render(context) {
-        // \uC804\uD22C \uC7A5\uBA74\uC5D0 \uD544\uC694\uD55C \uAC83\uB4E4\uC744 \uADF8\uB9AC\uB294\uB2E4.
-        this.mapManager.render(context);
-        this.player.draw?.(context);
-        this.monster.draw?.(context);
+    render() {
+        // \uC804\uD22C \uC7A5\uBA74 \uCD9C\uB825 \uC2DC \uD544\uC694\uD55C \uB808\uC774\uC5B4 \uC815\uBCF4를 
+        // Game 객체에서 가져와 전달한다.
+        const { contexts } = this.game.layerManager;
+        const baseCtx = contexts.mapBase;
+        const decorCtx = contexts.mapDecor;
+        const entityCtx = contexts.entity;
+
+        this.mapManager.render(baseCtx, decorCtx, this.game.assets);
+        this.player.draw?.(entityCtx);
+        this.monster.draw?.(entityCtx);
     }
 }
