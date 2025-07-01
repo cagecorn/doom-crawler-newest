@@ -505,3 +505,6 @@ export class Ghost {
         this.state = 'seeking'; // 'seeking', 'possessing', 'wandering'
     }
 }
+
+// 기본 Entity 클래스를 외부에서도 사용할 수 있도록 내보냅니다.
+export { Entity };
