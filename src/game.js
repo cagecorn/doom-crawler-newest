@@ -201,6 +201,8 @@ export class Game {
         this.worldEngine = new WorldEngine(this, assets, this.movementEngine, this.worldMapRenderManager);
         this.combatEngine = new CombatEngine(this);
         this.battleManager = new BattleManager(this, this.eventManager, this.groupManager, this.entityManager, this.factory);
+        // 전투 준비 과정에서 충돌한 몬스터 파티 정보를 임시로 저장
+        this.pendingMonsterParty = null;
 
         // --- GridRenderer 인스턴스 생성 ---
         // AquariumMapManager의 정보를 바탕으로 GridRenderer를 초기화합니다.
@@ -869,6 +871,15 @@ export class Game {
             const entityMap = { [gameState.player.id]: gameState.player };
             this.mercenaryManager.mercenaries.forEach(m => { entityMap[m.id] = m; });
             this.formationManager.apply(origin, entityMap);
+
+            // 전투 맵으로 전환하고 실제 전투를 시작한다
+            this.showBattleMap();
+            this.eventManager.publish('combat_started', {
+                attacker: gameState.player,
+                defender: this.pendingMonsterParty
+            });
+            this.pendingMonsterParty = null;
+
             gameState.currentState = 'COMBAT';
         });
 
