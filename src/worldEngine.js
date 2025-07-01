@@ -67,7 +67,7 @@ export class WorldEngine {
             this.player.movementEngine = this.movementEngine;
         }
         if (this.turnManager) {
-            this.turnManager.entities = [this.player, ...this.monsters];
+            this.turnManager.setEntities([this.player, ...this.monsters]);
         }
     }
 
