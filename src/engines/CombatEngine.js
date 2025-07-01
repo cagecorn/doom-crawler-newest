@@ -39,10 +39,15 @@ export class CombatEngine {
         this.currentTurn = 'PLAYER';
     }
 
-    render(context) {
+    render() {
         // \uC804\uD22C \uC7A5\uBA74\uC5D0 \uD544\uC694\uD55C \uAC83\uB4E4\uC744 \uADF8\uB9AC\uB294\uB2E4.
-        this.mapManager.render(context);
-        this.player.draw?.(context);
-        this.monster.draw?.(context);
+        const baseCtx = this.game.layerManager.contexts.mapBase;
+        const decorCtx = this.game.layerManager.contexts.mapDecor;
+        const entityCtx = this.game.layerManager.contexts.entity;
+        const assets = this.game.assets;
+
+        this.mapManager.render(baseCtx, decorCtx, assets);
+        this.player.draw?.(entityCtx);
+        this.monster.draw?.(entityCtx);
     }
 }
