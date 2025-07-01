@@ -5,7 +5,6 @@ export class WorldAIManager {
         this.movementEngine = movementEngine;
         this.combatManager = combatManager;
         this.apManager = apManager;
-        this.isProcessing = false; // 현재 AI가 행동 중인지 여부를 나타내는 플래그
     }
 
     /**
@@ -15,40 +14,31 @@ export class WorldAIManager {
      * @param {function} onTurnEnd - 턴 종료 시 호출될 콜백 함수
      */
     handleMonsterTurn(monster, player, onTurnEnd) {
-        // 이미 다른 AI 루틴이 실행 중이라면 중복 실행을 방지합니다.
-        if (this.isProcessing) return;
-
-        this.isProcessing = true;
-
         const performAction = () => {
-            // 1. 공격이 가능하면 즉시 공격하고 턴을 종료합니다.
-            if (this.combatManager.isAdjacent(monster, player)) {
-                this.combatManager.attemptAttack(monster, player);
-                this.isProcessing = false;
-                onTurnEnd(); // 턴 종료 콜백 호출
+            // 움직이는 중이거나 AP가 없으면 행동을 멈추고 턴을 종료합니다.
+            if (this.movementEngine.isMoving(monster) || !this.apManager.hasEnoughAP(monster, 1)) {
+                onTurnEnd();
                 return;
             }
 
-            // 2. 이동할 AP가 남아있으면 플레이어를 향해 이동합니다.
-            if (this.apManager.hasEnoughAP(monster, 1)) {
-                const nextStep = this.walkManager.getNextStep(monster, player);
-                if (nextStep) {
-                    this.apManager.spendAP(monster, 1);
-                    this.movementEngine.startMovement(monster, nextStep);
-                    // 이동이 끝난 후 다시 행동을 결정해야 하므로, 여기서는 턴을 종료하지 않습니다.
-                    // worldEngine의 update 루프가 이동이 끝난 것을 감지하고 다시 AI를 깨울 것입니다.
-                    this.isProcessing = false;
-                    return;
-                }
+            // 1. 플레이어가 사거리 내에 있으면 공격
+            if (this.combatManager.isAdjacent(monster, player)) {
+                this.combatManager.attemptAttack(monster, player);
+                onTurnEnd(); // 공격 후에는 바로 턴 종료
+                return;
             }
 
-            // 3. 더 이상 할 수 있는 행동이 없으면 턴을 종료합니다.
-            // (AP가 없거나, 이동할 경로가 없는 경우)
-            this.isProcessing = false;
-            onTurnEnd();
+            // 2. 사거리 밖에 있으면 이동
+            const nextStep = this.walkManager.getNextStep(monster, player);
+            if (nextStep && this.apManager.spendAP(monster, 1)) {
+                this.movementEngine.startMovement(monster, nextStep);
+                // 이동 후 다음 행동을 결정하기 위해 잠시 후 다시 이 함수를 호출합니다.
+                setTimeout(performAction, 300); // 0.3초 후 다음 행동 결정
+            } else {
+                onTurnEnd(); // 더 이상 이동할 수 없으면 턴 종료
+            }
         };
 
-        // 몬스터의 행동을 시작합니다.
         performAction();
     }
 }
