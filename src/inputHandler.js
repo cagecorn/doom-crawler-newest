@@ -59,15 +59,4 @@ export class InputHandler {
             this.game.eventManager?.publish('mouse_wheel', { direction });
         }
     }
-
-    clearKey(key) {
-        delete this.keysPressed[key];
-    }
-
-    clearArrowKeys() {
-        this.clearKey('ArrowUp');
-        this.clearKey('ArrowDown');
-        this.clearKey('ArrowLeft');
-        this.clearKey('ArrowRight');
-    }
 }
